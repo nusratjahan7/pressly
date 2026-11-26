@@ -1,5 +1,6 @@
 import type { ImageElement, Project } from "@/types";
 import { MM_PER_INCH } from "@/lib/units";
+import { resolveMediaUrl } from "@/lib/mediaStorage";
 
 export const MIN_PRINT_DPI = 200;
 
@@ -22,17 +23,20 @@ export interface ResolutionReport {
 
 const dimensionCache = new Map<string, { w: number; h: number } | null>();
 
-function loadDimensions(
+async function loadDimensions(
   src: string,
 ): Promise<{ w: number; h: number } | null> {
   const cached = dimensionCache.get(src);
-  if (cached !== undefined) return Promise.resolve(cached);
+  if (cached !== undefined) return cached;
+  if (typeof window === "undefined" || !src) return null;
+
+  const resolvedUrl = await resolveMediaUrl(src);
+  if (!resolvedUrl) {
+    dimensionCache.set(src, null);
+    return null;
+  }
 
   return new Promise((resolve) => {
-    if (typeof window === "undefined" || !src) {
-      resolve(null);
-      return;
-    }
     const image = new window.Image();
     image.onload = () => {
       const value = {
@@ -46,7 +50,7 @@ function loadDimensions(
       dimensionCache.set(src, null);
       resolve(null);
     };
-    image.src = src;
+    image.src = resolvedUrl;
   });
 }
 

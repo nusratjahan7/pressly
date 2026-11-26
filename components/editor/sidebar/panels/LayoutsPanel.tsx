@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useRef, useState } from "react";
-import { Heart } from "lucide-react";
+import { ChevronDown, Heart, SlidersHorizontal } from "lucide-react";
 import { useEditorStore } from "@/store";
 import { useActivePage, useCurrentSpread } from "@/store/selectors";
 import { getPageLabel } from "@/lib/spreads";
@@ -13,7 +13,6 @@ import {
 } from "@/lib/layouts";
 import { useElementSize } from "@/lib/useElementSize";
 import { LayoutWireframe } from "@/components/editor/sidebar/panels/LayoutWireframe";
-import { PageContext } from "@/components/editor/sidebar/PanelSection";
 import { EmptyState } from "@/components/editor/EmptyState";
 import { Slider } from "@/components/ui/slider";
 import { cn } from "@/lib/cn";
@@ -51,6 +50,7 @@ export function LayoutsPanel() {
   const [favoritesOnly, setFavoritesOnly] = useState(false);
   const [photoFilter, setPhotoFilter] = useState<PhotoFilter>("all");
   const [withTextOnly, setWithTextOnly] = useState(false);
+  const [spacingOpen, setSpacingOpen] = useState(false);
   const [scrollTop, setScrollTop] = useState(0);
 
   const { ref: scrollContainerRef, size: viewportSize } =
@@ -87,9 +87,15 @@ export function LayoutsPanel() {
   }, [scope, favoritesOnly, favoriteSet, withTextOnly, photoFilter]);
 
   const totalRows = Math.ceil(filteredLayouts.length / 2);
-  const totalHeight = Math.max(0, totalRows * ROW_STRIDE - (totalRows > 0 ? ROW_GAP : 0));
+  const totalHeight = Math.max(
+    0,
+    totalRows * ROW_STRIDE - (totalRows > 0 ? ROW_GAP : 0),
+  );
   const viewportHeight = viewportSize.height || 480;
-  const startRow = Math.max(0, Math.floor(scrollTop / ROW_STRIDE) - OVERSCAN_ROWS);
+  const startRow = Math.max(
+    0,
+    Math.floor(scrollTop / ROW_STRIDE) - OVERSCAN_ROWS,
+  );
   const endRow = Math.min(
     totalRows,
     Math.ceil((scrollTop + viewportHeight) / ROW_STRIDE) + OVERSCAN_ROWS,
@@ -120,7 +126,9 @@ export function LayoutsPanel() {
     if (nextIndex >= 0 && nextIndex < filteredLayouts.length) {
       event.preventDefault();
       const targetRow = Math.floor(nextIndex / 2);
-      const container = (event.currentTarget.closest("[data-layouts-scroll]") as HTMLElement | null);
+      const container = event.currentTarget.closest(
+        "[data-layouts-scroll]",
+      ) as HTMLElement | null;
       if (container) {
         const top = targetRow * ROW_STRIDE;
         const bottom = top + CARD_HEIGHT;
@@ -138,69 +146,99 @@ export function LayoutsPanel() {
 
   return (
     <div className="flex h-full min-h-0 flex-col">
-      <div className="flex shrink-0 flex-col gap-3 border-b border-line px-4 pb-3 pt-4">
-        <PageContext
-          label={pageLabel}
-          suffix={
-            scope === "spread" && canUseSpreadScope ? "Full spread" : undefined
-          }
-        />
+      <div className="flex shrink-0 flex-col gap-2 border-b border-line px-3.5 py-2.5">
+        {/* Top bar: target page + Single/Spread scope + optional Spacing toggle */}
+        <div className="flex items-center justify-between gap-2">
+          <span className="truncate text-[10.5px] font-medium text-ink-muted">
+            On <span className="font-semibold text-ink">{pageLabel}</span>
+            {scope === "spread" && canUseSpreadScope ? " · Spread" : ""}
+          </span>
 
-        {/* Scope switch: Single page vs Spread */}
-        <div
-          role="group"
-          aria-label="Layout scope"
-          className="grid grid-cols-2 gap-1 rounded-field border border-line bg-surface-muted/60 p-0.5"
-        >
-          <button
-            type="button"
-            aria-pressed={scope === "page"}
-            onClick={() => {
-              setScope("page");
-              setScrollTop(0);
-            }}
-            className={cn(
-              "h-6 rounded-[6px] text-[10.5px] font-medium transition-colors",
-              scope === "page"
-                ? "bg-surface text-ink shadow-sm"
-                : "text-ink-subtle hover:text-ink-muted",
-            )}
-          >
-            Single page
-          </button>
-          <button
-            type="button"
-            aria-pressed={scope === "spread"}
-            onClick={() => {
-              setScope("spread");
-              setScrollTop(0);
-            }}
-            className={cn(
-              "h-6 rounded-[6px] text-[10.5px] font-medium transition-colors",
-              scope === "spread"
-                ? "bg-surface text-ink shadow-sm"
-                : "text-ink-subtle hover:text-ink-muted",
-            )}
-          >
-            Spread
-          </button>
+          <div className="flex shrink-0 items-center gap-1">
+            {pageEditable && page?.layoutMeta ? (
+              <button
+                type="button"
+                aria-expanded={spacingOpen}
+                onClick={() => setSpacingOpen((prev) => !prev)}
+                className={cn(
+                  "inline-flex h-6 items-center gap-1 rounded-field border px-1.5 text-[10px] font-medium transition-colors",
+                  spacingOpen
+                    ? "border-accent bg-accent-soft text-accent"
+                    : "border-line bg-surface text-ink-muted hover:border-line-strong",
+                )}
+              >
+                <SlidersHorizontal className="size-2.5" aria-hidden="true" />
+                <span>{page.layoutMeta.gapMm}mm</span>
+                <ChevronDown
+                  className={cn(
+                    "size-2.5 transition-transform",
+                    spacingOpen && "rotate-180",
+                  )}
+                  aria-hidden="true"
+                />
+              </button>
+            ) : null}
+
+            <div
+              role="group"
+              aria-label="Layout scope"
+              className="inline-flex h-6 items-center rounded-field border border-line bg-surface-muted/60 p-0.5"
+            >
+              <button
+                type="button"
+                aria-pressed={scope === "page"}
+                onClick={() => {
+                  setScope("page");
+                  setScrollTop(0);
+                }}
+                className={cn(
+                  "h-5 rounded-[5px] px-2 text-[10px] font-medium transition-colors",
+                  scope === "page"
+                    ? "bg-surface text-ink shadow-sm"
+                    : "text-ink-subtle hover:text-ink-muted",
+                )}
+              >
+                Page
+              </button>
+              <button
+                type="button"
+                aria-pressed={scope === "spread"}
+                onClick={() => {
+                  setScope("spread");
+                  setScrollTop(0);
+                }}
+                className={cn(
+                  "h-5 rounded-[5px] px-2 text-[10px] font-medium transition-colors",
+                  scope === "spread"
+                    ? "bg-surface text-ink shadow-sm"
+                    : "text-ink-subtle hover:text-ink-muted",
+                )}
+              >
+                Spread
+              </button>
+            </div>
+          </div>
         </div>
 
-        {/* Filter chips: Favorites, With text, Photo counts */}
-        <div className="flex flex-wrap items-center gap-1.5" role="group" aria-label="Layout filters">
+        {/* Filter chips: Favorites, With text, and Photo count in two tight rows */}
+        <div
+          className="flex flex-wrap items-center gap-1"
+          role="group"
+          aria-label="Layout filters"
+        >
           <button
             type="button"
             aria-pressed={favoritesOnly}
             onClick={() => setFavoritesOnly((prev) => !prev)}
             className={cn(
-              "inline-flex h-6 items-center gap-1 rounded-full border px-2 text-[10.5px] font-medium transition-colors",
+              "inline-flex h-6 items-center gap-1 rounded-full border px-2 text-[10px] font-medium transition-colors",
               favoritesOnly
                 ? "border-accent bg-accent text-accent-ink"
                 : "border-line bg-surface text-ink-muted hover:border-line-strong",
             )}
           >
             <Heart
-              className={cn("size-3", favoritesOnly && "fill-current")}
+              className={cn("size-2.5", favoritesOnly && "fill-current")}
               aria-hidden="true"
             />
             Favorites
@@ -214,7 +252,7 @@ export function LayoutsPanel() {
             aria-pressed={withTextOnly}
             onClick={() => setWithTextOnly((prev) => !prev)}
             className={cn(
-              "inline-flex h-6 items-center rounded-full border px-2 text-[10.5px] font-medium transition-colors",
+              "inline-flex h-6 items-center rounded-full border px-2 text-[10px] font-medium transition-colors",
               withTextOnly
                 ? "border-accent bg-accent text-accent-ink"
                 : "border-line bg-surface text-ink-muted hover:border-line-strong",
@@ -222,9 +260,17 @@ export function LayoutsPanel() {
           >
             With text
           </button>
+
+          <span className="ml-auto text-[10px] tabular-nums text-ink-subtle">
+            {filteredLayouts.length}
+          </span>
         </div>
 
-        <div className="flex flex-wrap items-center gap-1" role="group" aria-label="Photo count filter">
+        <div
+          className="flex items-center gap-1"
+          role="group"
+          aria-label="Photo count filter"
+        >
           {PHOTO_CHIPS.map((chip) => {
             const active = photoFilter === chip.value;
             return (
@@ -234,7 +280,7 @@ export function LayoutsPanel() {
                 aria-pressed={active}
                 onClick={() => setPhotoFilter(chip.value)}
                 className={cn(
-                  "inline-flex h-6 min-w-7 items-center justify-center rounded-full border px-2 text-[10.5px] font-medium transition-colors",
+                  "inline-flex h-6 flex-1 items-center justify-center rounded-full border text-[10px] font-medium transition-colors",
                   active
                     ? "border-accent bg-accent-soft text-accent"
                     : "border-line bg-surface text-ink-muted hover:border-line-strong",
@@ -246,8 +292,8 @@ export function LayoutsPanel() {
           })}
         </div>
 
-        {/* Layout spacing controls when a layout is applied */}
-        {pageEditable && page?.layoutMeta ? (
+        {/* Collapsible spacing sliders (default collapsed so cards stay prominent) */}
+        {spacingOpen && pageEditable && page?.layoutMeta ? (
           <div className="flex flex-col gap-2 rounded-field border border-line bg-surface-muted/50 px-2.5 py-2">
             <Slider
               label="Frame gap"
@@ -258,7 +304,11 @@ export function LayoutsPanel() {
               formatValue={(v) => `${v} mm`}
               onStart={pushHistory}
               onValueChange={(v) =>
-                updatePageLayoutSpacing(page.id, { gapMm: v }, { commit: false })
+                updatePageLayoutSpacing(
+                  page.id,
+                  { gapMm: v },
+                  { commit: false },
+                )
               }
             />
             <Slider
@@ -306,7 +356,7 @@ export function LayoutsPanel() {
           ref={scrollContainerRef}
           data-layouts-scroll
           onScroll={(event) => setScrollTop(event.currentTarget.scrollTop)}
-          className="min-h-0 flex-1 overflow-y-auto px-4 py-4"
+          className="min-h-0 flex-1 overflow-y-auto px-4 py-3.5"
         >
           <div className="relative w-full" style={{ height: totalHeight }}>
             {visibleRows.map(({ rowIndex, items }) => (

@@ -56,7 +56,7 @@ export function SelectionTransformer({
     <Transformer
       ref={transformerRef}
       rotateEnabled
-      keepRatio={false}
+      keepRatio={element?.type === "text"}
       flipEnabled={false}
       ignoreStroke
       anchorSize={handleSize}
@@ -96,8 +96,16 @@ export function SelectionTransformer({
         pushHistory();
       }}
       onTransformEnd={() => {
-        const node = transformerRef.current?.nodes()[0];
+        const transformer = transformerRef.current;
+        const node = transformer?.nodes()[0];
         if (!element || !node || !(node instanceof Object)) return;
+
+        const activeAnchor = transformer.getActiveAnchor() ?? "";
+        const isCorner =
+          activeAnchor === "top-left" ||
+          activeAnchor === "top-right" ||
+          activeAnchor === "bottom-left" ||
+          activeAnchor === "bottom-right";
 
         const group = node as Konva.Group;
         const scaleX = group.scaleX();
@@ -128,17 +136,23 @@ export function SelectionTransformer({
           ),
         );
 
-        updateElement(
-          element.id,
-          {
-            x: round(clampedX),
-            y: round(clampedY),
-            width: round(nextWidth),
-            height: round(nextHeight),
-            rotation: round(group.rotation()),
-          },
-          { commit: false },
-        );
+        const patch: Partial<Element> = {
+          x: round(clampedX),
+          y: round(clampedY),
+          width: round(nextWidth),
+          height: round(nextHeight),
+          rotation: round(group.rotation()),
+        };
+
+        if (element.type === "text" && isCorner) {
+          const ratio = Math.max(0.1, Math.abs(scaleY));
+          Object.assign(patch, {
+            fontSize: Math.max(4, Math.min(400, round(element.fontSize * ratio, 1))),
+            letterSpacing: round(element.letterSpacing * ratio, 2),
+          });
+        }
+
+        updateElement(element.id, patch, { commit: false });
       }}
     />
   );

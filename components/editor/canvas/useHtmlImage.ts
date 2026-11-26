@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { resolveMediaUrl } from "@/lib/mediaStorage";
 
 interface LoadedImage {
   image: HTMLImageElement;
@@ -39,18 +40,34 @@ function startLoad(src: string) {
   if (cache.has(src) || loading.has(src)) return;
   if (typeof window === "undefined") return;
   loading.add(src);
-  const image = new window.Image();
-  image.decoding = "async";
-  image.onload = () => {
-    loading.delete(src);
-    publish(src, { image, status: "loaded" });
-    evictIfNeeded();
-  };
-  image.onerror = () => {
-    loading.delete(src);
-    publish(src, { image: null, status: "error" });
-  };
-  image.src = src;
+
+  void resolveMediaUrl(src)
+    .then((resolvedUrl) => {
+      if (!resolvedUrl) {
+        loading.delete(src);
+        publish(src, { image: null, status: "error" });
+        return;
+      }
+      const image = new window.Image();
+      if (/^https?:\/\//i.test(resolvedUrl)) {
+        image.crossOrigin = "anonymous";
+      }
+      image.decoding = "async";
+      image.onload = () => {
+        loading.delete(src);
+        publish(src, { image, status: "loaded" });
+        evictIfNeeded();
+      };
+      image.onerror = () => {
+        loading.delete(src);
+        publish(src, { image: null, status: "error" });
+      };
+      image.src = resolvedUrl;
+    })
+    .catch(() => {
+      loading.delete(src);
+      publish(src, { image: null, status: "error" });
+    });
 }
 
 /**

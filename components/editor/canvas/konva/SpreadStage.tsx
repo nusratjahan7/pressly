@@ -33,6 +33,7 @@ export interface SpreadStageProps {
   animSeq?: number;
   animPageIds?: string[];
   onSelectPage?: (pageId: string) => void;
+  onDoubleClickEmptyPage?: (pageId: string, localX: number, localY: number) => void;
   onSelectSpine?: () => void;
   onEditSpine?: () => void;
   onClearSelection: () => void;
@@ -71,6 +72,7 @@ export function SpreadStage({
   animSeq = 0,
   animPageIds = [],
   onSelectPage,
+  onDoubleClickEmptyPage,
   onSelectSpine,
   onEditSpine,
   onClearSelection,
@@ -218,6 +220,7 @@ export function SpreadStage({
               dropHighlight={dropHighlightPageId === page.id}
               animSeq={animPageIds.includes(page.id) ? animSeq : 0}
               onSelectPage={onSelectPage}
+              onDoubleClickEmptyPage={onDoubleClickEmptyPage}
               onOpenPhotoPicker={onOpenPhotoPicker}
               onDoubleClickFrame={onDoubleClickFrame}
               onContextMenuFrame={onContextMenuFrame}

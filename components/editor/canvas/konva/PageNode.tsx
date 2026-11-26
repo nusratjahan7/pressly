@@ -34,6 +34,7 @@ interface PageNodeProps {
   dropHighlight?: boolean;
   animSeq?: number;
   onSelectPage?: (pageId: string) => void;
+  onDoubleClickEmptyPage?: (pageId: string, localX: number, localY: number) => void;
   onOpenPhotoPicker?: (elementId: string, pageId: string) => void;
   onDoubleClickFrame?: (element: Element, pageId: string) => void;
   onContextMenuFrame?: (
@@ -68,6 +69,7 @@ export function PageNode({
   dropHighlight = false,
   animSeq = 0,
   onSelectPage,
+  onDoubleClickEmptyPage,
   onOpenPhotoPicker,
   onDoubleClickFrame,
   onContextMenuFrame,
@@ -117,6 +119,22 @@ export function PageNode({
           onPointerDown={(event) => {
             event.cancelBubble = true;
             onSelectPage(page.id);
+          }}
+          onDblClick={(event) => {
+            if (!onDoubleClickEmptyPage) return;
+            event.cancelBubble = true;
+            const localPos = event.target.getRelativePointerPosition();
+            if (localPos) {
+              onDoubleClickEmptyPage(page.id, localPos.x, localPos.y);
+            }
+          }}
+          onDblTap={(event) => {
+            if (!onDoubleClickEmptyPage) return;
+            event.cancelBubble = true;
+            const localPos = event.target.getRelativePointerPosition();
+            if (localPos) {
+              onDoubleClickEmptyPage(page.id, localPos.x, localPos.y);
+            }
           }}
         />
       ) : null}

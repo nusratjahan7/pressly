@@ -1,16 +1,25 @@
 "use client";
 
+import { useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import {
   AlignCenter,
   AlignLeft,
   AlignRight,
+  CaseUpper,
   ChevronDown,
   ChevronUp,
   ChevronsDown,
   ChevronsUp,
+  FlipHorizontal2,
+  FlipVertical2,
+  Italic,
   Lock,
+  RotateCcw,
+  RotateCw,
+  SlidersHorizontal,
   Trash2,
+  Underline,
   Unlock,
   X,
 } from "lucide-react";
@@ -19,6 +28,13 @@ import { useEditorStore } from "@/store";
 import { useSelectedElement } from "@/store/selectors";
 import { getSpineWidth } from "@/lib/binding";
 import { getEditablePageCount } from "@/lib/spreads";
+import {
+  CURATED_FONTS,
+  ensureGoogleFontLoaded,
+  getCuratedFont,
+  preloadAllCuratedFonts,
+} from "@/lib/fonts";
+import { useMediaQuery } from "@/lib/useMediaQuery";
 import { formatNumber } from "@/lib/units";
 import {
   ELEMENT_TYPE_LABEL,
@@ -84,10 +100,54 @@ function PropertiesContent({
   const moveElementLayer = useEditorStore((state) => state.moveElementLayer);
   const clearSelection = useEditorStore((state) => state.clearSelection);
 
+  const isCompact = useMediaQuery("(max-width: 1023px)");
+  const [mobileExpanded, setMobileExpanded] = useState(false);
+
   const locked = element.locked;
   const label = getElementLabel(element, element.zIndex);
   const update = (patch: Partial<Element>) =>
     updateElement(element.id, patch);
+
+  if (isCompact && !mobileExpanded) {
+    return (
+      <motion.div
+        key={`pill-${element.id}`}
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: 10 }}
+        transition={{ duration: 0.15 }}
+        className="absolute bottom-3 right-3 z-30 flex max-w-[calc(100%-24px)] items-center gap-1 rounded-full border border-line bg-surface/95 py-1 pl-3 pr-1.5 shadow-panel backdrop-blur"
+      >
+        <button
+          type="button"
+          onClick={() => setMobileExpanded(true)}
+          className="flex min-w-0 items-center gap-1.5 text-left text-[11px] font-medium text-ink hover:text-accent"
+        >
+          <SlidersHorizontal className="size-3.5 shrink-0 text-accent" />
+          <span className="truncate">{label}</span>
+          <span className="shrink-0 text-[10px] text-ink-subtle">
+            · Properties
+          </span>
+          <ChevronUp className="size-3.5 shrink-0 text-ink-subtle" />
+        </button>
+        <IconButton
+          icon={Trash2}
+          label="Remove element"
+          size="sm"
+          variant="danger-ghost"
+          onClick={() => removeElement(element.id)}
+          disabled={locked}
+        />
+        <IconButton
+          icon={X}
+          label="Close properties"
+          size="sm"
+          variant="ghost"
+          onClick={clearSelection}
+        />
+      </motion.div>
+    );
+  }
 
   return (
     <motion.aside
@@ -97,7 +157,7 @@ function PropertiesContent({
       exit={{ opacity: 0, x: 18 }}
       transition={{ duration: 0.18, ease: [0.22, 1, 0.36, 1] }}
       aria-label={`${ELEMENT_TYPE_LABEL[element.type]} properties`}
-      className="absolute z-30 flex max-h-[min(56dvh,460px)] flex-col overflow-hidden rounded-card border border-line bg-surface shadow-panel max-lg:inset-x-3 max-lg:bottom-3 lg:bottom-4 lg:right-4 lg:top-4 lg:max-h-none lg:w-[300px]"
+      className="absolute z-30 flex max-h-[min(44dvh,420px)] flex-col overflow-hidden rounded-card border border-line bg-surface shadow-panel max-lg:inset-x-3 max-lg:bottom-3 lg:bottom-4 lg:right-4 lg:top-4 lg:max-h-none lg:w-[300px]"
     >
       <header className="flex shrink-0 items-start gap-2 border-b border-line px-3.5 py-3">
         <div className="flex min-w-0 flex-1 flex-col gap-0.5">
@@ -112,6 +172,16 @@ function PropertiesContent({
           </h2>
         </div>
         <div className="flex shrink-0 items-center gap-0.5">
+          {isCompact ? (
+            <IconButton
+              icon={ChevronDown}
+              label="Collapse properties"
+              tooltip="Collapse properties"
+              size="sm"
+              variant="ghost"
+              onClick={() => setMobileExpanded(false)}
+            />
+          ) : null}
           <IconButton
             icon={locked ? Unlock : Lock}
             label={locked ? "Unlock element" : "Lock element"}
@@ -259,19 +329,164 @@ function PropertiesContent({
               />
             </PropertyGrid>
             <SelectField
+              label="Font"
+              value={element.fontFamily}
+              disabled={locked}
+              options={CURATED_FONTS.map((font) => ({
+                value: font.name,
+                label: font.name,
+              }))}
+              onChange={(value) => {
+                preloadAllCuratedFonts();
+                const supported = getCuratedFont(value).weights;
+                const nextWeight = supported.includes(element.fontWeight)
+                  ? element.fontWeight
+                  : (supported[0] ?? 400);
+                ensureGoogleFontLoaded(
+                  value,
+                  nextWeight,
+                  element.fontStyle === "italic",
+                );
+                update({ fontFamily: value, fontWeight: nextWeight });
+              }}
+            />
+            <SelectField
               label="Weight"
               value={element.fontWeight}
               disabled={locked}
-              options={[
-                { value: 400, label: "Regular" },
-                { value: 500, label: "Medium" },
-                { value: 600, label: "Semibold" },
-                { value: 700, label: "Bold" },
-              ]}
-              onChange={(value) =>
-                update({ fontWeight: value as 400 | 500 | 600 | 700 })
-              }
+              options={getCuratedFont(element.fontFamily).weights.map((w) => ({
+                value: w,
+                label:
+                  w === 400
+                    ? "Regular (400)"
+                    : w === 500
+                      ? "Medium (500)"
+                      : w === 600
+                        ? "Semibold (600)"
+                        : "Bold (700)",
+              }))}
+              onChange={(value) => {
+                const w = value as 400 | 500 | 600 | 700;
+                ensureGoogleFontLoaded(
+                  element.fontFamily,
+                  w,
+                  element.fontStyle === "italic",
+                );
+                update({ fontWeight: w });
+              }}
             />
+            <div className="flex items-center gap-1.5">
+              <button
+                type="button"
+                aria-pressed={element.fontStyle === "italic"}
+                disabled={locked}
+                onClick={() =>
+                  update({
+                    fontStyle:
+                      element.fontStyle === "italic" ? "normal" : "italic",
+                  })
+                }
+                className="inline-flex h-7 flex-1 items-center justify-center gap-1 rounded-field border border-line text-[10.5px] font-medium text-ink-muted aria-pressed:border-accent aria-pressed:bg-accent-soft aria-pressed:text-accent"
+              >
+                <Italic className="size-3" />
+                Italic
+              </button>
+              <button
+                type="button"
+                aria-pressed={element.textDecoration === "underline"}
+                disabled={locked}
+                onClick={() =>
+                  update({
+                    textDecoration:
+                      element.textDecoration === "underline"
+                        ? "none"
+                        : "underline",
+                  })
+                }
+                className="inline-flex h-7 flex-1 items-center justify-center gap-1 rounded-field border border-line text-[10.5px] font-medium text-ink-muted aria-pressed:border-accent aria-pressed:bg-accent-soft aria-pressed:text-accent"
+              >
+                <Underline className="size-3" />
+                Underline
+              </button>
+              <button
+                type="button"
+                aria-pressed={element.textTransform === "uppercase"}
+                disabled={locked}
+                onClick={() =>
+                  update({
+                    textTransform:
+                      element.textTransform === "uppercase"
+                        ? "none"
+                        : "uppercase",
+                  })
+                }
+                className="inline-flex h-7 flex-1 items-center justify-center gap-1 rounded-field border border-line text-[10.5px] font-medium text-ink-muted aria-pressed:border-accent aria-pressed:bg-accent-soft aria-pressed:text-accent"
+              >
+                <CaseUpper className="size-3" />
+                Upper
+              </button>
+            </div>
+            <SegmentedField
+              label="Box mode"
+              value={element.boxMode ?? "auto"}
+              disabled={locked}
+              options={[
+                { value: "auto", label: "Auto-size" },
+                { value: "fixed", label: "Fixed box" },
+              ]}
+              onChange={(value) => update({ boxMode: value })}
+            />
+            <div className="flex flex-col gap-1.5 pt-1">
+              <Toggle
+                label="Text shadow"
+                checked={Boolean(element.textShadow)}
+                disabled={locked}
+                onCheckedChange={(checked) => update({ textShadow: checked })}
+              />
+              <Toggle
+                label="Text outline"
+                checked={Boolean(element.textOutline)}
+                disabled={locked}
+                onCheckedChange={(checked) =>
+                  update({
+                    textOutline: checked,
+                    textOutlineColor: element.textOutlineColor ?? "#5B65DC",
+                  })
+                }
+              />
+              <Toggle
+                label="Curved text"
+                checked={Boolean(element.curvedText)}
+                disabled={locked}
+                onCheckedChange={(checked) =>
+                  update({
+                    curvedText: checked,
+                    curveRadius: element.curveRadius ?? 65,
+                  })
+                }
+              />
+              {element.curvedText ? (
+                <Slider
+                  label="Curve arc"
+                  value={element.curveRadius ?? 65}
+                  min={-100}
+                  max={100}
+                  step={2}
+                  disabled={locked}
+                  onStart={pushHistory}
+                  onValueChange={(v) =>
+                    updateElement(element.id, { curveRadius: v }, { commit: false })
+                  }
+                />
+              ) : null}
+              <ColorField
+                label="Highlight"
+                value={element.textHighlight ?? "transparent"}
+                allowTransparent
+                disabled={locked}
+                onChange={(value) => update({ textHighlight: value })}
+              />
+            </div>
             <SegmentedField
               label="Alignment"
               value={element.align}
@@ -387,40 +602,192 @@ function PropertiesContent({
               disabled={locked}
               onCommit={(value) => update({ alt: value })}
             />
-            {element.src && element.fit === "cover" ? (
               <div className="flex flex-col gap-2 pt-1">
-                <Slider
-                  label="Crop zoom"
-                  value={Math.round((element.cropScale ?? 1) * 100)}
-                  min={100}
-                  max={300}
-                  step={5}
-                  disabled={locked}
-                  formatValue={(v) => `${(v / 100).toFixed(2)}×`}
-                  onStart={pushHistory}
-                  onValueChange={(v) =>
-                    updateElement(
-                      element.id,
-                      { cropScale: v / 100 },
-                      { commit: false },
-                    )
-                  }
-                />
-                {(element.cropScale ?? 1) > 1 ||
-                element.cropX ||
-                element.cropY ? (
+                <div className="flex items-center gap-1.5">
                   <button
                     type="button"
-                    onClick={() =>
-                      update({ cropScale: 1, cropX: 0, cropY: 0 })
-                    }
-                    className="self-start text-[10.5px] font-medium text-accent underline-offset-2 hover:underline"
+                    aria-pressed={Boolean(element.flipX)}
+                    disabled={locked}
+                    onClick={() => update({ flipX: !element.flipX })}
+                    className="inline-flex h-7 flex-1 items-center justify-center gap-1 rounded-field border border-line text-[10.5px] font-medium text-ink-muted aria-pressed:border-accent aria-pressed:bg-accent-soft aria-pressed:text-accent"
                   >
-                    Reset pan &amp; zoom
+                    <FlipHorizontal2 className="size-3.5" />
+                    Flip H
                   </button>
+                  <button
+                    type="button"
+                    aria-pressed={Boolean(element.flipY)}
+                    disabled={locked}
+                    onClick={() => update({ flipY: !element.flipY })}
+                    className="inline-flex h-7 flex-1 items-center justify-center gap-1 rounded-field border border-line text-[10.5px] font-medium text-ink-muted aria-pressed:border-accent aria-pressed:bg-accent-soft aria-pressed:text-accent"
+                  >
+                    <FlipVertical2 className="size-3.5" />
+                    Flip V
+                  </button>
+                  <button
+                    type="button"
+                    disabled={locked}
+                    aria-label="Rotate 90 degrees left"
+                    onClick={() =>
+                      update({
+                        rotation: ((element.rotation - 90 + 180) % 360) - 180,
+                      })
+                    }
+                    className="inline-flex size-7 items-center justify-center rounded-field border border-line text-ink-muted hover:text-ink"
+                  >
+                    <RotateCcw className="size-3.5" />
+                  </button>
+                  <button
+                    type="button"
+                    disabled={locked}
+                    aria-label="Rotate 90 degrees right"
+                    onClick={() =>
+                      update({
+                        rotation: ((element.rotation + 90 + 180) % 360) - 180,
+                      })
+                    }
+                    className="inline-flex size-7 items-center justify-center rounded-field border border-line text-ink-muted hover:text-ink"
+                  >
+                    <RotateCw className="size-3.5" />
+                  </button>
+                </div>
+
+                {element.fit === "cover" ? (
+                  <Slider
+                    label="Crop zoom"
+                    value={Math.round((element.cropScale ?? 1) * 100)}
+                    min={100}
+                    max={300}
+                    step={5}
+                    disabled={locked}
+                    formatValue={(v) => `${(v / 100).toFixed(2)}×`}
+                    onStart={pushHistory}
+                    onValueChange={(v) =>
+                      updateElement(
+                        element.id,
+                        { cropScale: v / 100 },
+                        { commit: false },
+                      )
+                    }
+                  />
                 ) : null}
+
+                <Slider
+                  label="Brightness"
+                  value={element.brightness ?? 100}
+                  min={20}
+                  max={200}
+                  step={2}
+                  disabled={locked}
+                  formatValue={(v) => `${v}%`}
+                  onStart={pushHistory}
+                  onValueChange={(v) =>
+                    updateElement(element.id, { brightness: v }, { commit: false })
+                  }
+                />
+                <Slider
+                  label="Contrast"
+                  value={element.contrast ?? 100}
+                  min={20}
+                  max={200}
+                  step={2}
+                  disabled={locked}
+                  formatValue={(v) => `${v}%`}
+                  onStart={pushHistory}
+                  onValueChange={(v) =>
+                    updateElement(element.id, { contrast: v }, { commit: false })
+                  }
+                />
+                <Slider
+                  label="Saturation"
+                  value={element.saturation ?? 100}
+                  min={0}
+                  max={200}
+                  step={2}
+                  disabled={locked}
+                  formatValue={(v) => `${v}%`}
+                  onStart={pushHistory}
+                  onValueChange={(v) =>
+                    updateElement(element.id, { saturation: v }, { commit: false })
+                  }
+                />
+                <Slider
+                  label="Grayscale"
+                  value={element.grayscale ?? 0}
+                  min={0}
+                  max={100}
+                  step={2}
+                  disabled={locked}
+                  formatValue={(v) => `${v}%`}
+                  onStart={pushHistory}
+                  onValueChange={(v) =>
+                    updateElement(element.id, { grayscale: v }, { commit: false })
+                  }
+                />
+                <Slider
+                  label="Blur"
+                  value={element.blur ?? 0}
+                  min={0}
+                  max={16}
+                  step={0.5}
+                  disabled={locked}
+                  formatValue={(v) => `${v} px`}
+                  onStart={pushHistory}
+                  onValueChange={(v) =>
+                    updateElement(element.id, { blur: v }, { commit: false })
+                  }
+                />
+
+                <PropertyGrid>
+                  <NumberField
+                    label="Border"
+                    value={element.borderWidth ?? 0}
+                    unit="mm"
+                    min={0}
+                    max={12}
+                    step={0.2}
+                    disabled={locked}
+                    onCommit={(value) => update({ borderWidth: value })}
+                  />
+                  <ColorField
+                    label="Border colour"
+                    value={element.borderColor ?? "#122056"}
+                    allowTransparent
+                    disabled={locked}
+                    onChange={(value) => update({ borderColor: value })}
+                  />
+                </PropertyGrid>
+
+                <Toggle
+                  label="Drop shadow"
+                  checked={Boolean(element.shadow)}
+                  disabled={locked}
+                  onCheckedChange={(checked) => update({ shadow: checked })}
+                />
+
+                <button
+                  type="button"
+                  onClick={() =>
+                    update({
+                      cropScale: 1,
+                      cropX: 0,
+                      cropY: 0,
+                      flipX: false,
+                      flipY: false,
+                      brightness: 100,
+                      contrast: 100,
+                      saturation: 100,
+                      grayscale: 0,
+                      blur: 0,
+                      borderWidth: 0,
+                      shadow: false,
+                    })
+                  }
+                  className="self-start text-[10.5px] font-medium text-accent underline-offset-2 hover:underline"
+                >
+                  Reset adjustments
+                </button>
               </div>
-            ) : null}
           </PropertySection>
         ) : null}
 
@@ -582,12 +949,44 @@ function SpinePropertiesContent() {
   const project = useEditorStore((state) => state.project);
   const setSpineText = useEditorStore((state) => state.setSpineText);
   const clearSelection = useEditorStore((state) => state.clearSelection);
+  const isCompact = useMediaQuery("(max-width: 1023px)");
+  const [mobileExpanded, setMobileExpanded] = useState(false);
 
   const spineText = project.spineText ?? project.name;
   const physicalSpine = getSpineWidth(
     project.pageSize.binding,
     getEditablePageCount(project.pages),
   );
+
+  if (isCompact && !mobileExpanded) {
+    return (
+      <motion.div
+        key="pill-cover-spine"
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: 10 }}
+        transition={{ duration: 0.15 }}
+        className="absolute bottom-3 right-3 z-30 flex max-w-[calc(100%-24px)] items-center gap-1 rounded-full border border-line bg-surface/95 py-1 pl-3 pr-1.5 shadow-panel backdrop-blur"
+      >
+        <button
+          type="button"
+          onClick={() => setMobileExpanded(true)}
+          className="flex min-w-0 items-center gap-1.5 text-left text-[11px] font-medium text-ink hover:text-accent"
+        >
+          <SlidersHorizontal className="size-3.5 shrink-0 text-accent" />
+          <span className="truncate">Spine · {spineText.trim() || "Blank"}</span>
+          <ChevronUp className="size-3.5 shrink-0 text-ink-subtle" />
+        </button>
+        <IconButton
+          icon={X}
+          label="Close properties"
+          size="sm"
+          variant="ghost"
+          onClick={clearSelection}
+        />
+      </motion.div>
+    );
+  }
 
   return (
     <motion.aside
@@ -597,7 +996,7 @@ function SpinePropertiesContent() {
       exit={{ opacity: 0, x: 18 }}
       transition={{ duration: 0.18, ease: [0.22, 1, 0.36, 1] }}
       aria-label="Cover spine properties"
-      className="absolute z-30 flex max-h-[min(56dvh,460px)] flex-col overflow-hidden rounded-card border border-line bg-surface shadow-panel max-lg:inset-x-3 max-lg:bottom-3 lg:bottom-4 lg:right-4 lg:top-4 lg:max-h-none lg:w-[300px]"
+      className="absolute z-30 flex max-h-[min(44dvh,420px)] flex-col overflow-hidden rounded-card border border-line bg-surface shadow-panel max-lg:inset-x-3 max-lg:bottom-3 lg:bottom-4 lg:right-4 lg:top-4 lg:max-h-none lg:w-[300px]"
     >
       <header className="flex shrink-0 items-start gap-2 border-b border-line px-3.5 py-3">
         <div className="flex min-w-0 flex-1 flex-col gap-0.5">
@@ -608,14 +1007,25 @@ function SpinePropertiesContent() {
             {spineText.trim() || "Blank spine"}
           </h2>
         </div>
-        <IconButton
-          icon={X}
-          label="Close properties"
-          tooltip="Close properties"
-          size="sm"
-          variant="ghost"
-          onClick={clearSelection}
-        />
+        <div className="flex shrink-0 items-center gap-0.5">
+          {isCompact ? (
+            <IconButton
+              icon={ChevronDown}
+              label="Collapse properties"
+              size="sm"
+              variant="ghost"
+              onClick={() => setMobileExpanded(false)}
+            />
+          ) : null}
+          <IconButton
+            icon={X}
+            label="Close properties"
+            tooltip="Close properties"
+            size="sm"
+            variant="ghost"
+            onClick={clearSelection}
+          />
+        </div>
       </header>
 
       <div className="min-h-0 flex-1 overflow-y-auto">

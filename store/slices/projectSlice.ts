@@ -4,6 +4,7 @@ import type { EditorStore, ProjectSlice } from "@/store/types";
 import { createSeedProject } from "@/lib/project";
 import { createId } from "@/lib/id";
 import { createCoverPage, createEndPaper, createPage } from "@/lib/project";
+import { deleteOriginalMediaBlob, extractAssetId } from "@/lib/mediaStorage";
 import { clamp, round } from "@/lib/units";
 
 export const MIN_TRIM_MM = 20;
@@ -221,12 +222,45 @@ export const createProjectSlice: StateCreator<
   },
 
   removeMediaAsset: (assetId) => {
+    get().removeMediaAssets([assetId]);
+  },
+
+  removeMediaAssets: (assetIds) => {
+    if (assetIds.length === 0) return;
+    const idSet = new Set(assetIds);
+    const currentLib = get().project.mediaLibrary ?? [];
+    const removedSrcs = new Set<string>();
+
+    for (const asset of currentLib) {
+      if (idSet.has(asset.id)) {
+        removedSrcs.add(asset.src);
+        const blobId = extractAssetId(asset.src) ?? asset.id;
+        void deleteOriginalMediaBlob(blobId);
+      }
+    }
+
+    get().pushHistory();
     set((state) => ({
       project: {
         ...state.project,
         mediaLibrary: (state.project.mediaLibrary ?? []).filter(
-          (item) => item.id !== assetId,
+          (item) => !idSet.has(item.id),
         ),
+        pages: state.project.pages.map((page) => ({
+          ...page,
+          elements: page.elements.map((el) =>
+            el.type === "image" && removedSrcs.has(el.src)
+              ? {
+                  ...el,
+                  src: "",
+                  alt: "",
+                  cropScale: 1,
+                  cropX: 0,
+                  cropY: 0,
+                }
+              : el,
+          ),
+        })),
       },
     }));
   },

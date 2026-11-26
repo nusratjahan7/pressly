@@ -2,8 +2,8 @@
 
 import { useEffect, useState } from "react";
 import type { Page, PageSize } from "@/types";
-import { useEditorStore } from "@/store";
 import { getCacheKey } from "@/lib/thumbnailCache";
+import { resolveMediaUrl } from "@/lib/mediaStorage";
 
 const SNAPSHOT_WIDTH = 132;
 const MAX_CACHE = 240;
@@ -136,10 +136,13 @@ async function renderPageSnapshot(
             y: py,
             width: pw,
             height: ph,
-            text: element.text,
-            fontFamily: element.fontFamily,
+            text:
+              element.textTransform === "uppercase"
+                ? element.text.toUpperCase()
+                : element.text,
+            fontFamily: `"${element.fontFamily}", "Montserrat", sans-serif`,
             fontSize: Math.max(1, ptToMm(element.fontSize) * scale),
-            fontStyle: element.fontWeight >= 600 ? "bold" : "normal",
+            fontStyle: `${element.fontStyle === "italic" ? "italic " : ""}${element.fontWeight}`,
             lineHeight: Math.max(0.8, element.lineHeight),
             letterSpacing: ptToMm(element.letterSpacing) * scale,
             fill: element.color,
@@ -311,12 +314,17 @@ async function renderPageSnapshot(
   }
 }
 
-function loadImage(src: string): Promise<HTMLImageElement> {
+async function loadImage(src: string): Promise<HTMLImageElement> {
+  const resolved = await resolveMediaUrl(src);
+  if (!resolved) throw new Error("Empty image source");
   return new Promise((resolve, reject) => {
     const image = new window.Image();
+    if (/^https?:\/\//i.test(resolved)) {
+      image.crossOrigin = "anonymous";
+    }
     image.onload = () => resolve(image);
     image.onerror = () => reject(new Error("Unable to load image"));
-    image.src = src;
+    image.src = resolved;
   });
 }
 

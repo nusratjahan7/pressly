@@ -58,6 +58,18 @@ export interface ImageElement extends ElementBase {
   cropX?: number;
   /** Vertical pan inside the frame (-1..1). */
   cropY?: number;
+  flipX?: boolean;
+  flipY?: boolean;
+  /** Image adjustments (100 = default for brightness/contrast/saturation, 0 for grayscale/blur). */
+  brightness?: number;
+  contrast?: number;
+  saturation?: number;
+  grayscale?: number;
+  blur?: number;
+  /** Border & drop shadow */
+  borderColor?: string;
+  borderWidth?: number;
+  shadow?: boolean;
 }
 
 export type TextAlign = "left" | "center" | "right";
@@ -69,6 +81,9 @@ export interface TextElement extends ElementBase {
   /** Font size in points. */
   fontSize: number;
   fontWeight: 400 | 500 | 600 | 700;
+  fontStyle?: "normal" | "italic";
+  textDecoration?: "none" | "underline";
+  textTransform?: "none" | "uppercase";
   color: string;
   align: TextAlign;
   lineHeight: number;
@@ -76,6 +91,15 @@ export interface TextElement extends ElementBase {
   letterSpacing: number;
   /** True while the frame still holds layout placeholder text. */
   isPlaceholder?: boolean;
+  /** Auto-resize box height to fit text, or fixed frame box with overflow indicator. */
+  boxMode?: "auto" | "fixed";
+  /** Text effects */
+  textShadow?: boolean;
+  textOutline?: boolean;
+  textOutlineColor?: string;
+  textHighlight?: string;
+  curvedText?: boolean;
+  curveRadius?: number;
 }
 
 export type ShapeKind = "rectangle" | "ellipse" | "line";
@@ -114,10 +138,14 @@ export type Element =
 
 export interface MediaAsset {
   id: string;
+  /** Original print-resolution source (`idb:<id>`, data URL, or URL). */
   src: string;
+  /** Lightweight client-generated thumbnail URL for grid UI. */
+  thumbSrc?: string;
   alt: string;
   width?: number;
   height?: number;
+  createdAt?: number;
 }
 
 export interface PageLayoutMeta {

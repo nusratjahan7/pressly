@@ -34,9 +34,43 @@ function getElementsSignature(page: Page) {
       element.zIndex,
     ];
     if (element.type === "text") {
-      parts.push(element.text, element.fontSize, element.color, element.align, element.fontWeight, element.lineHeight, element.letterSpacing, element.isPlaceholder ? 1 : 0);
+      parts.push(
+        element.text,
+        element.fontFamily,
+        element.fontSize,
+        element.color,
+        element.align,
+        element.fontWeight,
+        element.fontStyle ?? "normal",
+        element.textDecoration ?? "none",
+        element.textTransform ?? "none",
+        element.lineHeight,
+        element.letterSpacing,
+        element.isPlaceholder ? 1 : 0,
+        element.textHighlight ?? "",
+        element.textShadow ? 1 : 0,
+        element.textOutline ? 1 : 0,
+        element.curvedText ? element.curveRadius ?? 65 : 0,
+      );
     } else if (element.type === "image") {
-      parts.push(element.src.slice(0, 64), element.fit, element.radius, element.cropScale ?? 1, element.cropX ?? 0, element.cropY ?? 0);
+      parts.push(
+        element.src.slice(0, 64),
+        element.fit,
+        element.radius,
+        element.cropScale ?? 1,
+        element.cropX ?? 0,
+        element.cropY ?? 0,
+        element.flipX ? 1 : 0,
+        element.flipY ? 1 : 0,
+        element.brightness ?? 100,
+        element.contrast ?? 100,
+        element.saturation ?? 100,
+        element.grayscale ?? 0,
+        element.blur ?? 0,
+        element.borderWidth ?? 0,
+        element.borderColor ?? "",
+        element.shadow ? 1 : 0,
+      );
     } else if (element.type === "shape") {
       parts.push(element.shape, element.fill, element.stroke, element.strokeWidth, element.radius);
     } else if (element.type === "sticker") {

@@ -1,10 +1,14 @@
 "use client";
 
 import type { CSSProperties } from "react";
+import { useEffect, useState } from "react";
 import { Lock, QrCode } from "lucide-react";
 import type { Element, PageSize } from "@/types";
 import { useEditorStore } from "@/store";
 import { ELEMENT_TYPE_LABEL, getElementLabel } from "@/lib/elements";
+import { buildCssFilterString, resolveMediaUrl } from "@/lib/mediaStorage";
+import { ensureGoogleFontLoaded } from "@/lib/fonts";
+import { buildCurvedTextPath, DEFAULT_CURVE_ARC } from "@/lib/textCurve";
 import { ptToPx } from "@/lib/units";
 import { StickerArt } from "@/components/editor/canvas/StickerArt";
 import {
@@ -45,9 +49,120 @@ interface ElementViewProps {
   selected: boolean;
 }
 
+function ResolvedDomImage({
+  src,
+  alt,
+  style,
+}: {
+  src: string;
+  alt: string;
+  style: CSSProperties;
+}) {
+  const [resolved, setResolved] = useState(src.startsWith("idb:") ? "" : src);
+
+  useEffect(() => {
+    let cancelled = false;
+    void resolveMediaUrl(src).then((url) => {
+      if (!cancelled && url) setResolved(url);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [src]);
+
+  if (!resolved) {
+    return <div className="h-full w-full bg-[#eceef8]" />;
+  }
+
+  return (
+    // eslint-disable-next-line @next/next/no-img-element
+    <img
+      src={resolved}
+      alt={alt}
+      draggable={false}
+      className="h-full w-full select-none"
+      style={style}
+    />
+  );
+}
+
 function renderElementContent(element: Element, scale: number) {
   if (element.type === "text") {
+    ensureGoogleFontLoaded(element.fontFamily);
     const isPlaceholder = Boolean(element.isPlaceholder);
+    const displayText =
+      element.textTransform === "uppercase"
+        ? element.text.toUpperCase()
+        : element.text;
+    const hasHighlight =
+      Boolean(element.textHighlight) && element.textHighlight !== "transparent";
+
+    if (element.curvedText && displayText) {
+      const wPx = Math.max(10, element.width * scale);
+      const hPx = Math.max(10, element.height * scale);
+      const { d: pathD } = buildCurvedTextPath(
+        wPx,
+        hPx,
+        element.curveRadius ?? DEFAULT_CURVE_ARC,
+      );
+      const pathId = `curve-${element.id}`;
+      return (
+        <svg
+          width="100%"
+          height="100%"
+          viewBox={`0 0 ${wPx} ${hPx}`}
+          overflow="visible"
+          style={{
+            backgroundColor: hasHighlight ? element.textHighlight : undefined,
+          }}
+        >
+          <defs>
+            <path id={pathId} d={pathD} />
+          </defs>
+          <text
+            fill={element.color}
+            fontFamily={`"${element.fontFamily}", var(--font-montserrat), sans-serif`}
+            fontSize={ptToPx(element.fontSize, scale)}
+            fontWeight={element.fontWeight}
+            fontStyle={element.fontStyle ?? "normal"}
+            letterSpacing={ptToPx(element.letterSpacing, scale)}
+            textDecoration={element.textDecoration}
+            stroke={
+              element.textOutline
+                ? (element.textOutlineColor ?? "#5B65DC")
+                : undefined
+            }
+            strokeWidth={
+              element.textOutline
+                ? Math.max(0.7, ptToPx(element.fontSize, scale) * 0.08)
+                : 0
+            }
+            paintOrder="stroke"
+          >
+            <textPath
+              href={`#${pathId}`}
+              startOffset={
+                element.align === "center"
+                  ? "50%"
+                  : element.align === "right"
+                    ? "100%"
+                    : "0%"
+              }
+              textAnchor={
+                element.align === "center"
+                  ? "middle"
+                  : element.align === "right"
+                    ? "end"
+                    : "start"
+              }
+            >
+              {displayText}
+            </textPath>
+          </text>
+        </svg>
+      );
+    }
+
     return (
       <div
         className={cn(
@@ -58,13 +173,22 @@ function renderElementContent(element: Element, scale: number) {
           fontFamily: `"${element.fontFamily}", var(--font-montserrat), sans-serif`,
           fontSize: ptToPx(element.fontSize, scale),
           fontWeight: element.fontWeight,
+          fontStyle: element.fontStyle ?? "normal",
+          textDecoration: element.textDecoration ?? "none",
           lineHeight: element.lineHeight,
           letterSpacing: ptToPx(element.letterSpacing, scale),
           color: element.color,
           textAlign: element.align,
+          backgroundColor: hasHighlight ? element.textHighlight : undefined,
+          textShadow: element.textShadow
+            ? "0 2px 6px rgba(18, 32, 86, 0.35)"
+            : undefined,
+          WebkitTextStroke: element.textOutline
+            ? `${Math.max(0.6, ptToPx(element.fontSize, scale) * 0.06)}px ${element.textOutlineColor ?? "#FFFFFF"}`
+            : undefined,
         }}
       >
-        {element.text}
+        {displayText}
       </div>
     );
   }
@@ -83,21 +207,44 @@ function renderElementContent(element: Element, scale: number) {
     const cropScale = Math.max(1, element.cropScale ?? 1);
     const cropX = element.cropX ?? 0;
     const cropY = element.cropY ?? 0;
+    const filterCss = buildCssFilterString({
+      brightness: element.brightness,
+      contrast: element.contrast,
+      saturation: element.saturation,
+      grayscale: element.grayscale,
+      blur: element.blur ? element.blur * scale : 0,
+    });
+    const borderW = Math.max(0, (element.borderWidth ?? 0) * scale);
+    const hasBorder =
+      borderW > 0 && element.borderColor && element.borderColor !== "transparent";
+    const scaleX = (element.flipX ? -1 : 1) * cropScale;
+    const scaleY = (element.flipY ? -1 : 1) * cropScale;
+
     return (
       <div
         className="h-full w-full overflow-hidden"
-        style={{ borderRadius: Math.max(0, element.radius * scale) }}
+        style={{
+          borderRadius: Math.max(0, element.radius * scale),
+          border: hasBorder
+            ? `${borderW}px solid ${element.borderColor}`
+            : undefined,
+          boxShadow: element.shadow
+            ? "0 6px 16px rgba(18, 32, 86, 0.28)"
+            : undefined,
+          boxSizing: "border-box",
+        }}
       >
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
+        <ResolvedDomImage
           src={element.src}
           alt={element.alt || "Untitled image"}
-          draggable={false}
-          className="h-full w-full select-none"
           style={{
             objectFit: element.fit,
             objectPosition: `${50 - cropX * 50}% ${50 - cropY * 50}%`,
-            transform: cropScale > 1 ? `scale(${cropScale})` : undefined,
+            filter: filterCss || undefined,
+            transform:
+              scaleX !== 1 || scaleY !== 1
+                ? `scale(${scaleX}, ${scaleY})`
+                : undefined,
             transformOrigin: `${50 - cropX * 50}% ${50 - cropY * 50}%`,
           }}
         />

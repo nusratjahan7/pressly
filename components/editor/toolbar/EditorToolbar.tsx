@@ -1,7 +1,9 @@
 "use client";
 
-import { Download, Eye, Redo2, Undo2 } from "lucide-react";
+import { Download, Eye, Redo2, Type, Undo2 } from "lucide-react";
 import { useEditorStore } from "@/store";
+import { useActivePage } from "@/store/selectors";
+import { createTextElement } from "@/lib/elements";
 import { PresslyMark } from "@/components/editor/PresslyMark";
 import { ProjectNameField } from "@/components/editor/toolbar/ProjectNameField";
 import { PageSizeMenu } from "@/components/editor/toolbar/PageSizeMenu";
@@ -23,8 +25,34 @@ export function EditorToolbar() {
   const canRedo = useEditorStore((state) => state.history.future.length > 0);
   const setPreviewOpen = useEditorStore((state) => state.setPreviewOpen);
   const setExportOpen = useEditorStore((state) => state.setExportOpen);
+  const addElement = useEditorStore((state) => state.addElement);
+  const project = useEditorStore((state) => state.project);
+  const { page: activePage } = useActivePage();
 
   const mod = modKey();
+
+  const handleAddText = () => {
+    if (!activePage || activePage.isEndPaper || activePage.locked) return;
+    const w = Math.min(120, project.pageSize.w * 0.65);
+    addElement(
+      activePage.id,
+      createTextElement(
+        {
+          x: Math.round(((project.pageSize.w - w) / 2) * 10) / 10,
+          y: Math.round((project.pageSize.h * 0.25) * 10) / 10,
+          width: Math.round(w * 10) / 10,
+          height: 16,
+        },
+        {
+          text: "Double-click to edit",
+          fontSize: 22,
+          fontWeight: 600,
+          align: "center",
+          boxMode: "auto",
+        },
+      ),
+    );
+  };
 
   return (
     <header className="relative z-40 flex h-14 shrink-0 items-center gap-2 border-b border-line bg-surface px-2.5 sm:gap-3 sm:px-4">
@@ -79,6 +107,17 @@ export function EditorToolbar() {
         <div className="hidden md:block">
           <ZoomControl />
         </div>
+        <Button
+          variant="secondary"
+          size="sm"
+          className="h-8 gap-1 px-2 sm:px-2.5"
+          leadingIcon={Type}
+          onClick={handleAddText}
+          disabled={!activePage || activePage.isEndPaper || activePage.locked}
+          aria-label="Add text box"
+        >
+          <span className="hidden xl:inline">A+ Text</span>
+        </Button>
         <ThemeToggle />
         <Button
           variant="secondary"
@@ -93,7 +132,7 @@ export function EditorToolbar() {
         <Button
           variant="primary"
           size="sm"
-          className="h-8 gap-1.5 px-2.5 sm:px-3"
+          className="h-8 shrink-0 gap-1.5 whitespace-nowrap px-2.5 sm:px-3"
           leadingIcon={Download}
           onClick={() => setExportOpen(true)}
           aria-label="Download PDF"

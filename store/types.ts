@@ -71,6 +71,7 @@ export interface ProjectSlice {
   replaceProject: (project: Project) => void;
   addMediaAssets: (assets: MediaAsset[]) => void;
   removeMediaAsset: (assetId: string) => void;
+  removeMediaAssets: (assetIds: string[]) => void;
 }
 
 export interface PagesSlice {
@@ -101,6 +102,7 @@ export interface PagesSlice {
     patch: { gapMm?: number; marginMm?: number },
     options?: { commit?: boolean },
   ) => void;
+  autofillUnusedPhotos: () => number;
 }
 
 export interface ElementsSlice {

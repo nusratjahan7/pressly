@@ -526,4 +526,85 @@ export const createPagesSlice: StateCreator<
       }));
     }
   },
+
+  autofillUnusedPhotos: () => {
+    const state = get();
+    const pages = state.project.pages;
+    const library = state.project.mediaLibrary ?? [];
+
+    const usedSrcs = new Set<string>();
+    for (const p of pages) {
+      for (const el of p.elements) {
+        if (el.type === "image" && el.src) usedSrcs.add(el.src);
+      }
+    }
+
+    const unused = library.filter((asset) => asset.src && !usedSrcs.has(asset.src));
+    if (unused.length === 0) {
+      useToastStore.getState().pushToast({
+        message: "No unused photos to autofill.",
+      });
+      return 0;
+    }
+
+    // Walk editable pages in spread order, filling empty frames largest-first.
+    const emptyTargets: Array<{ pageId: string; elementId: string }> = [];
+    const spreads = getSpreads(pages);
+    for (const spread of spreads) {
+      for (const pageIndex of spread.pageIndices) {
+        const page = pages[pageIndex];
+        if (!page || page.isEndPaper || page.locked) continue;
+        const frames = page.elements
+          .filter((el): el is ImageElement => el.type === "image" && !el.src)
+          .sort((a, b) => b.width * b.height - a.width * a.height);
+        for (const frame of frames) {
+          emptyTargets.push({ pageId: page.id, elementId: frame.id });
+        }
+      }
+    }
+
+    if (emptyTargets.length === 0) {
+      useToastStore.getState().pushToast({
+        message: "No empty photo frames across pages. Apply a layout first.",
+      });
+      return 0;
+    }
+
+    const count = Math.min(unused.length, emptyTargets.length);
+    const assignments = new Map<string, { src: string; alt: string }>();
+    for (let i = 0; i < count; i += 1) {
+      const target = emptyTargets[i]!;
+      const asset = unused[i]!;
+      assignments.set(target.elementId, { src: asset.src, alt: asset.alt });
+    }
+
+    get().pushHistory();
+    set((current) => ({
+      project: {
+        ...current.project,
+        pages: current.project.pages.map((page) => ({
+          ...page,
+          elements: page.elements.map((el) => {
+            const photo = assignments.get(el.id);
+            if (!photo || el.type !== "image") return el;
+            return {
+              ...el,
+              src: photo.src,
+              alt: photo.alt,
+              fit: "cover",
+              cropScale: 1,
+              cropX: 0,
+              cropY: 0,
+            };
+          }),
+        })),
+      },
+    }));
+
+    useToastStore.getState().pushToast({
+      message: `Placed ${count} ${count === 1 ? "photo" : "photos"} into empty frames`,
+      action: { label: "Undo", onAct: () => get().undo() },
+    });
+    return count;
+  },
 });

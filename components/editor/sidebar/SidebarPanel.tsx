@@ -63,17 +63,19 @@ export function SidebarPanel() {
               className="relative z-20 shrink-0 overflow-hidden border-r border-line bg-surface"
             >
               <div className="flex h-full w-80 flex-col">
-                <header className="flex items-start justify-between gap-3 border-b border-line px-4 pb-3.5 pt-4">
-                  <div className="flex min-w-0 flex-col gap-1">
-                    <span className="text-[9.5px] font-semibold uppercase tracking-[0.16em] text-ink-subtle">
+                <header className="flex items-start justify-between gap-3 border-b border-line px-4 pb-2.5 pt-3">
+                  <div className="flex min-w-0 flex-col gap-0.5">
+                    <span className="text-[9px] font-semibold uppercase tracking-[0.16em] text-ink-subtle">
                       Library
                     </span>
-                    <h2 className="text-[14px] font-semibold leading-5 tracking-[-0.015em] text-ink">
+                    <h2 className="text-[13.5px] font-semibold leading-5 tracking-[-0.015em] text-ink">
                       {meta.title}
                     </h2>
-                    <p className="text-[11px] leading-4 text-ink-muted">
-                      {meta.description}
-                    </p>
+                    {activeTab !== "layouts" ? (
+                      <p className="text-[11px] leading-4 text-ink-muted">
+                        {meta.description}
+                      </p>
+                    ) : null}
                   </div>
                   <IconButton
                     icon={PanelLeftClose}

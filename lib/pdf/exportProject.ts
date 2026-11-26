@@ -6,8 +6,11 @@ import type {
   TextElement,
 } from "@/types";
 import { getBackground, type BackgroundPattern } from "@/lib/backgrounds";
+import { fetchFontBytesForPdf } from "@/lib/fonts";
+import { buildCssFilterString, resolveMediaUrl } from "@/lib/mediaStorage";
 import { getPdfExportPages } from "@/lib/spreads";
 import { getSticker, stickerToSvgString } from "@/lib/stickers";
+import { buildCurvedTextPath, DEFAULT_CURVE_ARC } from "@/lib/textCurve";
 import { mmToPt } from "@/lib/units";
 
 export interface PdfExportOptions {
@@ -126,12 +129,17 @@ function rotatedOrigin(
   return { x: originX, y: originY };
 }
 
-function loadImageElement(src: string): Promise<HTMLImageElement> {
+async function loadImageElement(src: string): Promise<HTMLImageElement> {
+  const resolved = await resolveMediaUrl(src);
+  if (!resolved) throw new Error("Empty image source");
   return new Promise((resolve, reject) => {
     const image = new Image();
+    if (/^https?:\/\//i.test(resolved)) {
+      image.crossOrigin = "anonymous";
+    }
     image.onload = () => resolve(image);
     image.onerror = () => reject(new Error("Unable to load image"));
-    image.src = src;
+    image.src = resolved;
   });
 }
 
@@ -177,6 +185,25 @@ async function rasterizeImage(
     const drawHeight = image.naturalHeight * scale;
     const panX = ((element.cropX ?? 0) * Math.max(0, drawWidth - targetWidth)) / 2;
     const panY = ((element.cropY ?? 0) * Math.max(0, drawHeight - targetHeight)) / 2;
+
+    const pxPerMm = targetWidth / Math.max(element.width, 1);
+    const filterStr = buildCssFilterString({
+      brightness: element.brightness,
+      contrast: element.contrast,
+      saturation: element.saturation,
+      grayscale: element.grayscale,
+      blur: element.blur ? element.blur * pxPerMm * 0.35 : 0,
+    });
+
+    context.save();
+    if (filterStr) context.filter = filterStr;
+    if (element.flipX || element.flipY) {
+      context.translate(
+        element.flipX ? targetWidth : 0,
+        element.flipY ? targetHeight : 0,
+      );
+      context.scale(element.flipX ? -1 : 1, element.flipY ? -1 : 1);
+    }
     context.imageSmoothingEnabled = true;
     context.imageSmoothingQuality = "high";
     context.drawImage(
@@ -186,6 +213,28 @@ async function rasterizeImage(
       drawWidth,
       drawHeight,
     );
+    context.restore();
+
+    if (
+      element.borderWidth &&
+      element.borderWidth > 0 &&
+      element.borderColor &&
+      element.borderColor !== "transparent"
+    ) {
+      const bw = element.borderWidth * pxPerMm;
+      context.save();
+      context.strokeStyle = element.borderColor;
+      context.lineWidth = bw;
+      if (radiusPx > 0) {
+        context.beginPath();
+        context.roundRect(bw / 2, bw / 2, targetWidth - bw, targetHeight - bw, radiusPx);
+        context.stroke();
+      } else {
+        context.strokeRect(bw / 2, bw / 2, targetWidth - bw, targetHeight - bw);
+      }
+      context.restore();
+    }
+
     return canvas.toDataURL("image/png");
   } catch {
     return null;
@@ -253,9 +302,35 @@ export async function createProjectPdf(
   options: PdfExportOptions = {},
 ): Promise<Uint8Array> {
   const { PDFDocument, StandardFonts, degrees } = await import("pdf-lib");
+  const fontkit = (await import("@pdf-lib/fontkit")).default;
   const document: PdfDocument = await PDFDocument.create();
+  document.registerFontkit(fontkit);
+
   const regular = await document.embedFont(StandardFonts.Helvetica);
   const bold = await document.embedFont(StandardFonts.HelveticaBold);
+  const embeddedFonts = new Map<string, PdfFont>();
+
+  const resolvePdfFont = async (
+    fontFamily: string,
+    weight: number,
+    italic: boolean,
+  ): Promise<PdfFont> => {
+    const key = `${fontFamily}:${weight}:${italic ? "i" : "n"}`;
+    const cached = embeddedFonts.get(key);
+    if (cached) return cached;
+
+    const bytes = await fetchFontBytesForPdf(fontFamily, weight, italic);
+    if (bytes) {
+      try {
+        const embedded = await document.embedFont(bytes, { subset: true });
+        embeddedFonts.set(key, embedded);
+        return embedded;
+      } catch {
+        /* fallback below */
+      }
+    }
+    return weight >= 600 ? bold : regular;
+  };
 
   const bleedMm = options.includeBleed ? project.pageSize.bleed : 0;
   const bleedPt = mmToPt(bleedMm);
@@ -366,17 +441,102 @@ export async function createProjectPdf(
       if (element.type === "text") {
         const text = element as TextElement;
         if (text.isPlaceholder) continue;
-        const font = text.fontWeight >= 600 ? bold : regular;
+        const isItalic = text.fontStyle === "italic";
+        const font = await resolvePdfFont(
+          text.fontFamily,
+          text.fontWeight,
+          isItalic,
+        );
         const fontSize = Math.max(1, text.fontSize);
         const lineHeight = fontSize * Math.max(0.8, text.lineHeight);
         const maxWidth = widthPt;
-        const lines = wrapTextLines(text.text, font, fontSize, maxWidth);
+        const contentText =
+          text.textTransform === "uppercase"
+            ? text.text.toUpperCase()
+            : text.text;
+        const lines = wrapTextLines(contentText, font, fontSize, maxWidth);
         const color = hexToRgb(text.color) ?? hexToRgb("#122056")!;
+        const highlight = text.textHighlight
+          ? hexToRgb(text.textHighlight)
+          : null;
+        if (highlight) {
+          const rectOrigin = rotatedOrigin(
+            originX,
+            topY - heightPt,
+            widthPt,
+            heightPt,
+            text.rotation,
+          );
+          pdfPage.drawRectangle({
+            x: rectOrigin.x,
+            y: rectOrigin.y,
+            width: widthPt,
+            height: heightPt,
+            color: highlight,
+            opacity: text.opacity,
+            rotate: rotation,
+          });
+        }
+
         const centerX = originX + widthPt / 2;
         const centerY = topY - heightPt / 2;
         const theta = (-text.rotation * Math.PI) / 180;
         const cos = Math.cos(theta);
         const sin = Math.sin(theta);
+
+        if (text.curvedText && contentText) {
+          const wPx = Math.min(MAX_RASTER_EDGE, Math.max(64, Math.round((text.width / 25.4) * PRINT_DPI)));
+          const hPx = Math.min(MAX_RASTER_EDGE, Math.max(64, Math.round((text.height / 25.4) * PRINT_DPI)));
+          const pxPerPt = wPx / Math.max(1, widthPt);
+          const fontSizePx = fontSize * pxPerPt;
+          const curvePath = buildCurvedTextPath(
+            wPx,
+            hPx,
+            text.curveRadius ?? DEFAULT_CURVE_ARC,
+          );
+          const padPx = Math.max(
+            0,
+            Math.ceil(fontSizePx * 1.6 - curvePath.minY),
+            Math.ceil(curvePath.maxY + fontSizePx * 1.6 - hPx),
+          );
+          const totalHPx = Math.min(MAX_RASTER_EDGE, hPx + 2 * padPx);
+          const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${wPx}" height="${totalHPx}" viewBox="0 ${-padPx} ${wPx} ${totalHPx}">
+            <defs><path id="c" d="${curvePath.d}"/></defs>
+            <text fill="${text.color}" font-family="${text.fontFamily}, sans-serif" font-size="${fontSizePx}" font-weight="${text.fontWeight}" font-style="${isItalic ? "italic" : "normal"}">
+              <textPath href="#c" startOffset="${text.align === "center" ? "50%" : text.align === "right" ? "100%" : "0%"}" text-anchor="${text.align === "center" ? "middle" : text.align === "right" ? "end" : "start"}">${contentText.replace(/&/g, "&amp;").replace(/</g, "&lt;")}</textPath>
+            </text>
+          </svg>`;
+          try {
+            const img = await loadImageElement(`data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`);
+            const canvas = window.document.createElement("canvas");
+            canvas.width = wPx;
+            canvas.height = totalHPx;
+            const ctx = canvas.getContext("2d");
+            if (ctx) {
+              ctx.drawImage(img, 0, 0, wPx, totalHPx);
+              const pngData = canvas.toDataURL("image/png").split(",")[1];
+              if (pngData) {
+                const png = await document.embedPng(pngData);
+                const padPt = padPx / pxPerPt;
+                const x = originX;
+                const y = topY - heightPt - padPt;
+                const drawHeightPt = heightPt + 2 * padPt;
+                const origin = rotatedOrigin(x, y, widthPt, drawHeightPt, text.rotation);
+                pdfPage.drawImage(png, {
+                  x: origin.x,
+                  y: origin.y,
+                  width: widthPt,
+                  height: drawHeightPt,
+                  opacity: text.opacity,
+                  rotate: rotation,
+                });
+                continue;
+              }
+            }
+          } catch {
+            /* fall back to standard text */
+          }
+        }
 
         lines.forEach((line, index) => {
           const lineWidth = font.widthOfTextAtSize(line, fontSize);
@@ -392,6 +552,18 @@ export async function createProjectPdf(
             y = centerY + offsetX * sin + offsetY * cos;
           }
 
+          if (text.textShadow) {
+            pdfPage.drawText(line, {
+              x: x + 1,
+              y: y - 1,
+              size: fontSize,
+              font,
+              color: hexToRgb("#122056")!,
+              opacity: text.opacity * 0.28,
+              rotate: text.rotation ? degrees(-text.rotation) : undefined,
+            });
+          }
+
           pdfPage.drawText(line, {
             x,
             y,
@@ -401,6 +573,16 @@ export async function createProjectPdf(
             opacity: text.opacity,
             rotate: text.rotation ? degrees(-text.rotation) : undefined,
           });
+
+          if (text.textDecoration === "underline" && lineWidth > 0) {
+            pdfPage.drawLine({
+              start: { x, y: y - Math.max(1, fontSize * 0.1) },
+              end: { x: x + lineWidth, y: y - Math.max(1, fontSize * 0.1) },
+              thickness: Math.max(0.6, fontSize * 0.06),
+              color,
+              opacity: text.opacity,
+            });
+          }
         });
         continue;
       }
@@ -415,6 +597,20 @@ export async function createProjectPdf(
         const x = originX;
         const y = topY - heightPt;
         const origin = rotatedOrigin(x, y, widthPt, heightPt, image.rotation);
+        if (image.shadow) {
+          const shadowRgb = hexToRgb("#122056");
+          if (shadowRgb) {
+            pdfPage.drawRectangle({
+              x: origin.x + 1.5,
+              y: origin.y - 2.5,
+              width: widthPt,
+              height: heightPt,
+              color: shadowRgb,
+              opacity: image.opacity * 0.16,
+              rotate: rotation,
+            });
+          }
+        }
         pdfPage.drawImage(png, {
           x: origin.x,
           y: origin.y,

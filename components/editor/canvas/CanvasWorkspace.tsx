@@ -6,7 +6,7 @@ import type { Element, ImageElement, TextElement } from "@/types";
 import { useEditorStore } from "@/store";
 import { useCurrentSpread } from "@/store/selectors";
 import { useElementSize } from "@/lib/useElementSize";
-import { formatDimensions, formatNumber } from "@/lib/units";
+import { formatDimensions, formatNumber, ptToPx, round } from "@/lib/units";
 import {
   getEditablePageCount,
   getPageLabel,
@@ -14,7 +14,12 @@ import {
 } from "@/lib/spreads";
 import { getCoverDisplaySpineWidth } from "@/lib/binding";
 import { DEFAULT_FRAME_GAP_MM, getLayoutById } from "@/lib/layouts";
-import { createImageElement } from "@/lib/elements";
+import { createImageElement, createTextElement } from "@/lib/elements";
+import {
+  generateClientThumbnail,
+  saveOriginalMediaBlob,
+} from "@/lib/mediaStorage";
+import { ensureGoogleFontLoaded } from "@/lib/fonts";
 import { createId } from "@/lib/id";
 import {
   getFitScale,
@@ -27,9 +32,10 @@ import {
   CropControlBar,
   FrameContextMenu,
   PhotoPickerModal,
-  QuickLayoutButton,
+  QuickPageActions,
   type ContextMenuState,
 } from "@/components/editor/canvas/CanvasOverlays";
+import { TextToolbar } from "@/components/editor/canvas/TextToolbar";
 import { EmptyState } from "@/components/editor/EmptyState";
 import { Button } from "@/components/ui/button";
 
@@ -83,7 +89,8 @@ export function CanvasWorkspace() {
     null,
   );
   const [editingText, setEditingText] = useState<{
-    element: TextElement;
+    elementId: string;
+    pageId: string;
     pageOffsetX: number;
     value: string;
   } | null>(null);
@@ -207,6 +214,65 @@ export function CanvasWorkspace() {
     return null;
   }, [croppingElementId, pages]);
 
+  const selectedTextContext = useMemo((): {
+    element: TextElement;
+    pageId: string;
+    pageOffsetX: number;
+  } | null => {
+    const targetId = editingText?.elementId ?? selectedElementId;
+    if (!targetId) return null;
+    for (let index = 0; index < pages.length; index += 1) {
+      const p = pages[index]!;
+      const found = p.elements.find(
+        (el): el is TextElement => el.id === targetId && el.type === "text",
+      );
+      if (found) {
+        return {
+          element: found,
+          pageId: p.id,
+          pageOffsetX: getPageOffsetX(index, layout),
+        };
+      }
+    }
+    return null;
+  }, [editingText?.elementId, selectedElementId, pages, layout]);
+
+  const addAndEditText = (pageId: string, localX?: number, localY?: number) => {
+    const indexInSpread = pages.findIndex((p) => p.id === pageId);
+    if (indexInSpread < 0) return;
+    const page = pages[indexInSpread]!;
+    if (page.isEndPaper || page.locked) return;
+
+    const w = Math.min(110, project.pageSize.w * 0.6);
+    const h = 16;
+    const x =
+      localX !== undefined
+        ? Math.max(4, Math.min(project.pageSize.w - w - 4, localX - w / 2))
+        : (project.pageSize.w - w) / 2;
+    const y =
+      localY !== undefined
+        ? Math.max(4, Math.min(project.pageSize.h - h - 4, localY - h / 2))
+        : project.pageSize.h * 0.25;
+
+    const created = createTextElement(
+      { x: round(x, 1), y: round(y, 1), width: round(w, 1), height: h },
+      {
+        text: "Your text here",
+        fontSize: 20,
+        fontWeight: 600,
+        align: "center",
+        boxMode: "auto",
+      },
+    );
+    addElement(pageId, created);
+    setEditingText({
+      elementId: created.id,
+      pageId,
+      pageOffsetX: getPageOffsetX(indexInSpread, layout),
+      value: created.text,
+    });
+  };
+
   const hitTestSpread = (clientX: number, clientY: number) => {
     if (!element) return null;
     const rect = element.getBoundingClientRect();
@@ -321,23 +387,39 @@ export function CanvasWorkspace() {
     }
 
     if (files && files.length > 0) {
-      const imageFile = Array.from(files).find((f) =>
-        f.type.startsWith("image/"),
+      const imageFile = Array.from(files).find(
+        (f) =>
+          f.type.startsWith("image/") ||
+          /\.(jpe?g|png|webp|gif|heic|heif)$/i.test(f.name),
       );
       if (!imageFile) return;
-      const src = await new Promise<string>((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = () => resolve(String(reader.result));
-        reader.onerror = () => reject(new Error("Unable to read image"));
-        reader.readAsDataURL(imageFile);
-      });
-      const alt =
-        imageFile.name
-          .replace(/\.[^.]+$/, "")
-          .replace(/[-_]+/g, " ")
-          .trim() || "Dropped image";
-      addMediaAssets([{ id: createId(), src, alt }]);
-      placePhoto({ src, alt });
+      try {
+        const assetId = createId();
+        const { thumbSrc, width, height } = await generateClientThumbnail(
+          imageFile,
+          320,
+        );
+        const src = await saveOriginalMediaBlob(assetId, imageFile);
+        const alt =
+          imageFile.name
+            .replace(/\.[^.]+$/, "")
+            .replace(/[-_]+/g, " ")
+            .trim() || "Dropped image";
+        addMediaAssets([
+          {
+            id: assetId,
+            src,
+            thumbSrc,
+            alt,
+            width,
+            height,
+            createdAt: Date.now(),
+          },
+        ]);
+        placePhoto({ src, alt });
+      } catch {
+        /* ignore undecodable file */
+      }
     }
   };
 
@@ -349,12 +431,30 @@ export function CanvasWorkspace() {
     if (frame.type === "text") {
       const pageIndexInSpread = pages.findIndex((p) => p.id === pageId);
       if (pageIndexInSpread < 0) return;
+      ensureGoogleFontLoaded(frame.fontFamily);
       setEditingText({
-        element: frame,
+        elementId: frame.id,
+        pageId,
         pageOffsetX: getPageOffsetX(pageIndexInSpread, layout),
         value: frame.isPlaceholder ? "" : frame.text,
       });
     }
+  };
+
+  const commitInlineText = (value: string) => {
+    if (!editingText) return;
+    const trimmed = value.trim();
+    updateElement(editingText.elementId, {
+      text: trimmed.length > 0 ? value : "text",
+      color:
+        trimmed.length > 0
+          ? selectedTextContext?.element.isPlaceholder
+            ? "#122056"
+            : (selectedTextContext?.element.color ?? "#122056")
+          : "#D4A3B8",
+      isPlaceholder: trimmed.length === 0,
+    });
+    setEditingText(null);
   };
 
   const spineCenterLeft =
@@ -430,10 +530,15 @@ export function CanvasWorkspace() {
           animPageIds={layoutAnimPageIds}
           onSelectPage={(id) => {
             setCroppingElementId(null);
+            setEditingText(null);
             selectPage(id);
+          }}
+          onDoubleClickEmptyPage={(pageId, localX, localY) => {
+            addAndEditText(pageId, localX, localY);
           }}
           onSelectSpine={() => {
             setCroppingElementId(null);
+            setEditingText(null);
             selectSpine();
           }}
           onEditSpine={openSpineEditor}
@@ -442,6 +547,7 @@ export function CanvasWorkspace() {
             setCroppingElementId(null);
             setQuickLayoutPageId(null);
             setContextMenu(null);
+            setEditingText(null);
             clearSelection();
           }}
           onOpenPhotoPicker={(elementId) => setPhotoPickerElementId(elementId)}
@@ -469,7 +575,7 @@ export function CanvasWorkspace() {
         </div>
       ) : null}
 
-      {/* Quick "layout" buttons beside each editable page */}
+      {/* Quick "A+ text" & "layout" buttons beside each editable page */}
       {ready
         ? pages.map((page, index) => {
             if (page.isEndPaper || page.locked) return null;
@@ -482,23 +588,52 @@ export function CanvasWorkspace() {
                     transform.panX + layout.spreadWidth * transform.scale + 10,
                   );
             return (
-              <QuickLayoutButton
-                key={`quick-layout-${page.id}`}
+              <QuickPageActions
+                key={`quick-actions-${page.id}`}
                 page={page}
                 pageSize={project.pageSize}
                 side={side}
                 topPx={spreadTopPx}
                 anchorXPx={anchorXPx}
-                open={quickLayoutPageId === page.id}
-                onToggle={() =>
+                layoutOpen={quickLayoutPageId === page.id}
+                onToggleLayout={() =>
                   setQuickLayoutPageId((prev) =>
                     prev === page.id ? null : page.id,
                   )
                 }
-                onClose={() => setQuickLayoutPageId(null)}
+                onCloseLayout={() => setQuickLayoutPageId(null)}
+                onAddText={() => addAndEditText(page.id)}
               />
             );
           })
+        : null}
+
+      {/* Floating Text Toolbar when any text element is selected or edited inline */}
+      {ready && selectedTextContext
+        ? (() => {
+            const elTopPx =
+              transform.panY + selectedTextContext.element.y * transform.scale;
+            const elBottomPx =
+              transform.panY +
+              (selectedTextContext.element.y +
+                selectedTextContext.element.height) *
+                transform.scale;
+            const placeBelow = elTopPx < 104;
+            const anchorTopPx = placeBelow
+              ? Math.min(size.height - 64, elBottomPx + 14)
+              : elTopPx - 14;
+
+            return (
+              <TextToolbar
+                element={selectedTextContext.element}
+                pageId={selectedTextContext.pageId}
+                pageWidthMm={project.pageSize.w}
+                pageHeightMm={project.pageSize.h}
+                anchorTopPx={anchorTopPx}
+                placeBelow={placeBelow}
+              />
+            );
+          })()
         : null}
 
       {/* Inline spine editor */}
@@ -531,49 +666,90 @@ export function CanvasWorkspace() {
         </div>
       ) : null}
 
-      {/* Inline text frame editor on double-click */}
-      {editingText ? (
+      {/* Inline text editor directly over the canvas element */}
+      {editingText && selectedTextContext ? (
         <div
-          className="absolute z-20 rounded-field border border-accent bg-surface p-1 shadow-panel"
+          className="absolute z-20 rounded-[2px] border border-accent bg-surface/95 shadow-sm"
           style={{
             left:
               transform.panX +
-              (editingText.pageOffsetX + editingText.element.x) *
+              (editingText.pageOffsetX + selectedTextContext.element.x) *
                 transform.scale,
-            top: transform.panY + editingText.element.y * transform.scale,
+            top:
+              transform.panY + selectedTextContext.element.y * transform.scale,
             width: Math.max(
-              140,
-              editingText.element.width * transform.scale,
+              90,
+              selectedTextContext.element.width * transform.scale,
+            ),
+            minHeight: Math.max(
+              28,
+              selectedTextContext.element.height * transform.scale,
             ),
           }}
           onPointerDown={(event) => event.stopPropagation()}
         >
           <textarea
             autoFocus
-            rows={2}
             value={editingText.value}
-            placeholder="Enter text…"
-            onChange={(event) =>
+            placeholder="Type here…"
+            onChange={(event) => {
+              const val = event.target.value;
               setEditingText((prev) =>
-                prev ? { ...prev, value: event.target.value } : null,
-              )
-            }
-            onBlur={() => {
-              const trimmed = editingText.value;
-              updateElement(editingText.element.id, {
-                text: trimmed.trim().length > 0 ? trimmed : "text",
-                color: trimmed.trim().length > 0 ? "#122056" : "#D4A3B8",
-                isPlaceholder: trimmed.trim().length === 0,
-              });
-              setEditingText(null);
+                prev ? { ...prev, value: val } : null,
+              );
+              const el = selectedTextContext.element;
+              const patch: Partial<TextElement> = {
+                text: val,
+                isPlaceholder: false,
+              };
+              if (el.boxMode !== "fixed") {
+                const approxHeightMm = Math.max(
+                  10,
+                  round(
+                    event.target.scrollHeight / Math.max(transform.scale, 0.1),
+                    1,
+                  ),
+                );
+                if (Math.abs(approxHeightMm - el.height) > 1) {
+                  patch.height = approxHeightMm;
+                }
+              }
+              updateElement(el.id, patch, { commit: false });
             }}
+            onBlur={() => commitInlineText(editingText.value)}
             onKeyDown={(event) => {
               if (event.key === "Escape") {
                 event.preventDefault();
-                setEditingText(null);
+                commitInlineText(editingText.value);
               }
             }}
-            className="w-full resize-none rounded-[6px] border border-line bg-surface-muted/40 px-2 py-1 text-[12px] text-ink outline-none focus:border-accent"
+            style={{
+              fontFamily: `"${selectedTextContext.element.fontFamily}", var(--font-montserrat), sans-serif`,
+              fontSize: ptToPx(
+                selectedTextContext.element.fontSize,
+                transform.scale,
+              ),
+              fontWeight: selectedTextContext.element.fontWeight,
+              fontStyle: selectedTextContext.element.fontStyle ?? "normal",
+              textDecoration:
+                selectedTextContext.element.textDecoration ?? "none",
+              textTransform:
+                selectedTextContext.element.textTransform ?? "none",
+              lineHeight: selectedTextContext.element.lineHeight,
+              letterSpacing: ptToPx(
+                selectedTextContext.element.letterSpacing,
+                transform.scale,
+              ),
+              color: selectedTextContext.element.isPlaceholder
+                ? "#122056"
+                : selectedTextContext.element.color,
+              textAlign: selectedTextContext.element.align,
+              minHeight: Math.max(
+                28,
+                selectedTextContext.element.height * transform.scale,
+              ),
+            }}
+            className="w-full resize-none bg-transparent p-0.5 outline-none"
           />
         </div>
       ) : null}

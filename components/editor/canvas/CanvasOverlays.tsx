@@ -19,6 +19,11 @@ import {
   getRelevantLayouts,
   type LayoutDefinition,
 } from "@/lib/layouts";
+import {
+  generateClientThumbnail,
+  resolveMediaUrl,
+  saveOriginalMediaBlob,
+} from "@/lib/mediaStorage";
 import { createId } from "@/lib/id";
 import { LayoutWireframe } from "@/components/editor/sidebar/panels/LayoutWireframe";
 import { Modal } from "@/components/ui/modal";
@@ -33,24 +38,26 @@ export interface ContextMenuState {
   y: number;
 }
 
-export function QuickLayoutButton({
+export function QuickPageActions({
   page,
   pageSize,
   side,
   topPx,
   anchorXPx,
-  open,
-  onToggle,
-  onClose,
+  layoutOpen,
+  onToggleLayout,
+  onCloseLayout,
+  onAddText,
 }: {
   page: Page;
   pageSize: PageSize;
   side: "left" | "right";
   topPx: number;
   anchorXPx: number;
-  open: boolean;
-  onToggle: () => void;
-  onClose: () => void;
+  layoutOpen: boolean;
+  onToggleLayout: () => void;
+  onCloseLayout: () => void;
+  onAddText: () => void;
 }) {
   const applyLayout = useEditorStore((state) => state.applyLayout);
 
@@ -73,12 +80,12 @@ export function QuickLayoutButton({
       gapMm: page.layoutMeta?.gapMm ?? DEFAULT_FRAME_GAP_MM,
       marginMm: page.layoutMeta?.marginMm ?? pageSize.safeMargin,
     });
-    onClose();
+    onCloseLayout();
   };
 
   return (
     <div
-      className="pointer-events-auto absolute z-20"
+      className="pointer-events-auto absolute z-20 flex flex-col gap-1.5"
       style={{
         top: topPx,
         left: anchorXPx,
@@ -88,67 +95,79 @@ export function QuickLayoutButton({
     >
       <button
         type="button"
-        onClick={onToggle}
-        aria-expanded={open}
-        aria-label="Quick layouts"
-        className={cn(
-          "flex flex-col items-center gap-0.5 rounded-field border border-line bg-surface/95 px-2 py-1.5 text-[10px] font-medium text-ink shadow-sm backdrop-blur transition-colors hover:border-accent hover:text-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent",
-          open && "border-accent text-accent",
-        )}
+        onClick={onAddText}
+        aria-label="Add text box"
+        className="flex flex-col items-center gap-0.5 rounded-field border border-line bg-surface/95 px-2 py-1.5 text-[10px] font-medium text-ink shadow-sm backdrop-blur transition-colors hover:border-accent hover:text-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
       >
-        <LayoutGrid className="size-3.5" aria-hidden="true" />
-        <span>layout</span>
+        <span className="text-[11px] font-bold leading-none">A+</span>
+        <span>text</span>
       </button>
 
-      {open ? (
-        <div
-          role="dialog"
-          aria-label="Relevant layouts"
+      <div className="relative">
+        <button
+          type="button"
+          onClick={onToggleLayout}
+          aria-expanded={layoutOpen}
+          aria-label="Quick layouts"
           className={cn(
-            "absolute top-0 z-30 w-56 rounded-card border border-line bg-surface p-2.5 shadow-panel",
-            side === "left" ? "left-full ml-2" : "right-full mr-2",
+            "flex w-full flex-col items-center gap-0.5 rounded-field border border-line bg-surface/95 px-2 py-1.5 text-[10px] font-medium text-ink shadow-sm backdrop-blur transition-colors hover:border-accent hover:text-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent",
+            layoutOpen && "border-accent text-accent",
           )}
         >
-          <div className="mb-2 flex items-center justify-between">
-            <span className="text-[9.5px] font-semibold uppercase tracking-[0.12em] text-ink-subtle">
-              Quick layouts ({photoCount}{" "}
-              {photoCount === 1 ? "photo" : "photos"})
-            </span>
-            <button
-              type="button"
-              onClick={onClose}
-              aria-label="Close quick layouts"
-              className="rounded p-0.5 text-ink-subtle hover:bg-surface-muted hover:text-ink"
-            >
-              <X className="size-3" />
-            </button>
+          <LayoutGrid className="size-3.5" aria-hidden="true" />
+          <span>layout</span>
+        </button>
+
+        {layoutOpen ? (
+          <div
+            role="dialog"
+            aria-label="Relevant layouts"
+            className={cn(
+              "absolute top-0 z-30 w-56 rounded-card border border-line bg-surface p-2.5 shadow-panel",
+              side === "left" ? "left-full ml-2" : "right-full mr-2",
+            )}
+          >
+            <div className="mb-2 flex items-center justify-between">
+              <span className="text-[9.5px] font-semibold uppercase tracking-[0.12em] text-ink-subtle">
+                Quick layouts ({photoCount}{" "}
+                {photoCount === 1 ? "photo" : "photos"})
+              </span>
+              <button
+                type="button"
+                onClick={onCloseLayout}
+                aria-label="Close quick layouts"
+                className="rounded p-0.5 text-ink-subtle hover:bg-surface-muted hover:text-ink"
+              >
+                <X className="size-3" />
+              </button>
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              {relevant.map((layout) => {
+                const active = page.layoutMeta?.layoutId === layout.id;
+                return (
+                  <button
+                    key={layout.id}
+                    type="button"
+                    onClick={() => handleSelect(layout)}
+                    aria-label={`Apply ${layout.name}`}
+                    className={cn(
+                      "flex items-center justify-center rounded-[6px] border bg-white p-1.5 transition-colors hover:border-accent",
+                      active ? "border-accent ring-1 ring-accent" : "border-line",
+                    )}
+                  >
+                    <LayoutWireframe
+                      layout={layout}
+                      pageSize={pageSize}
+                      maxWidth={68}
+                      maxHeight={56}
+                    />
+                  </button>
+                );
+              })}
+            </div>
           </div>
-          <div className="grid grid-cols-2 gap-2">
-            {relevant.map((layout) => {
-              const active = page.layoutMeta?.layoutId === layout.id;
-              return (
-                <button
-                  key={layout.id}
-                  type="button"
-                  onClick={() => handleSelect(layout)}
-                  aria-label={`Apply ${layout.name}`}
-                  className={cn(
-                    "flex items-center justify-center rounded-[6px] border bg-white p-1.5 transition-colors hover:border-accent",
-                    active ? "border-accent ring-1 ring-accent" : "border-line",
-                  )}
-                >
-                  <LayoutWireframe
-                    layout={layout}
-                    pageSize={pageSize}
-                    maxWidth={68}
-                    maxHeight={56}
-                  />
-                </button>
-              );
-            })}
-          </div>
-        </div>
-      ) : null}
+        ) : null}
+      </div>
     </div>
   );
 }
@@ -272,6 +291,40 @@ export function FrameContextMenu({
   );
 }
 
+function PickerThumb({
+  src,
+  thumbSrc,
+  alt,
+}: {
+  src: string;
+  thumbSrc?: string;
+  alt: string;
+}) {
+  const [url, setUrl] = useState(thumbSrc || (src.startsWith("idb:") ? "" : src));
+  useEffect(() => {
+    if (thumbSrc) {
+      setUrl(thumbSrc);
+      return;
+    }
+    let cancelled = false;
+    void resolveMediaUrl(src).then((next) => {
+      if (!cancelled && next) setUrl(next);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [src, thumbSrc]);
+  if (!url) return <div className="h-full w-full animate-pulse bg-surface-muted" />;
+  return (
+    // eslint-disable-next-line @next/next/no-img-element
+    <img
+      src={url}
+      alt={alt}
+      className="h-full w-full object-cover transition-transform duration-150 group-hover:scale-[1.03]"
+    />
+  );
+}
+
 export function PhotoPickerModal({
   targetElementId,
   onClose,
@@ -296,12 +349,16 @@ export function PhotoPickerModal({
   }, [project.pages]);
 
   const photos = useMemo(() => {
-    const bySrc = new Map<string, { id: string; src: string; alt: string; used: boolean }>();
+    const bySrc = new Map<
+      string,
+      { id: string; src: string; thumbSrc?: string; alt: string; used: boolean }
+    >();
     for (const asset of project.mediaLibrary ?? []) {
       if (!asset.src) continue;
       bySrc.set(asset.src, {
         id: asset.id,
         src: asset.src,
+        thumbSrc: asset.thumbSrc,
         alt: asset.alt,
         used: usedSrcs.has(asset.src),
       });
@@ -324,25 +381,41 @@ export function PhotoPickerModal({
 
   const handleUpload = async (files: FileList | null) => {
     if (!files || !targetElementId) return;
-    const valid = Array.from(files).filter((f) => f.type.startsWith("image/"));
+    const valid = Array.from(files).filter(
+      (f) =>
+        f.type.startsWith("image/") ||
+        /\.(jpe?g|png|webp|gif|heic|heif)$/i.test(f.name),
+    );
     if (valid.length === 0) return;
 
     setBusy(true);
     try {
       const assets: MediaAsset[] = [];
       for (const file of valid.slice(0, 12)) {
-        const src = await new Promise<string>((resolve, reject) => {
-          const reader = new FileReader();
-          reader.onload = () => resolve(String(reader.result));
-          reader.onerror = () => reject(new Error("Read error"));
-          reader.readAsDataURL(file);
-        });
-        const alt =
-          file.name
-            .replace(/\.[^.]+$/, "")
-            .replace(/[-_]+/g, " ")
-            .trim() || "Untitled image";
-        assets.push({ id: createId(), src, alt });
+        try {
+          const assetId = createId();
+          const { thumbSrc, width, height } = await generateClientThumbnail(
+            file,
+            320,
+          );
+          const src = await saveOriginalMediaBlob(assetId, file);
+          const alt =
+            file.name
+              .replace(/\.[^.]+$/, "")
+              .replace(/[-_]+/g, " ")
+              .trim() || "Untitled image";
+          assets.push({
+            id: assetId,
+            src,
+            thumbSrc,
+            alt,
+            width,
+            height,
+            createdAt: Date.now(),
+          });
+        } catch {
+          /* skip undecodable file */
+        }
       }
       if (assets.length > 0) {
         addMediaAssets(assets);
@@ -369,7 +442,7 @@ export function PhotoPickerModal({
           <input
             ref={inputRef}
             type="file"
-            accept="image/png,image/jpeg,image/webp,image/gif"
+            accept="image/png,image/jpeg,image/webp,image/gif,image/heic,image/heif,.heic,.heif"
             multiple
             className="sr-only"
             onChange={(event) => void handleUpload(event.target.files)}
@@ -419,11 +492,10 @@ export function PhotoPickerModal({
               }}
               className="group relative aspect-square overflow-hidden rounded-field border border-line bg-surface-muted text-left hover:border-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
             >
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
+              <PickerThumb
                 src={photo.src}
+                thumbSrc={photo.thumbSrc}
                 alt={photo.alt || "Photo"}
-                className="h-full w-full object-cover transition-transform duration-150 group-hover:scale-[1.03]"
               />
               <span
                 className={cn(
