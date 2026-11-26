@@ -57,6 +57,36 @@ export function KeyboardShortcuts() {
         return;
       }
 
+      if (mod && key === "g") {
+        const ids = state.selection.elementIds;
+        if (ids.length >= 2) {
+          event.preventDefault();
+          if (event.shiftKey) state.ungroupElements(ids);
+          else state.groupElements(ids);
+        } else if (ids.length === 1 && event.shiftKey) {
+          event.preventDefault();
+          state.ungroupElements(ids);
+        }
+        return;
+      }
+
+      if (mod && key === "a") {
+        const pageId = state.selection.pageId;
+        const page = pageId
+          ? state.project.pages.find((p) => p.id === pageId)
+          : undefined;
+        if (page && !page.isEndPaper && !page.locked) {
+          const unlockedIds = page.elements
+            .filter((el) => !el.locked)
+            .map((el) => el.id);
+          if (unlockedIds.length > 0) {
+            event.preventDefault();
+            state.selectElements(page.id, unlockedIds);
+          }
+        }
+        return;
+      }
+
       if (event.key === "PageDown") {
         event.preventDefault();
         state.nextSpread();
@@ -74,14 +104,15 @@ export function KeyboardShortcuts() {
       }
 
       if (event.key === "Delete" || event.key === "Backspace") {
-        const selectedId = state.selection.elementId;
-        if (!selectedId) return;
-        const element = state.project.pages
-          .flatMap((page) => page.elements)
-          .find((candidate) => candidate.id === selectedId);
-        if (!element || element.locked) return;
+        const ids =
+          state.selection.elementIds.length > 0
+            ? state.selection.elementIds
+            : state.selection.elementId
+              ? [state.selection.elementId]
+              : [];
+        if (ids.length === 0) return;
         event.preventDefault();
-        state.removeElement(selectedId);
+        state.removeElements(ids);
       }
     };
 

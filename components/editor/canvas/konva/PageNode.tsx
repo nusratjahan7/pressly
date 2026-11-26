@@ -29,6 +29,7 @@ interface PageNodeProps {
   showSafeMargin: boolean;
   showBleed: boolean;
   selectedElementId?: string | null;
+  selectedElementIds?: string[];
   swapTargetElementId?: string | null;
   croppingElementId?: string | null;
   dropHighlight?: boolean;
@@ -64,6 +65,7 @@ export function PageNode({
   showSafeMargin,
   showBleed,
   selectedElementId = null,
+  selectedElementIds = [],
   swapTargetElementId = null,
   croppingElementId = null,
   dropHighlight = false,
@@ -154,7 +156,11 @@ export function PageNode({
                 pageOffsetX={0}
                 pageWidth={pageSize.w}
                 pageHeight={pageSize.h}
-                selected={selectedElementId === element.id}
+                selected={
+                  selectedElementIds.length > 0
+                    ? selectedElementIds.includes(element.id)
+                    : selectedElementId === element.id
+                }
                 decorative={isLocked}
                 isLargestEmpty={element.id === largestEmptyId}
                 isSwapTarget={element.id === swapTargetElementId}

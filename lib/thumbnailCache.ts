@@ -32,6 +32,8 @@ function getElementsSignature(page: Page) {
       element.rotation,
       element.opacity,
       element.zIndex,
+      element.flipX ? 1 : 0,
+      element.flipY ? 1 : 0,
     ];
     if (element.type === "text") {
       parts.push(
@@ -72,11 +74,34 @@ function getElementsSignature(page: Page) {
         element.shadow ? 1 : 0,
       );
     } else if (element.type === "shape") {
-      parts.push(element.shape, element.fill, element.stroke, element.strokeWidth, element.radius);
+      parts.push(
+        element.shape,
+        element.fill,
+        element.fillGradient?.enabled ? 1 : 0,
+        element.fillGradient?.from ?? "",
+        element.fillGradient?.to ?? "",
+        element.fillGradient?.angle ?? 0,
+        element.stroke,
+        element.strokeWidth,
+        element.radius,
+        element.sides ?? 0,
+        element.innerRadiusRatio ?? 0,
+        element.shadow ? 1 : 0,
+      );
     } else if (element.type === "sticker") {
-      parts.push(element.stickerId, element.color);
+      parts.push(
+        element.stickerId,
+        element.color,
+        element.src ?? "",
+        element.shadow ? 1 : 0,
+      );
     } else if (element.type === "qr") {
-      parts.push(element.value, element.foreground, element.background);
+      parts.push(
+        element.value,
+        element.foreground,
+        element.background,
+        element.errorCorrection,
+      );
     }
     const row = parts.join(",");
     for (let index = 0; index < row.length; index += 1) {

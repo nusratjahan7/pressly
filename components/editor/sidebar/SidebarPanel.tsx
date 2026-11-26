@@ -45,6 +45,7 @@ export function SidebarPanel() {
   const sidebarOpen = useEditorStore((state) => state.ui.sidebarOpen);
   const setSidebarOpen = useEditorStore((state) => state.setSidebarOpen);
   const isTablet = useMediaQuery("(max-width: 1023px)");
+  const isCompactDesktop = useMediaQuery("(max-width: 1279px)");
   const meta = SIDEBAR_META[activeTab];
 
   const close = () => setSidebarOpen(false);
@@ -57,12 +58,12 @@ export function SidebarPanel() {
             <motion.aside
               key="sidebar-panel"
               initial={{ width: 0, opacity: 0 }}
-              animate={{ width: 320, opacity: 1 }}
+              animate={{ width: isCompactDesktop ? 268 : 320, opacity: 1 }}
               exit={{ width: 0, opacity: 0 }}
               transition={{ duration: 0.18, ease: [0.22, 1, 0.36, 1] }}
               className="relative z-20 shrink-0 overflow-hidden border-r border-line bg-surface"
             >
-              <div className="flex h-full w-80 flex-col">
+              <div className="flex h-full w-[268px] flex-col xl:w-80">
                 <header className="flex items-start justify-between gap-3 border-b border-line px-4 pb-2.5 pt-3">
                   <div className="flex min-w-0 flex-col gap-0.5">
                     <span className="text-[9px] font-semibold uppercase tracking-[0.16em] text-ink-subtle">
@@ -93,7 +94,7 @@ export function SidebarPanel() {
                   aria-labelledby={`tab-${activeTab}`}
                   className={cn(
                     "min-h-0 flex-1",
-                    activeTab === "layouts"
+                    activeTab === "layouts" || activeTab === "stickers"
                       ? "flex flex-col overflow-hidden"
                       : "overflow-y-auto px-4 py-4",
                   )}
@@ -121,7 +122,7 @@ export function SidebarPanel() {
             role="tabpanel"
             aria-labelledby={`tab-${activeTab}`}
             className={
-              activeTab === "layouts"
+              activeTab === "layouts" || activeTab === "stickers"
                 ? "flex h-[72dvh] flex-col overflow-hidden"
                 : "px-4 py-4"
             }

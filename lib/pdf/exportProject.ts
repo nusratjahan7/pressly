@@ -1,6 +1,7 @@
 import type {
   ImageElement,
   Project,
+  QrElement,
   ShapeElement,
   StickerElement,
   TextElement,
@@ -8,8 +9,19 @@ import type {
 import { getBackground, type BackgroundPattern } from "@/lib/backgrounds";
 import { fetchFontBytesForPdf } from "@/lib/fonts";
 import { buildCssFilterString, resolveMediaUrl } from "@/lib/mediaStorage";
+import { getQrMatrix } from "@/lib/qr";
+import {
+  getGradientPoints,
+  getPolygonPoints,
+  getStarPoints,
+  pointsToSvgPath,
+} from "@/lib/shapes";
 import { getPdfExportPages } from "@/lib/spreads";
-import { getSticker, stickerToSvgString } from "@/lib/stickers";
+import {
+  getSticker,
+  loadCustomStickers,
+  stickerToSvgString,
+} from "@/lib/stickers";
 import { buildCurvedTextPath, DEFAULT_CURVE_ARC } from "@/lib/textCurve";
 import { mmToPt } from "@/lib/units";
 
@@ -245,24 +257,137 @@ async function rasterizeSticker(
   element: StickerElement,
 ): Promise<string | null> {
   try {
-    const size = Math.min(
+    const wPx = Math.min(
       MAX_RASTER_EDGE,
-      Math.max(
-        64,
-        Math.round((Math.max(element.width, element.height) / 25.4) * PRINT_DPI),
-      ),
+      Math.max(64, Math.round((element.width / 25.4) * PRINT_DPI)),
+    );
+    const hPx = Math.min(
+      MAX_RASTER_EDGE,
+      Math.max(64, Math.round((element.height / 25.4) * PRINT_DPI)),
     );
     const definition = getSticker(element.stickerId);
-    const svg = stickerToSvgString(definition.id, element.color, size);
-    const image = await loadImageElement(
+    const customSrc =
+      element.src ??
+      loadCustomStickers().find((c) => c.id === element.stickerId)?.src ??
+      (definition.format === "png" ? definition.src : undefined);
+
+    const image = customSrc
+      ? await loadImageElement(customSrc)
+      : await loadImageElement(
+          `data:image/svg+xml;charset=utf-8,${encodeURIComponent(
+            stickerToSvgString(definition.id, element.color, Math.max(wPx, hPx)),
+          )}`,
+        );
+
+    const canvas = document.createElement("canvas");
+    canvas.width = wPx;
+    canvas.height = hPx;
+    const context = canvas.getContext("2d");
+    if (!context) return null;
+
+    const natW = Math.max(1, image.naturalWidth || wPx);
+    const natH = Math.max(1, image.naturalHeight || hPx);
+    const scale = Math.min(wPx / natW, hPx / natH);
+    const drawW = natW * scale;
+    const drawH = natH * scale;
+
+    context.save();
+    if (element.flipX || element.flipY) {
+      context.translate(element.flipX ? wPx : 0, element.flipY ? hPx : 0);
+      context.scale(element.flipX ? -1 : 1, element.flipY ? -1 : 1);
+    }
+    if (element.shadow) {
+      context.shadowColor = "rgba(18,32,86,0.34)";
+      context.shadowBlur = Math.max(6, Math.min(wPx, hPx) * 0.04);
+      context.shadowOffsetX = 3;
+      context.shadowOffsetY = 5;
+    }
+    context.imageSmoothingEnabled = true;
+    context.imageSmoothingQuality = "high";
+    context.drawImage(
+      image,
+      (wPx - drawW) / 2,
+      (hPx - drawH) / 2,
+      drawW,
+      drawH,
+    );
+    context.restore();
+    return canvas.toDataURL("image/png");
+  } catch {
+    return null;
+  }
+}
+
+async function rasterizeShapeWithGradientOrComplex(
+  shape: ShapeElement,
+): Promise<string | null> {
+  try {
+    const wPx = Math.min(
+      MAX_RASTER_EDGE,
+      Math.max(48, Math.round((shape.width / 25.4) * PRINT_DPI)),
+    );
+    const hPx = Math.min(
+      MAX_RASTER_EDGE,
+      Math.max(48, Math.round((shape.height / 25.4) * PRINT_DPI)),
+    );
+    const pxPerMm = wPx / Math.max(1, shape.width);
+    const strokePx =
+      shape.stroke !== "transparent" && shape.strokeWidth > 0
+        ? shape.strokeWidth * pxPerMm
+        : 0;
+    const gradDef =
+      shape.fillGradient?.enabled
+        ? (() => {
+            const { start, end } = getGradientPoints(
+              wPx,
+              hPx,
+              shape.fillGradient.angle,
+              false,
+            );
+            return `<defs><linearGradient id="g" gradientUnits="userSpaceOnUse" x1="${start.x}" y1="${start.y}" x2="${end.x}" y2="${end.y}"><stop offset="0%" stop-color="${shape.fillGradient.from}"/><stop offset="100%" stop-color="${shape.fillGradient.to}"/></linearGradient></defs>`;
+          })()
+        : "";
+    const fillAttr = shape.fillGradient?.enabled
+      ? "url(#g)"
+      : shape.fill !== "transparent"
+        ? shape.fill
+        : "none";
+    const strokeAttr = strokePx > 0 ? shape.stroke : "none";
+
+    let body = "";
+    if (shape.shape === "ellipse") {
+      body = `<ellipse cx="${wPx / 2}" cy="${hPx / 2}" rx="${Math.max(1, wPx / 2 - strokePx / 2)}" ry="${Math.max(1, hPx / 2 - strokePx / 2)}" fill="${fillAttr}" stroke="${strokeAttr}" stroke-width="${strokePx}"/>`;
+    } else if (shape.shape === "polygon" || shape.shape === "star") {
+      const pts =
+        shape.shape === "polygon"
+          ? getPolygonPoints(wPx, hPx, shape.sides ?? 6)
+          : getStarPoints(wPx, hPx, shape.sides ?? 5, shape.innerRadiusRatio ?? 0.45);
+      body = `<path d="${pointsToSvgPath(pts, true)}" fill="${fillAttr}" stroke="${strokeAttr}" stroke-width="${strokePx}" stroke-linejoin="${shape.radius > 0 ? "round" : "miter"}"/>`;
+    } else if (shape.shape === "arrow") {
+      const c = shape.stroke !== "transparent" ? shape.stroke : shape.fill;
+      const col = c === "transparent" ? "#122056" : c;
+      const sw = Math.max(2, shape.strokeWidth * pxPerMm);
+      const ptr = Math.max(10, Math.min(wPx * 0.35, sw * 3.5 + 8));
+      body = `<line x1="0" y1="${hPx / 2}" x2="${Math.max(2, wPx - ptr * 0.7)}" y2="${hPx / 2}" stroke="${col}" stroke-width="${sw}" stroke-linecap="round"/><polygon points="${wPx},${hPx / 2} ${wPx - ptr},${hPx / 2 - ptr * 0.48} ${wPx - ptr},${hPx / 2 + ptr * 0.48}" fill="${col}"/>`;
+    } else {
+      const rx = Math.max(0, shape.radius * pxPerMm);
+      body = `<rect x="${strokePx / 2}" y="${strokePx / 2}" width="${Math.max(1, wPx - strokePx)}" height="${Math.max(1, hPx - strokePx)}" rx="${rx}" fill="${fillAttr}" stroke="${strokeAttr}" stroke-width="${strokePx}"/>`;
+    }
+
+    const flipAttr =
+      shape.flipX || shape.flipY
+        ? ` transform="translate(${shape.flipX ? wPx : 0} ${shape.flipY ? hPx : 0}) scale(${shape.flipX ? -1 : 1} ${shape.flipY ? -1 : 1})"`
+        : "";
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${wPx}" height="${hPx}" viewBox="0 0 ${wPx} ${hPx}">${gradDef}<g${flipAttr}>${body}</g></svg>`;
+    const img = await loadImageElement(
       `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`,
     );
     const canvas = document.createElement("canvas");
-    canvas.width = size;
-    canvas.height = size;
-    const context = canvas.getContext("2d");
-    if (!context) return null;
-    context.drawImage(image, 0, 0, size, size);
+    canvas.width = wPx;
+    canvas.height = hPx;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return null;
+    ctx.drawImage(img, 0, 0, wPx, hPx);
     return canvas.toDataURL("image/png");
   } catch {
     return null;
@@ -380,6 +505,46 @@ export async function createProjectPdf(
         const fill = hexToRgb(shape.fill);
         const stroke = hexToRgb(shape.stroke);
         const origin = rotatedOrigin(x, y, widthPt, heightPt, shape.rotation);
+
+        if (
+          shape.fillGradient?.enabled ||
+          shape.shape === "arrow" ||
+          shape.shape === "polygon" ||
+          shape.shape === "star" ||
+          (shape.shape === "rectangle" && shape.radius > 0) ||
+          shape.shadow ||
+          shape.flipX ||
+          shape.flipY
+        ) {
+          if (shape.shadow) {
+            const shadowRgb = hexToRgb("#122056");
+            if (shadowRgb) {
+              pdfPage.drawRectangle({
+                x: origin.x + 1.5,
+                y: origin.y - 2,
+                width: widthPt,
+                height: heightPt,
+                color: shadowRgb,
+                opacity: shape.opacity * 0.14,
+                rotate: rotation,
+              });
+            }
+          }
+          const shapeDataUrl = await rasterizeShapeWithGradientOrComplex(shape);
+          const b64 = shapeDataUrl?.split(",")[1];
+          if (b64) {
+            const png = await document.embedPng(b64);
+            pdfPage.drawImage(png, {
+              x: origin.x,
+              y: origin.y,
+              width: widthPt,
+              height: heightPt,
+              opacity: shape.opacity,
+              rotate: rotation,
+            });
+            continue;
+          }
+        }
 
         if (shape.shape === "ellipse") {
           pdfPage.drawEllipse({
@@ -640,6 +805,65 @@ export async function createProjectPdf(
           opacity: sticker.opacity,
           rotate: rotation,
         });
+        continue;
+      }
+
+      if (element.type === "qr") {
+        const qr = element as QrElement;
+        const x = originX;
+        const y = topY - heightPt;
+        const bgRgb = hexToRgb(qr.background);
+        const fgRgb = hexToRgb(qr.foreground) ?? hexToRgb("#122056")!;
+        const centerX = x + widthPt / 2;
+        const centerY = y + heightPt / 2;
+        const theta = (-qr.rotation * Math.PI) / 180;
+        const cos = Math.cos(theta);
+        const sin = Math.sin(theta);
+
+        if (bgRgb) {
+          const bgOrigin = rotatedOrigin(x, y, widthPt, heightPt, qr.rotation);
+          pdfPage.drawRectangle({
+            x: bgOrigin.x,
+            y: bgOrigin.y,
+            width: widthPt,
+            height: heightPt,
+            color: bgRgb,
+            opacity: qr.opacity,
+            rotate: rotation,
+          });
+        }
+
+        const matrix = getQrMatrix(qr.value, qr.errorCorrection);
+        if (matrix) {
+          const count = matrix.length;
+          const quietZone = 4;
+          const total = count + quietZone * 2;
+          const mod = Math.min(widthPt, heightPt) / total;
+          const offsetX = (widthPt - mod * total) / 2;
+          const offsetYTop = (heightPt - mod * total) / 2;
+
+          for (let row = 0; row < count; row += 1) {
+            const line = matrix[row]!;
+            for (let col = 0; col < count; col += 1) {
+              if (!line[col]) continue;
+              const mx = x + offsetX + (col + quietZone) * mod;
+              const my = topY - offsetYTop - (row + 1 + quietZone) * mod;
+              const dx = mx - centerX;
+              const dy = my - centerY;
+              const rx = qr.rotation ? centerX + dx * cos - dy * sin : mx;
+              const ry = qr.rotation ? centerY + dx * sin + dy * cos : my;
+              pdfPage.drawRectangle({
+                x: rx,
+                y: ry,
+                width: mod * 1.02,
+                height: mod * 1.02,
+                color: fgRgb,
+                opacity: qr.opacity,
+                rotate: rotation,
+              });
+            }
+          }
+        }
       }
     }
   }

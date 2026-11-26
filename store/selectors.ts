@@ -31,16 +31,41 @@ export function useSelectedElement(): {
 } | null {
   const project = useEditorStore((state) => state.project);
   const elementId = useEditorStore((state) => state.selection.elementId);
+  const elementIds = useEditorStore((state) => state.selection.elementIds);
 
   return useMemo(() => {
-    if (!elementId) return null;
+    if (elementIds.length > 1) return null;
+    const targetId = elementIds[0] ?? elementId;
+    if (!targetId) return null;
     for (let pageIndex = 0; pageIndex < project.pages.length; pageIndex += 1) {
       const page = project.pages[pageIndex]!;
-      const element = page.elements.find((candidate) => candidate.id === elementId);
+      const element = page.elements.find((candidate) => candidate.id === targetId);
       if (element) return { element, page, pageIndex };
     }
     return null;
-  }, [project.pages, elementId]);
+  }, [project.pages, elementId, elementIds]);
+}
+
+export function useSelectedElements(): {
+  elements: Element[];
+  page: Page;
+  pageIndex: number;
+} | null {
+  const project = useEditorStore((state) => state.project);
+  const elementId = useEditorStore((state) => state.selection.elementId);
+  const elementIds = useEditorStore((state) => state.selection.elementIds);
+
+  return useMemo(() => {
+    const ids = elementIds.length > 0 ? elementIds : elementId ? [elementId] : [];
+    if (ids.length === 0) return null;
+    const idSet = new Set(ids);
+    for (let pageIndex = 0; pageIndex < project.pages.length; pageIndex += 1) {
+      const page = project.pages[pageIndex]!;
+      const found = page.elements.filter((el) => idSet.has(el.id));
+      if (found.length > 0) return { elements: found, page, pageIndex };
+    }
+    return null;
+  }, [project.pages, elementId, elementIds]);
 }
 
 export function useActivePage(): { page: Page | null; pageIndex: number } {

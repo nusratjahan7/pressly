@@ -37,6 +37,7 @@ export interface UiState {
 export interface SelectionState {
   pageId: string | null;
   elementId: string | null;
+  elementIds: string[];
   spineSelected?: boolean;
 }
 
@@ -113,7 +114,40 @@ export interface ElementsSlice {
     patch: Partial<Element>,
     options?: { commit?: boolean },
   ) => void;
+  moveElements: (
+    updates: Array<{ id: string; x: number; y: number }>,
+    options?: { commit?: boolean },
+  ) => void;
+  transformElements: (
+    updates: Array<{
+      id: string;
+      x: number;
+      y: number;
+      width: number;
+      height: number;
+      rotation: number;
+    }>,
+    options?: { commit?: boolean },
+  ) => void;
   removeElement: (elementId: string) => void;
+  removeElements: (elementIds: string[]) => void;
+  setElementsLocked: (elementIds: string[], locked: boolean) => void;
+  groupElements: (elementIds: string[]) => void;
+  ungroupElements: (elementIds: string[]) => void;
+  flipElements: (
+    elementIds: string[],
+    axis: "horizontal" | "vertical",
+  ) => void;
+  alignElements: (
+    pageId: string,
+    elementIds: string[],
+    alignment: "left" | "center" | "right" | "top" | "middle" | "bottom",
+  ) => void;
+  distributeElements: (
+    pageId: string,
+    elementIds: string[],
+    axis: "horizontal" | "vertical",
+  ) => void;
   moveElementLayer: (
     elementId: string,
     direction: "forward" | "backward" | "front" | "back",
@@ -133,7 +167,12 @@ export interface ElementsSlice {
 
 export interface SelectionSlice {
   selection: SelectionState;
-  selectElement: (pageId: string, elementId: string) => void;
+  selectElement: (
+    pageId: string,
+    elementId: string,
+    options?: { additive?: boolean },
+  ) => void;
+  selectElements: (pageId: string, elementIds: string[]) => void;
   selectPage: (pageId: string) => void;
   selectSpine: () => void;
   clearSelection: () => void;

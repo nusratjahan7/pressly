@@ -14,7 +14,13 @@ import {
 } from "@/lib/spreads";
 import { getCoverDisplaySpineWidth } from "@/lib/binding";
 import { DEFAULT_FRAME_GAP_MM, getLayoutById } from "@/lib/layouts";
-import { createImageElement, createTextElement } from "@/lib/elements";
+import {
+  createImageElement,
+  createQrElement,
+  createShapeElement,
+  createStickerElement,
+  createTextElement,
+} from "@/lib/elements";
 import {
   generateClientThumbnail,
   saveOriginalMediaBlob,
@@ -60,6 +66,9 @@ export function CanvasWorkspace() {
   const addSpread = useEditorStore((state) => state.addSpread);
   const selectedElementId = useEditorStore(
     (state) => state.selection.elementId,
+  );
+  const selectedElementIds = useEditorStore(
+    (state) => state.selection.elementIds,
   );
   const spineSelected = useEditorStore((state) =>
     Boolean(state.selection.spineSelected),
@@ -314,6 +323,9 @@ export function CanvasWorkspace() {
     const accepts =
       types.includes("application/x-pressly-layout") ||
       types.includes("application/x-pressly-image") ||
+      types.includes("application/x-pressly-sticker") ||
+      types.includes("application/x-pressly-shape") ||
+      types.includes("application/x-pressly-qr") ||
       types.includes("Files");
     if (!accepts) return;
     event.preventDefault();
@@ -326,9 +338,21 @@ export function CanvasWorkspace() {
     setDropHighlightPageId(null);
     const layoutId = event.dataTransfer.getData("application/x-pressly-layout");
     const imageJson = event.dataTransfer.getData("application/x-pressly-image");
+    const stickerJson = event.dataTransfer.getData("application/x-pressly-sticker");
+    const shapeJson = event.dataTransfer.getData("application/x-pressly-shape");
+    const qrJson = event.dataTransfer.getData("application/x-pressly-qr");
     const files = event.dataTransfer.files;
 
-    if (!layoutId && !imageJson && (!files || files.length === 0)) return;
+    if (
+      !layoutId &&
+      !imageJson &&
+      !stickerJson &&
+      !shapeJson &&
+      !qrJson &&
+      (!files || files.length === 0)
+    ) {
+      return;
+    }
     event.preventDefault();
 
     const hit = hitTestSpread(event.clientX, event.clientY);
@@ -336,6 +360,91 @@ export function CanvasWorkspace() {
       hit?.page ??
       pages.find((candidate) => !candidate.isEndPaper && !candidate.locked);
     if (!targetPage) return;
+
+    if (stickerJson) {
+      try {
+        const parsed = JSON.parse(stickerJson) as {
+          stickerId: string;
+          color?: string;
+          src?: string;
+          kind?: "svg" | "png";
+          aspectRatio?: number;
+        };
+        const w = Math.max(20, Math.min(38, project.pageSize.w * 0.16));
+        const h = parsed.aspectRatio ? round(w / parsed.aspectRatio, 1) : w;
+        const x = hit
+          ? Math.max(0, Math.min(project.pageSize.w - w, hit.localX - w / 2))
+          : (project.pageSize.w - w) / 2;
+        const y = hit
+          ? Math.max(0, Math.min(project.pageSize.h - h, hit.localY - h / 2))
+          : (project.pageSize.h - h) / 2;
+        addElement(
+          targetPage.id,
+          createStickerElement(
+            { x: round(x, 1), y: round(y, 1), width: round(w, 1), height: round(h, 1) },
+            {
+              stickerId: parsed.stickerId,
+              color: parsed.color ?? "#122056",
+              src: parsed.src,
+              kind: parsed.kind,
+            },
+          ),
+        );
+      } catch {
+        /* ignore malformed sticker drag payload */
+      }
+      return;
+    }
+
+    if (shapeJson) {
+      try {
+        const parsed = JSON.parse(shapeJson) as {
+          shape: "rectangle" | "ellipse" | "line" | "arrow" | "polygon" | "star";
+        };
+        const isLinear = parsed.shape === "line" || parsed.shape === "arrow";
+        const w = isLinear ? 56 : 36;
+        const h = isLinear ? 10 : 36;
+        const x = hit
+          ? Math.max(0, Math.min(project.pageSize.w - w, hit.localX - w / 2))
+          : (project.pageSize.w - w) / 2;
+        const y = hit
+          ? Math.max(0, Math.min(project.pageSize.h - h, hit.localY - h / 2))
+          : (project.pageSize.h - h) / 2;
+        addElement(
+          targetPage.id,
+          createShapeElement(
+            { x: round(x, 1), y: round(y, 1), width: w, height: h },
+            { shape: parsed.shape },
+          ),
+        );
+      } catch {
+        /* ignore malformed shape drag payload */
+      }
+      return;
+    }
+
+    if (qrJson) {
+      try {
+        const parsed = JSON.parse(qrJson) as { value?: string };
+        const sizeMm = 32;
+        const x = hit
+          ? Math.max(0, Math.min(project.pageSize.w - sizeMm, hit.localX - sizeMm / 2))
+          : (project.pageSize.w - sizeMm) / 2;
+        const y = hit
+          ? Math.max(0, Math.min(project.pageSize.h - sizeMm, hit.localY - sizeMm / 2))
+          : (project.pageSize.h - sizeMm) / 2;
+        addElement(
+          targetPage.id,
+          createQrElement(
+            { x: round(x, 1), y: round(y, 1), width: sizeMm, height: sizeMm },
+            { value: parsed.value || "https://pressly.studio" },
+          ),
+        );
+      } catch {
+        /* ignore malformed qr drag payload */
+      }
+      return;
+    }
 
     if (layoutId) {
       const def = getLayoutById(layoutId);
@@ -524,6 +633,7 @@ export function CanvasWorkspace() {
           showSafeMargin={showSafeMargin}
           showBleed={showBleed}
           selectedElementId={selectedElementId}
+          selectedElementIds={selectedElementIds}
           croppingElementId={croppingElementId}
           dropHighlightPageId={dropHighlightPageId}
           animSeq={layoutAnimSeq}

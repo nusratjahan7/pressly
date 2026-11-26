@@ -8,6 +8,7 @@ import type {
   TextElement,
 } from "@/types";
 import { createId } from "@/lib/id";
+import { findSticker } from "@/lib/stickers";
 
 interface Geometry {
   x: number;
@@ -81,17 +82,24 @@ export function createShapeElement(
     Omit<ShapeElement, "id" | "type" | "x" | "y" | "width" | "height">
   > = {},
 ): ShapeElement {
+  const shapeKind = patch.shape ?? "rectangle";
   return {
     id: createId(),
     type: "shape",
     ...geometryDefaults,
     ...geometry,
     zIndex: geometry.zIndex ?? 0,
-    shape: "rectangle",
-    fill: "transparent",
+    shape: shapeKind,
+    fill:
+      shapeKind === "line" || shapeKind === "arrow"
+        ? "transparent"
+        : "#E9ECFE",
     stroke: "#5B65DC",
-    strokeWidth: 0.5,
+    strokeWidth: shapeKind === "line" || shapeKind === "arrow" ? 0.9 : 0.5,
     radius: 0,
+    sides: shapeKind === "polygon" ? 6 : shapeKind === "star" ? 5 : undefined,
+    innerRadiusRatio: shapeKind === "star" ? 0.45 : undefined,
+    shadow: false,
     ...patch,
   };
 }
@@ -146,6 +154,15 @@ export function nextZIndex(elements: Element[]) {
   return elements.reduce((max, el) => Math.max(max, el.zIndex), -1) + 1;
 }
 
+const SHAPE_LABEL_MAP: Record<ShapeElement["shape"], string> = {
+  rectangle: "Rectangle",
+  ellipse: "Ellipse",
+  line: "Line",
+  arrow: "Arrow",
+  polygon: "Polygon",
+  star: "Star",
+};
+
 export function getElementLabel(element: Element, index: number) {
   switch (element.type) {
     case "text":
@@ -153,13 +170,9 @@ export function getElementLabel(element: Element, index: number) {
     case "image":
       return element.alt.trim() || `Image ${index + 1}`;
     case "shape":
-      return element.shape === "ellipse"
-        ? "Ellipse"
-        : element.shape === "line"
-          ? "Line"
-          : "Rectangle";
+      return SHAPE_LABEL_MAP[element.shape] ?? "Shape";
     case "sticker":
-      return "Sticker";
+      return findSticker(element.stickerId)?.name ?? "Sticker";
     case "qr":
       return "QR code";
   }

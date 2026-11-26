@@ -157,6 +157,11 @@ async function renderPageSnapshot(
       }
 
       if (element.type === "shape") {
+        const { getGradientPoints, getPolygonPoints, getStarPoints } = await import(
+          "@/lib/shapes"
+        );
+        const hasGradient = Boolean(element.fillGradient?.enabled);
+        const hasSolid = element.fill !== "transparent";
         const common = {
           x: px,
           y: py,
@@ -164,6 +169,27 @@ async function renderPageSnapshot(
           listening: false,
           perfectDrawEnabled: false,
         };
+        const gradientProps = (centered = false) => {
+          if (!hasGradient || !element.fillGradient) return {};
+          const { start, end } = getGradientPoints(
+            pw,
+            ph,
+            element.fillGradient.angle,
+            centered,
+          );
+          return {
+            fillPriority: "linear-gradient" as const,
+            fillLinearGradientStartPoint: start,
+            fillLinearGradientEndPoint: end,
+            fillLinearGradientColorStops: [
+              0,
+              element.fillGradient.from,
+              1,
+              element.fillGradient.to,
+            ],
+          };
+        };
+
         if (element.shape === "ellipse") {
           layer.add(
             new Konva.Ellipse({
@@ -172,21 +198,61 @@ async function renderPageSnapshot(
               y: py + ph / 2,
               radiusX: pw / 2,
               radiusY: ph / 2,
-              fill: element.fill === "transparent" ? undefined : element.fill,
+              fill: !hasGradient && hasSolid ? element.fill : undefined,
+              ...gradientProps(true),
               stroke:
                 element.stroke === "transparent" ? undefined : element.stroke,
               strokeWidth: element.strokeWidth * scale,
             }),
           );
-        } else if (element.shape === "line") {
+        } else if (element.shape === "line" || element.shape === "arrow") {
           const color =
             element.stroke !== "transparent" ? element.stroke : element.fill;
+          const resolved = color === "transparent" ? "#122056" : color;
+          if (element.shape === "arrow") {
+            const sw = Math.max(0.5, element.strokeWidth * scale);
+            const ptr = Math.max(3, Math.min(pw * 0.35, sw * 3.5 + 2));
+            layer.add(
+              new Konva.Arrow({
+                ...common,
+                points: [0, ph / 2, Math.max(2, pw - sw * 0.5), ph / 2],
+                pointerLength: ptr,
+                pointerWidth: ptr * 0.85,
+                fill: resolved,
+                stroke: resolved,
+                strokeWidth: sw,
+              }),
+            );
+          } else {
+            layer.add(
+              new Konva.Line({
+                ...common,
+                points: [0, ph / 2, pw, ph / 2],
+                stroke: resolved,
+                strokeWidth: Math.max(0.5, element.strokeWidth * scale),
+              }),
+            );
+          }
+        } else if (element.shape === "polygon" || element.shape === "star") {
+          const pts =
+            element.shape === "polygon"
+              ? getPolygonPoints(pw, ph, element.sides ?? 6)
+              : getStarPoints(
+                  pw,
+                  ph,
+                  element.sides ?? 5,
+                  element.innerRadiusRatio ?? 0.45,
+                );
           layer.add(
             new Konva.Line({
               ...common,
-              points: [px, py + ph / 2, px + pw, py + ph / 2],
-              stroke: color === "transparent" ? "#122056" : color,
-              strokeWidth: Math.max(0.5, element.strokeWidth * scale),
+              points: pts,
+              closed: true,
+              fill: !hasGradient && hasSolid ? element.fill : undefined,
+              ...gradientProps(false),
+              stroke:
+                element.stroke === "transparent" ? undefined : element.stroke,
+              strokeWidth: element.strokeWidth * scale,
             }),
           );
         } else {
@@ -195,7 +261,8 @@ async function renderPageSnapshot(
               ...common,
               width: pw,
               height: ph,
-              fill: element.fill === "transparent" ? undefined : element.fill,
+              fill: !hasGradient && hasSolid ? element.fill : undefined,
+              ...gradientProps(false),
               stroke:
                 element.stroke === "transparent" ? undefined : element.stroke,
               strokeWidth: element.strokeWidth * scale,
@@ -243,10 +310,33 @@ async function renderPageSnapshot(
       if (element.type === "sticker") {
         const { getSticker } = await import("@/lib/stickers");
         const sticker = getSticker(element.stickerId);
-        const s = Math.min(pw, ph) / 24;
+        const imageSrc =
+          element.src ?? (sticker.format === "png" ? sticker.src : undefined);
+        if (imageSrc) {
+          const img = await loadImage(imageSrc).catch(() => null);
+          if (img) {
+            layer.add(
+              new Konva.Image({
+                image: img,
+                x: px,
+                y: py,
+                width: pw,
+                height: ph,
+                opacity: element.opacity,
+                listening: false,
+                perfectDrawEnabled: false,
+              }),
+            );
+          }
+          continue;
+        }
+        const parts = sticker.viewBox.trim().split(/\s+/).map(Number);
+        const vbW = Math.max(1, parts[2] || 24);
+        const vbH = Math.max(1, parts[3] || 24);
+        const s = Math.min(pw / vbW, ph / vbH);
         const group = new Konva.Group({
-          x: px,
-          y: py,
+          x: px + (pw - vbW * s) / 2,
+          y: py + (ph - vbH * s) / 2,
           scaleX: s,
           scaleY: s,
           opacity: element.opacity,
@@ -256,10 +346,20 @@ async function renderPageSnapshot(
           group.add(
             new Konva.Path({
               data: path.d,
-              fill: path.fill === "currentColor" ? element.color : undefined,
+              fill:
+                path.fill === "currentColor"
+                  ? element.color
+                  : path.fill && path.fill !== "none"
+                    ? path.fill
+                    : undefined,
               stroke:
-                path.stroke === "currentColor" ? element.color : undefined,
+                path.stroke === "currentColor"
+                  ? element.color
+                  : path.stroke && path.stroke !== "none"
+                    ? path.stroke
+                    : undefined,
               strokeWidth: path.strokeWidth ?? 0,
+              opacity: path.opacity ?? 1,
               listening: false,
             }),
           );
@@ -269,6 +369,8 @@ async function renderPageSnapshot(
       }
 
       if (element.type === "qr") {
+        const { getQrMatrix } = await import("@/lib/qr");
+        const matrix = getQrMatrix(element.value, element.errorCorrection);
         layer.add(
           new Konva.Rect({
             x: px,
@@ -279,17 +381,30 @@ async function renderPageSnapshot(
             listening: false,
           }),
         );
-        layer.add(
-          new Konva.Rect({
-            x: px + pw * 0.18,
-            y: py + ph * 0.18,
-            width: pw * 0.64,
-            height: ph * 0.64,
-            fill: element.foreground,
-            opacity: 0.75,
-            listening: false,
-          }),
-        );
+        if (matrix) {
+          const count = matrix.length;
+          const qz = 4;
+          const total = count + qz * 2;
+          const mod = Math.min(pw, ph) / total;
+          const ox = px + (pw - mod * total) / 2;
+          const oy = py + (ph - mod * total) / 2;
+          for (let r = 0; r < count; r += 1) {
+            for (let c = 0; c < count; c += 1) {
+              if (matrix[r]![c]) {
+                layer.add(
+                  new Konva.Rect({
+                    x: ox + (c + qz) * mod,
+                    y: oy + (r + qz) * mod,
+                    width: Math.max(0.3, mod),
+                    height: Math.max(0.3, mod),
+                    fill: element.foreground,
+                    listening: false,
+                  }),
+                );
+              }
+            }
+          }
+        }
       }
     }
 

@@ -60,7 +60,7 @@ export const createPagesSlice: StateCreator<
     ];
     set((current) => ({
       project: { ...current.project, pages: nextPages },
-      selection: { pageId: null, elementId: null },
+      selection: { pageId: null, elementId: null, elementIds: [], spineSelected: false },
       ui: {
         ...current.ui,
         spreadIndex: getSpreadIndexForPage(insertAt),
@@ -109,7 +109,7 @@ export const createPagesSlice: StateCreator<
     get().pushHistory();
     set((current) => ({
       project: { ...current.project, pages: nextPages },
-      selection: { pageId: null, elementId: null },
+      selection: { pageId: null, elementId: null, elementIds: [], spineSelected: false },
       ui: {
         ...current.ui,
         spreadIndex: getSpreadIndexForPage(insertAt),
@@ -141,7 +141,7 @@ export const createPagesSlice: StateCreator<
 
     set((current) => ({
       project: { ...current.project, pages: nextPages },
-      selection: { pageId: null, elementId: null },
+      selection: { pageId: null, elementId: null, elementIds: [], spineSelected: false },
       ui: {
         ...current.ui,
         spreadIndex: clampSpreadIndex(current.ui.spreadIndex, nextPages),
@@ -199,7 +199,7 @@ export const createPagesSlice: StateCreator<
     get().pushHistory();
     set((current) => ({
       project: { ...current.project, pages: nextPages },
-      selection: { pageId: null, elementId: null },
+      selection: { pageId: null, elementId: null, elementIds: [], spineSelected: false },
       ui: {
         ...current.ui,
         spreadIndex: getSpreadIndexForPage(insertAt),
@@ -213,7 +213,7 @@ export const createPagesSlice: StateCreator<
     if (next === state.ui.spreadIndex) return;
     set((current) => ({
       ui: { ...current.ui, spreadIndex: next },
-      selection: { pageId: null, elementId: null },
+      selection: { pageId: null, elementId: null, elementIds: [], spineSelected: false },
     }));
   },
 
@@ -268,7 +268,7 @@ export const createPagesSlice: StateCreator<
             : candidate,
         ),
       },
-      selection: { pageId, elementId: null, spineSelected: false },
+      selection: { pageId, elementId: null, elementIds: [], spineSelected: false },
     }));
   },
 
@@ -367,7 +367,7 @@ export const createPagesSlice: StateCreator<
               return candidate;
             }),
           },
-          selection: { pageId, elementId: null, spineSelected: false },
+          selection: { pageId, elementId: null, elementIds: [], spineSelected: false },
           ui: {
             ...current.ui,
             layoutAnimSeq: current.ui.layoutAnimSeq + 1,
@@ -407,7 +407,7 @@ export const createPagesSlice: StateCreator<
             : candidate,
         ),
       },
-      selection: { pageId, elementId: null, spineSelected: false },
+      selection: { pageId, elementId: null, elementIds: [], spineSelected: false },
       ui: {
         ...current.ui,
         layoutAnimSeq: current.ui.layoutAnimSeq + 1,

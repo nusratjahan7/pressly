@@ -152,6 +152,7 @@ interface TextFieldProps {
   label: string;
   value: string;
   onCommit: (value: string) => void;
+  onLiveChange?: (value: string) => void;
   placeholder?: string;
   disabled?: boolean;
   multiline?: boolean;
@@ -162,6 +163,7 @@ export function TextField({
   label,
   value,
   onCommit,
+  onLiveChange,
   placeholder,
   disabled = false,
   multiline = false,
@@ -200,7 +202,10 @@ export function TextField({
           onFocus={() => {
             focused.current = true;
           }}
-          onChange={(event) => setDraft(event.target.value)}
+          onChange={(event) => {
+            setDraft(event.target.value);
+            onLiveChange?.(event.target.value);
+          }}
           onBlur={() => {
             focused.current = false;
             commit();
@@ -228,7 +233,10 @@ export function TextField({
           onFocus={() => {
             focused.current = true;
           }}
-          onChange={(event) => setDraft(event.target.value)}
+          onChange={(event) => {
+            setDraft(event.target.value);
+            onLiveChange?.(event.target.value);
+          }}
           onBlur={() => {
             focused.current = false;
             commit();

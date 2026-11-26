@@ -7,6 +7,12 @@ import type { Element, PageSize } from "@/types";
 import { useEditorStore } from "@/store";
 import { ELEMENT_TYPE_LABEL, getElementLabel } from "@/lib/elements";
 import { buildCssFilterString, resolveMediaUrl } from "@/lib/mediaStorage";
+import { getQrMatrix } from "@/lib/qr";
+import {
+  getPolygonPoints,
+  getStarPoints,
+  pointsToSvgPath,
+} from "@/lib/shapes";
 import { ensureGoogleFontLoaded } from "@/lib/fonts";
 import { buildCurvedTextPath, DEFAULT_CURVE_ARC } from "@/lib/textCurve";
 import { ptToPx } from "@/lib/units";
@@ -253,40 +259,123 @@ function renderElementContent(element: Element, scale: number) {
   }
 
   if (element.type === "shape") {
-    if (element.shape === "line") {
-      const thickness = Math.max(1, element.strokeWidth * scale);
+    const wPx = Math.max(4, element.width * scale);
+    const hPx = Math.max(4, element.height * scale);
+    const hasGradient = Boolean(element.fillGradient?.enabled);
+    const hasFill = element.fill !== "transparent" || hasGradient;
+    const hasStroke =
+      element.stroke !== "transparent" && element.strokeWidth > 0;
+    const swPx = hasStroke ? Math.max(0.75, element.strokeWidth * scale) : 0;
+    const flipTransform =
+      element.flipX || element.flipY
+        ? `scale(${element.flipX ? -1 : 1}, ${element.flipY ? -1 : 1})`
+        : undefined;
+    const shadowFilter = element.shadow
+      ? "drop-shadow(1px 2px 4px rgba(18,32,86,0.28))"
+      : undefined;
+
+    if (element.shape === "line" || element.shape === "arrow") {
       const color =
         element.stroke !== "transparent" ? element.stroke : element.fill;
+      const strokeColor = color === "transparent" ? "#122056" : color;
+      const thickness = Math.max(1.2, element.strokeWidth * scale);
+      const ptr = Math.max(5, thickness * 3.5);
       return (
-        <div className="relative h-full w-full">
-          <div
-            className="absolute left-0 top-1/2 w-full -translate-y-1/2"
-            style={{
-              height: thickness,
-              backgroundColor:
-                color === "transparent" ? "var(--ink)" : color,
-            }}
+        <svg
+          width="100%"
+          height="100%"
+          viewBox={`0 0 ${wPx} ${hPx}`}
+          style={{ transform: flipTransform, filter: shadowFilter }}
+        >
+          <line
+            x1={0}
+            y1={hPx / 2}
+            x2={element.shape === "arrow" ? Math.max(2, wPx - ptr * 0.7) : wPx}
+            y2={hPx / 2}
+            stroke={strokeColor}
+            strokeWidth={thickness}
+            strokeLinecap="round"
           />
-        </div>
+          {element.shape === "arrow" ? (
+            <polygon
+              points={`${wPx},${hPx / 2} ${wPx - ptr},${hPx / 2 - ptr * 0.48} ${wPx - ptr},${hPx / 2 + ptr * 0.48}`}
+              fill={strokeColor}
+            />
+          ) : null}
+        </svg>
       );
     }
 
-    const hasFill = element.fill !== "transparent";
-    const hasStroke =
-      element.stroke !== "transparent" && element.strokeWidth > 0;
+    if (element.shape === "polygon" || element.shape === "star") {
+      const pts =
+        element.shape === "polygon"
+          ? getPolygonPoints(wPx, hPx, element.sides ?? 6)
+          : getStarPoints(
+              wPx,
+              hPx,
+              element.sides ?? 5,
+              element.innerRadiusRatio ?? 0.45,
+            );
+      const gradId = `sg-${element.id}`;
+      return (
+        <svg
+          width="100%"
+          height="100%"
+          viewBox={`0 0 ${wPx} ${hPx}`}
+          style={{ transform: flipTransform, filter: shadowFilter }}
+        >
+          {hasGradient && element.fillGradient ? (
+            <defs>
+              <linearGradient
+                id={gradId}
+                gradientTransform={`rotate(${element.fillGradient.angle - 90} 0.5 0.5)`}
+              >
+                <stop offset="0%" stopColor={element.fillGradient.from} />
+                <stop offset="100%" stopColor={element.fillGradient.to} />
+              </linearGradient>
+            </defs>
+          ) : null}
+          <path
+            d={pointsToSvgPath(pts, true)}
+            fill={
+              hasGradient
+                ? `url(#${gradId})`
+                : element.fill !== "transparent"
+                  ? element.fill
+                  : "none"
+            }
+            stroke={hasStroke ? element.stroke : "none"}
+            strokeWidth={swPx}
+            strokeLinejoin={element.radius > 0 ? "round" : "miter"}
+          />
+        </svg>
+      );
+    }
+
+    const bgStyle =
+      hasGradient && element.fillGradient
+        ? {
+            backgroundImage: `linear-gradient(${element.fillGradient.angle}deg, ${element.fillGradient.from}, ${element.fillGradient.to})`,
+          }
+        : {
+            backgroundColor: hasFill ? element.fill : "transparent",
+          };
+
     return (
       <div
         className="h-full w-full"
         style={{
-          backgroundColor: hasFill ? element.fill : "transparent",
-          border: hasStroke
-            ? `${Math.max(0.75, element.strokeWidth * scale)}px solid ${element.stroke}`
-            : "none",
+          ...bgStyle,
+          border: hasStroke ? `${swPx}px solid ${element.stroke}` : "none",
           borderRadius:
             element.shape === "ellipse"
               ? "50%"
               : Math.max(0, element.radius * scale),
           boxSizing: "border-box",
+          transform: flipTransform,
+          boxShadow: element.shadow
+            ? "0 3px 8px rgba(18,32,86,0.26)"
+            : undefined,
         }}
       />
     );
@@ -294,11 +383,57 @@ function renderElementContent(element: Element, scale: number) {
 
   if (element.type === "sticker") {
     return (
-      <StickerArt
-        stickerId={element.stickerId}
-        color={element.color}
+      <div
         className="h-full w-full"
-      />
+        style={{
+          transform:
+            element.flipX || element.flipY
+              ? `scale(${element.flipX ? -1 : 1}, ${element.flipY ? -1 : 1})`
+              : undefined,
+          filter: element.shadow
+            ? "drop-shadow(1px 2px 4px rgba(18,32,86,0.28))"
+            : undefined,
+        }}
+      >
+        <StickerArt
+          stickerId={element.stickerId}
+          color={element.color}
+          src={element.src}
+          className="h-full w-full"
+        />
+      </div>
+    );
+  }
+
+  const qrMatrix = getQrMatrix(element.value, element.errorCorrection);
+  if (qrMatrix) {
+    const count = qrMatrix.length;
+    const qz = 4;
+    const total = count + qz * 2;
+    return (
+      <svg
+        width="100%"
+        height="100%"
+        viewBox={`0 0 ${total} ${total}`}
+        shapeRendering="crispEdges"
+        style={{ backgroundColor: element.background }}
+      >
+        <rect width={total} height={total} fill={element.background} />
+        {qrMatrix.map((row, r) =>
+          row.map((dark, c) =>
+            dark ? (
+              <rect
+                key={`${r}-${c}`}
+                x={c + qz}
+                y={r + qz}
+                width={1}
+                height={1}
+                fill={element.foreground}
+              />
+            ) : null,
+          ),
+        )}
+      </svg>
     );
   }
 

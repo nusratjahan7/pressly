@@ -7,6 +7,7 @@ import type { Element } from "@/types";
 import { useEditorStore } from "@/store";
 import { round } from "@/lib/units";
 import {
+  getElementNode,
   registerElementNode,
   unregisterElementNode,
 } from "@/lib/konva/elementNodes";
@@ -47,9 +48,8 @@ interface ElementFrameProps {
 }
 
 /**
- * Positions one element and makes it interactive: press to select, drag to
- * move (or swap photos between frames), double-click to crop/edit, right-click
- * for frame actions, and register its node so the Transformer can attach.
+ * Positions one element and makes it interactive: press/Shift-press to select,
+ * drag to move single/group selections or swap photos, double-click to edit/crop.
  */
 export function ElementFrame({
   element,
@@ -72,12 +72,18 @@ export function ElementFrame({
   const groupRef = useRef<Konva.Group>(null);
   const selectElement = useEditorStore((state) => state.selectElement);
   const updateElement = useEditorStore((state) => state.updateElement);
+  const moveElements = useEditorStore((state) => state.moveElements);
   const pushHistory = useEditorStore((state) => state.pushHistory);
   const cropDragRef = useRef<{
     startX: number;
     startY: number;
     baseCropX: number;
     baseCropY: number;
+  } | null>(null);
+  const multiDragOriginRef = useRef<{
+    selfX: number;
+    selfY: number;
+    siblings: Array<{ id: string; x: number; y: number }>;
   } | null>(null);
   const didDragRef = useRef(false);
   const lastAnimSeqRef = useRef(animSeq);
@@ -150,7 +156,16 @@ export function ElementFrame({
         if (!interactive) return;
         event.cancelBubble = true;
         didDragRef.current = false;
-        selectElement(pageId, element.id);
+        const state = useEditorStore.getState();
+        const additive = Boolean(event.evt.shiftKey);
+        const alreadyMultiSelected =
+          !additive &&
+          state.selection.pageId === pageId &&
+          state.selection.elementIds.length > 1 &&
+          state.selection.elementIds.includes(element.id);
+        if (!alreadyMultiSelected) {
+          selectElement(pageId, element.id, { additive });
+        }
 
         if (isCropping && element.type === "image") {
           cropDragRef.current = {
@@ -216,6 +231,25 @@ export function ElementFrame({
       onDragStart={() => {
         didDragRef.current = true;
         pushHistory();
+        const state = useEditorStore.getState();
+        const page = state.project.pages.find((p) => p.id === pageId);
+        const selIds = state.selection.elementIds;
+        if (page && selIds.length > 1 && selIds.includes(element.id)) {
+          multiDragOriginRef.current = {
+            selfX: element.x,
+            selfY: element.y,
+            siblings: page.elements
+              .filter(
+                (el) =>
+                  el.id !== element.id &&
+                  selIds.includes(el.id) &&
+                  !el.locked,
+              )
+              .map((el) => ({ id: el.id, x: el.x, y: el.y })),
+          };
+        } else {
+          multiDragOriginRef.current = null;
+        }
       }}
       onDragMove={(event) => {
         const node = event.target;
@@ -227,6 +261,21 @@ export function ElementFrame({
         );
         node.position({ x: pageOffsetX + next.x, y: next.y });
 
+        const multi = multiDragOriginRef.current;
+        if (multi) {
+          const dx = next.x - multi.selfX;
+          const dy = next.y - multi.selfY;
+          for (const sib of multi.siblings) {
+            const sibNode = getElementNode(sib.id);
+            sibNode?.position({
+              x: pageOffsetX + sib.x + dx,
+              y: sib.y + dy,
+            });
+          }
+          node.getLayer()?.batchDraw();
+          return;
+        }
+
         if (isFilledImage && onFrameDragMove) {
           const pointer = node.getStage()?.getPointerPosition();
           if (pointer) {
@@ -236,6 +285,33 @@ export function ElementFrame({
       }}
       onDragEnd={(event) => {
         const node = event.target;
+        const multi = multiDragOriginRef.current;
+        multiDragOriginRef.current = null;
+
+        const next = clampToPage(
+          node.x() - pageOffsetX,
+          node.y(),
+          element.width,
+          element.height,
+        );
+
+        if (multi) {
+          const dx = next.x - multi.selfX;
+          const dy = next.y - multi.selfY;
+          moveElements(
+            [
+              { id: element.id, x: next.x, y: next.y },
+              ...multi.siblings.map((sib) => ({
+                id: sib.id,
+                x: sib.x + dx,
+                y: sib.y + dy,
+              })),
+            ],
+            { commit: false },
+          );
+          return;
+        }
+
         if (isFilledImage && onFrameDragEndSwap) {
           const pointer = node.getStage()?.getPointerPosition();
           if (pointer && onFrameDragEndSwap(element.id, pointer.x, pointer.y)) {
@@ -243,12 +319,7 @@ export function ElementFrame({
             return;
           }
         }
-        const next = clampToPage(
-          node.x() - pageOffsetX,
-          node.y(),
-          element.width,
-          element.height,
-        );
+
         updateElement(
           element.id,
           { x: round(next.x), y: round(next.y) },
@@ -268,6 +339,17 @@ export function ElementFrame({
           width={element.width}
           height={element.height}
           listening
+        />
+      ) : null}
+      {selected ? (
+        <Rect
+          width={element.width}
+          height={element.height}
+          stroke={element.groupId ? "#7C84E8" : "transparent"}
+          strokeWidth={element.groupId ? 0.35 : 0}
+          dash={element.groupId ? [1.5, 1.5] : undefined}
+          listening={false}
+          perfectDrawEnabled={false}
         />
       ) : null}
       {isSwapTarget ? (

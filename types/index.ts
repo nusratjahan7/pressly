@@ -37,6 +37,10 @@ export interface ElementBase {
   opacity: number;
   locked: boolean;
   zIndex: number;
+  /** Optional group identifier shared across grouped elements on a page. */
+  groupId?: string;
+  flipX?: boolean;
+  flipY?: boolean;
   /**
    * When true the element is rendered across both pages of its spread instead
    * of being clipped to its own page. Opt-in only, so elements never cross the
@@ -58,8 +62,6 @@ export interface ImageElement extends ElementBase {
   cropX?: number;
   /** Vertical pan inside the frame (-1..1). */
   cropY?: number;
-  flipX?: boolean;
-  flipY?: boolean;
   /** Image adjustments (100 = default for brightness/contrast/saturation, 0 for grayscale/blur). */
   brightness?: number;
   contrast?: number;
@@ -102,23 +104,68 @@ export interface TextElement extends ElementBase {
   curveRadius?: number;
 }
 
-export type ShapeKind = "rectangle" | "ellipse" | "line";
+export type ShapeKind =
+  | "rectangle"
+  | "ellipse"
+  | "line"
+  | "arrow"
+  | "polygon"
+  | "star";
+
+export interface ShapeGradient {
+  enabled: boolean;
+  from: string;
+  to: string;
+  /** Gradient angle in degrees (0 = left->right, 90 = top->bottom). */
+  angle: number;
+}
 
 export interface ShapeElement extends ElementBase {
   type: "shape";
   shape: ShapeKind;
   fill: string;
+  fillGradient?: ShapeGradient;
   stroke: string;
   /** Stroke width in millimetres. */
   strokeWidth: number;
   /** Corner radius in millimetres. */
   radius: number;
+  /** Vertex count for polygons (3..12) or point count for stars (3..12). */
+  sides?: number;
+  /** Inner radius ratio for stars (0.2..0.8). */
+  innerRadiusRatio?: number;
+  /** Drop shadow enabled. */
+  shadow?: boolean;
+}
+
+export type StickerCategory =
+  | "Travel"
+  | "Love"
+  | "Birthday"
+  | "Vintage"
+  | "Typography"
+  | "Paper tape"
+  | "Stamps";
+
+export interface CustomStickerAsset {
+  id: string;
+  name: string;
+  /** Original `idb:<id>`, `/stickers/...`, or data URL source. */
+  src: string;
+  thumbSrc?: string;
+  format: "png" | "svg";
+  category: StickerCategory;
+  createdAt: number;
 }
 
 export interface StickerElement extends ElementBase {
   type: "sticker";
   stickerId: string;
   color: string;
+  /** Image/SVG source URL or `idb:` ref for PNG / uploaded stickers. */
+  src?: string;
+  kind?: "svg" | "png";
+  shadow?: boolean;
 }
 
 export interface QrElement extends ElementBase {

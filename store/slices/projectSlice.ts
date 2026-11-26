@@ -187,7 +187,7 @@ export const createProjectSlice: StateCreator<
         pageSize: next,
         pages,
       },
-      selection: { pageId: null, elementId: null },
+      selection: { pageId: null, elementId: null, elementIds: [], spineSelected: false },
       ui: {
         ...state.ui,
         spreadIndex: 0,

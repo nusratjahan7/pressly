@@ -28,6 +28,7 @@ export interface SpreadStageProps {
   showSafeMargin: boolean;
   showBleed: boolean;
   selectedElementId: string | null;
+  selectedElementIds?: string[];
   croppingElementId?: string | null;
   dropHighlightPageId?: string | null;
   animSeq?: number;
@@ -67,6 +68,7 @@ export function SpreadStage({
   showSafeMargin,
   showBleed,
   selectedElementId,
+  selectedElementIds = [],
   croppingElementId = null,
   dropHighlightPageId = null,
   animSeq = 0,
@@ -145,23 +147,28 @@ export function SpreadStage({
     [findImageTargetAtPointer, swapFramePhotos],
   );
 
-  // Locate the selected element so the transformer can attach by id.
+  // Locate selected elements so the transformer can attach across 1 or more nodes.
   const selected = useMemo((): {
-    element: Element;
+    elements: Element[];
     pageOffsetX: number;
   } | null => {
-    if (!selectedElementId) return null;
+    const ids =
+      selectedElementIds.length > 0
+        ? selectedElementIds
+        : selectedElementId
+          ? [selectedElementId]
+          : [];
+    if (ids.length === 0) return null;
+    const idSet = new Set(ids);
     for (let index = 0; index < pages.length; index += 1) {
       const page = pages[index]!;
-      const element = page.elements.find(
-        (candidate) => candidate.id === selectedElementId,
-      );
-      if (element) {
-        return { element, pageOffsetX: getPageOffsetX(index, layout) };
+      const matched = page.elements.filter((candidate) => idSet.has(candidate.id));
+      if (matched.length > 0) {
+        return { elements: matched, pageOffsetX: getPageOffsetX(index, layout) };
       }
     }
     return null;
-  }, [selectedElementId, pages, layout]);
+  }, [selectedElementId, selectedElementIds, pages, layout]);
 
   if (pages.length === 0 || width === 0 || height === 0) return null;
 
@@ -215,6 +222,7 @@ export function SpreadStage({
               showSafeMargin={showSafeMargin}
               showBleed={isCover ? false : showBleed}
               selectedElementId={selectedElementId}
+              selectedElementIds={selectedElementIds}
               swapTargetElementId={swapTargetId}
               croppingElementId={croppingElementId}
               dropHighlight={dropHighlightPageId === page.id}
@@ -424,9 +432,7 @@ export function SpreadStage({
       <Layer>
         <Group x={panX} y={panY} scaleX={scale} scaleY={scale}>
           <SelectionTransformer
-            element={
-              croppingElementId ? null : (selected?.element ?? null)
-            }
+            elements={croppingElementId ? [] : (selected?.elements ?? [])}
             pageOffsetX={selected?.pageOffsetX ?? 0}
             pageWidth={layout.pageWidth}
             pageHeight={layout.pageHeight}

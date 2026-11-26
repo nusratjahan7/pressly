@@ -1,6 +1,6 @@
 "use client";
 
-import { Rect } from "react-konva";
+import { Group, Rect } from "react-konva";
 import type { Element } from "@/types";
 import { TextNode } from "@/components/editor/canvas/konva/TextNode";
 import { ImageNode } from "@/components/editor/canvas/konva/ImageNode";
@@ -20,7 +20,7 @@ interface ElementContentProps {
 /**
  * Draws the element body in its own local coordinate space, anchored at (0,0)
  * and sized to `element.width` × `element.height`. Positioning, rotation and
- * opacity are applied by the surrounding frame so this stays pure content.
+ * opacity are applied by the surrounding frame; non-image flip transforms wrap cleanly here.
  */
 export function ElementContent({
   element,
@@ -29,54 +29,75 @@ export function ElementContent({
   isLargestEmpty = false,
   listening = false,
 }: ElementContentProps) {
-  switch (element.type) {
-    case "text":
-      return (
-        <TextNode
-          element={element}
-          width={width}
-          height={height}
-          listening={listening}
-        />
-      );
-    case "image":
-      return (
-        <ImageNode
-          element={element}
-          width={width}
-          height={height}
-          isLargestEmpty={isLargestEmpty}
-          listening={listening}
-        />
-      );
-    case "shape":
-      return (
-        <ShapeNode
-          element={element}
-          width={width}
-          height={height}
-          listening={listening}
-        />
-      );
-    case "sticker":
-      return (
-        <StickerNode
-          element={element}
-          width={width}
-          height={height}
-          listening={listening}
-        />
-      );
-    case "qr":
-      return (
-        <QrNode
-          element={element}
-          width={width}
-          height={height}
-          listening={listening}
-        />
-      );
+  if (element.type === "image") {
+    return (
+      <ImageNode
+        element={element}
+        width={width}
+        height={height}
+        isLargestEmpty={isLargestEmpty}
+        listening={listening}
+      />
+    );
   }
+
+  const flipX = Boolean(element.flipX);
+  const flipY = Boolean(element.flipY);
+
+  const inner = (() => {
+    switch (element.type) {
+      case "text":
+        return (
+          <TextNode
+            element={element}
+            width={width}
+            height={height}
+            listening={listening}
+          />
+        );
+      case "shape":
+        return (
+          <ShapeNode
+            element={element}
+            width={width}
+            height={height}
+            listening={listening}
+          />
+        );
+      case "sticker":
+        return (
+          <StickerNode
+            element={element}
+            width={width}
+            height={height}
+            listening={listening}
+          />
+        );
+      case "qr":
+        return (
+          <QrNode
+            element={element}
+            width={width}
+            height={height}
+            listening={listening}
+          />
+        );
+    }
+  })();
+
+  if (!flipX && !flipY) return inner;
+
+  return (
+    <Group
+      x={flipX ? width : 0}
+      y={flipY ? height : 0}
+      scaleX={flipX ? -1 : 1}
+      scaleY={flipY ? -1 : 1}
+      listening={listening}
+    >
+      {inner}
+    </Group>
+  );
 }
 
 /**

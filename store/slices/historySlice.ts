@@ -1,6 +1,7 @@
 import type { StateCreator } from "zustand";
 import type { Project } from "@/types";
 import type { EditorStore, HistorySlice } from "@/store/types";
+import { EMPTY_SELECTION } from "@/store/slices/selectionSlice";
 import { clampSpreadIndex } from "@/lib/spreads";
 
 const HISTORY_LIMIT = 60;
@@ -43,7 +44,7 @@ export const createHistorySlice: StateCreator<
           HISTORY_LIMIT,
         ),
       },
-      selection: { pageId: null, elementId: null },
+      selection: EMPTY_SELECTION,
       ui: {
         ...current.ui,
         spreadIndex: clampSpreadIndex(current.ui.spreadIndex, previous.pages),
@@ -64,7 +65,7 @@ export const createHistorySlice: StateCreator<
         ),
         future: current.history.future.slice(1),
       },
-      selection: { pageId: null, elementId: null },
+      selection: EMPTY_SELECTION,
       ui: {
         ...current.ui,
         spreadIndex: clampSpreadIndex(current.ui.spreadIndex, next.pages),
