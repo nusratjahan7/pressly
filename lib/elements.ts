@@ -134,7 +134,7 @@ export function createQrElement(
     ...geometryDefaults,
     ...geometry,
     zIndex: geometry.zIndex ?? 0,
-    value: "https://pressly.studio",
+    value: "",
     foreground: DEFAULT_TEXT_COLOR,
     background: "#FFFFFF",
     errorCorrection: "M",

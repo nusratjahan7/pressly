@@ -1,97 +1,337 @@
 "use client";
 
-import { useMemo } from "react";
-import { Info } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { BookOpen, Layers, Sparkles } from "lucide-react";
+import { ensureGoogleFontLoaded } from "@/lib/fonts";
 import { useEditorStore } from "@/store";
-import { useActivePage } from "@/store/selectors";
-import { getPageLabel } from "@/lib/spreads";
-import { PAGE_TEMPLATES } from "@/lib/templates";
+import { useCurrentSpread } from "@/store/selectors";
+import { getSpreadLabel, getSpreads } from "@/lib/spreads";
+import {
+  MAGAZINE_TEMPLATES,
+  TEMPLATE_THEMES,
+  type MagazineTemplate,
+  type TemplateTheme,
+} from "@/lib/templates";
 import { PageView } from "@/components/editor/canvas/PageView";
-import { PageContext, PanelSection } from "@/components/editor/sidebar/PanelSection";
-import { EmptyState } from "@/components/editor/EmptyState";
+import { PanelSection } from "@/components/editor/sidebar/PanelSection";
+import { Modal } from "@/components/ui/modal";
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/cn";
 
-const PREVIEW_WIDTH = 118;
+type ThemeFilter = "All" | TemplateTheme;
+
+const COVER_THUMB_W = 84;
+const SPREAD_PAGE_THUMB_W = 56;
 
 export function TemplatesPanel() {
   const project = useEditorStore((state) => state.project);
-  const applyPageTemplate = useEditorStore((state) => state.applyPageTemplate);
-  const { page, pageIndex } = useActivePage();
+  const applyMagazineTemplate = useEditorStore(
+    (state) => state.applyMagazineTemplate,
+  );
+  const { spread, spreadIndex } = useCurrentSpread();
 
-  const pageLabel = page ? getPageLabel(pageIndex, project.pages) : "a page";
+  const [themeFilter, setThemeFilter] = useState<ThemeFilter>("All");
+  const [confirmTemplate, setConfirmTemplate] =
+    useState<MagazineTemplate | null>(null);
+  const [selectedTplSpreadIdx, setSelectedTplSpreadIdx] = useState<number>(0);
 
-  const previews = useMemo(
-    () =>
-      PAGE_TEMPLATES.map((template) => ({
-        template,
-        page: {
-          id: `template-preview-${template.id}`,
-          backgroundId: template.backgroundId,
-          elements: template.build({
-            projectName: project.name,
-            pageSize: project.pageSize,
-          }),
-        },
-      })),
-    [project.name, project.pageSize],
+  useEffect(() => {
+    for (const tpl of MAGAZINE_TEMPLATES) {
+      const front = tpl.project.pages[1];
+      if (!front) continue;
+      for (const el of front.elements) {
+        if (el.type === "text") {
+          ensureGoogleFontLoaded(
+            el.fontFamily,
+            el.fontWeight,
+            el.fontStyle === "italic",
+          );
+        }
+      }
+    }
+  }, []);
+
+  const filtered = useMemo(() => {
+    if (themeFilter === "All") return MAGAZINE_TEMPLATES;
+    return MAGAZINE_TEMPLATES.filter((t) => t.theme === themeFilter);
+  }, [themeFilter]);
+
+  const currentSpreadEditable = useMemo(() => {
+    if (!spread) return false;
+    return spread.pageIndices.some((idx) => {
+      const p = project.pages[idx];
+      return Boolean(p && !p.isEndPaper && !p.locked);
+    });
+  }, [spread, project.pages]);
+
+  const openConfirm = (template: MagazineTemplate) => {
+    const tplSpreads = getSpreads(template.project.pages);
+    const defaultIdx = spread?.isCover
+      ? 0
+      : Math.min(Math.max(1, spreadIndex), Math.max(0, tplSpreads.length - 1));
+    setSelectedTplSpreadIdx(defaultIdx);
+    setConfirmTemplate(template);
+  };
+
+  const confirmTplSpreads = useMemo(
+    () => (confirmTemplate ? getSpreads(confirmTemplate.project.pages) : []),
+    [confirmTemplate],
   );
 
-  const scale = PREVIEW_WIDTH / project.pageSize.w;
-  const previewHeight = project.pageSize.h * scale;
+  const scaleCover = COVER_THUMB_W / (confirmTemplate?.project.pageSize.w ?? 210);
+  const scaleSpreadHalf = SPREAD_PAGE_THUMB_W / 210;
 
   return (
     <div className="flex flex-col gap-4">
-      <PageContext label={pageLabel} />
-
-      <div className="flex items-start gap-2 rounded-field border border-line bg-surface-muted/60 px-2.5 py-2 text-[10.5px] leading-4 text-ink-muted">
-        <Info className="mt-0.5 size-3 shrink-0 text-ink-subtle" aria-hidden="true" />
-        <p>
-          Applying a template replaces this page. Undo is always available.
-        </p>
+      {/* Theme chips */}
+      <div className="flex flex-wrap gap-1.5">
+        {(["All", ...TEMPLATE_THEMES] as ThemeFilter[]).map((theme) => {
+          const active = themeFilter === theme;
+          return (
+            <button
+              key={theme}
+              type="button"
+              onClick={() => setThemeFilter(theme)}
+              aria-pressed={active}
+              className={cn(
+                "rounded-full border px-2.5 py-1 text-[10.5px] font-medium transition-colors",
+                active
+                  ? "border-accent bg-accent text-accent-ink"
+                  : "border-line bg-surface text-ink-muted hover:border-line-strong hover:text-ink",
+              )}
+            >
+              {theme}
+            </button>
+          );
+        })}
       </div>
 
-      {!page || page.isEndPaper || page.locked ? (
-        <EmptyState
-          title={page ? "Page is locked" : "No page selected"}
-          description="Select an editable page to apply a template."
-          compact
-        />
-      ) : (
-        <PanelSection>
-          <div className="grid grid-cols-2 gap-2.5">
-            {previews.map(({ template, page: previewPage }) => (
+      <PanelSection
+        title="Magazine themes"
+        description={`${filtered.length} full issues · Cover + inner spreads`}
+      >
+        <div className="grid grid-cols-2 gap-2.5">
+          {filtered.map((template) => {
+            const tplPages = template.project.pages;
+            const backCover = tplPages[0];
+            const frontCover = tplPages[1] ?? tplPages[0]!;
+            const tplSize = template.project.pageSize;
+            const covScale = 96 / tplSize.w;
+
+            return (
               <button
                 key={template.id}
                 type="button"
-                onClick={() => applyPageTemplate(page.id, template)}
-                aria-label={`Apply ${template.name} template to ${pageLabel}`}
-                className="group flex flex-col overflow-hidden rounded-ui border border-line bg-surface text-left transition-[border-color,box-shadow] duration-150 hover:border-line-strong hover:shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-surface"
+                onClick={() => openConfirm(template)}
+                className="group flex flex-col overflow-hidden rounded-ui border border-line bg-surface text-left transition-[border-color,box-shadow] duration-150 hover:border-accent hover:shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
               >
-                <span className="flex items-center justify-center bg-surface-muted/70 p-3">
-                  <span
-                    className="block overflow-hidden rounded-[2px] shadow-paper ring-1 ring-black/5 transition-transform duration-200 ease-out-soft group-hover:-translate-y-0.5"
-                    style={{ width: PREVIEW_WIDTH, height: previewHeight }}
-                  >
-                    <PageView
-                      page={previewPage}
-                      pageSize={project.pageSize}
-                      scale={scale}
-                      decorative
+                <div className="flex items-center justify-center bg-surface-muted/65 px-2 py-3">
+                  {/* Front cover mini with spine bar */}
+                  <div className="flex overflow-hidden rounded-[2px] shadow-paper ring-1 ring-black/10 transition-transform duration-200 group-hover:-translate-y-0.5">
+                    <span
+                      aria-hidden="true"
+                      className="w-1.5 shrink-0 border-r border-black/10"
+                      style={{
+                        backgroundColor:
+                          template.palette[0] ??
+                          (backCover?.backgroundId === "ink" ? "#122056" : "#EFE7DC"),
+                      }}
                     />
-                  </span>
-                </span>
-                <span className="flex flex-col gap-0.5 px-2.5 py-2">
-                  <span className="text-[11.5px] font-semibold leading-4 text-ink">
+                    <div
+                      style={{
+                        width: 96,
+                        height: tplSize.h * covScale,
+                      }}
+                    >
+                      <PageView
+                        page={frontCover}
+                        pageSize={tplSize}
+                        scale={covScale}
+                        decorative
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex flex-col gap-0.5 px-2.5 py-2">
+                  <span className="truncate text-[11px] font-semibold text-ink">
                     {template.name}
                   </span>
-                  <span className="line-clamp-2 text-[10px] leading-3.5 text-ink-subtle">
-                    {template.description}
-                  </span>
-                </span>
+                  <div className="flex items-center justify-between gap-1">
+                    <span className="truncate text-[9px] font-medium text-ink-subtle">
+                      {template.theme}
+                    </span>
+                    <span className="flex shrink-0 items-center gap-0.5">
+                      {template.palette.slice(0, 3).map((hex, i) => (
+                        <span
+                          key={`${template.id}-swatch-${i}`}
+                          className="size-2 rounded-full ring-1 ring-black/15"
+                          style={{ backgroundColor: hex }}
+                          aria-hidden="true"
+                        />
+                      ))}
+                    </span>
+                  </div>
+                </div>
               </button>
-            ))}
+            );
+          })}
+        </div>
+      </PanelSection>
+
+      {/* Confirm apply dialog (Replace issue vs. Apply to current spread only) */}
+      <Modal
+        open={Boolean(confirmTemplate)}
+        onClose={() => setConfirmTemplate(null)}
+        title={confirmTemplate?.name ?? "Apply template"}
+        description={
+          confirmTemplate
+            ? `${confirmTemplate.theme} · ${confirmTemplate.typography}`
+            : undefined
+        }
+        size="md"
+        footer={
+          confirmTemplate ? (
+            <div className="flex w-full flex-wrap items-center justify-between gap-2">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setConfirmTemplate(null)}
+              >
+                Cancel
+              </Button>
+              <div className="flex flex-wrap items-center gap-2">
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  leadingIcon={Layers}
+                  disabled={!currentSpreadEditable}
+                  onClick={() => {
+                    applyMagazineTemplate(confirmTemplate.id, "spread", {
+                      targetSpreadIndex: spreadIndex,
+                      templateSpreadIndex: selectedTplSpreadIdx,
+                    });
+                    setConfirmTemplate(null);
+                  }}
+                >
+                  Apply to current spread only
+                </Button>
+                <Button
+                  variant="primary"
+                  size="sm"
+                  leadingIcon={BookOpen}
+                  onClick={() => {
+                    applyMagazineTemplate(confirmTemplate.id, "replace");
+                    setConfirmTemplate(null);
+                  }}
+                >
+                  Replace entire issue
+                </Button>
+              </div>
+            </div>
+          ) : null
+        }
+      >
+        {confirmTemplate ? (
+          <div className="flex flex-col gap-3.5">
+            <div className="flex items-center justify-center gap-4 rounded-ui border border-line bg-surface-muted/50 p-3.5">
+              <div
+                className="overflow-hidden rounded-[2px] shadow-paper ring-1 ring-black/10"
+                style={{
+                  width: COVER_THUMB_W,
+                  height: confirmTemplate.project.pageSize.h * scaleCover,
+                }}
+              >
+                <PageView
+                  page={
+                    confirmTemplate.project.pages[1] ??
+                    confirmTemplate.project.pages[0]!
+                  }
+                  pageSize={confirmTemplate.project.pageSize}
+                  scale={scaleCover}
+                  decorative
+                />
+              </div>
+              {confirmTemplate.project.pages[4] &&
+              confirmTemplate.project.pages[5] ? (
+                <div className="flex overflow-hidden rounded-[2px] shadow-paper ring-1 ring-black/10">
+                  <PageView
+                    page={confirmTemplate.project.pages[4]}
+                    pageSize={confirmTemplate.project.pageSize}
+                    scale={scaleSpreadHalf}
+                    decorative
+                  />
+                  <PageView
+                    page={confirmTemplate.project.pages[5]}
+                    pageSize={confirmTemplate.project.pageSize}
+                    scale={scaleSpreadHalf}
+                    extraElements={confirmTemplate.project.pages[4].elements
+                      .filter((el) => Boolean(el.spanSpread))
+                      .map((el) => ({
+                        ...el,
+                        x: el.x - confirmTemplate.project.pageSize.w,
+                      }))}
+                    decorative
+                  />
+                </div>
+              ) : null}
+            </div>
+
+            <div className="flex items-center justify-between gap-2 text-[11px] text-ink-muted">
+              <span className="flex items-center gap-1.5">
+                <Sparkles className="size-3.5 text-accent" aria-hidden="true" />
+                Cohesive palette &amp; font pairing included
+              </span>
+              <span className="flex items-center gap-1">
+                {confirmTemplate.palette.map((hex, i) => (
+                  <span
+                    key={`modal-swatch-${i}`}
+                    className="size-3 rounded-full ring-1 ring-black/15"
+                    style={{ backgroundColor: hex }}
+                  />
+                ))}
+              </span>
+            </div>
+
+            {currentSpreadEditable && confirmTplSpreads.length > 0 ? (
+              <div className="flex flex-col gap-1.5 rounded-field border border-line bg-surface-muted/40 p-2.5">
+                <span className="text-[10px] font-semibold uppercase tracking-[0.12em] text-ink-subtle">
+                  If applying to{" "}
+                  {spread
+                    ? getSpreadLabel(spread, project.pages)
+                    : "current spread"}
+                  , use template spread:
+                </span>
+                <div className="flex flex-wrap gap-1">
+                  {confirmTplSpreads.map((sp, idx) => {
+                    const label = sp.isCover
+                      ? "Cover"
+                      : sp.isFirstContent
+                        ? "Page 1"
+                        : `Spread ${idx}`;
+                    const active = selectedTplSpreadIdx === idx;
+                    return (
+                      <button
+                        key={`tpl-sp-${idx}`}
+                        type="button"
+                        onClick={() => setSelectedTplSpreadIdx(idx)}
+                        className={cn(
+                          "rounded-field border px-2 py-1 text-[10.5px] font-medium transition-colors",
+                          active
+                            ? "border-accent bg-accent text-accent-ink"
+                            : "border-line bg-surface text-ink-muted hover:text-ink",
+                        )}
+                      >
+                        {label}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            ) : null}
           </div>
-        </PanelSection>
-      )}
+        ) : null}
+      </Modal>
     </div>
   );
 }

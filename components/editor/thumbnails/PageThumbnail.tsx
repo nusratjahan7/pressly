@@ -1,6 +1,7 @@
 "use client";
 
-import type { Page, PageSize } from "@/types";
+import { useMemo } from "react";
+import type { Element, Page, PageSize } from "@/types";
 import { usePageSnapshot } from "@/components/editor/thumbnails/usePageSnapshot";
 import { PageView } from "@/components/editor/canvas/PageView";
 import { cn } from "@/lib/cn";
@@ -9,6 +10,7 @@ interface PageThumbnailProps {
   page: Page;
   pageSize: PageSize;
   height: number;
+  extraElements?: Element[];
   className?: string;
 }
 
@@ -21,10 +23,18 @@ export function PageThumbnail({
   page,
   pageSize,
   height,
+  extraElements = [],
   className,
 }: PageThumbnailProps) {
   const width = Math.round((pageSize.w / pageSize.h) * height);
-  const url = usePageSnapshot(page, pageSize, width);
+  const effectivePage = useMemo(
+    () =>
+      extraElements.length > 0 && !page.isEndPaper
+        ? { ...page, elements: [...extraElements, ...page.elements] }
+        : page,
+    [page, extraElements],
+  );
+  const url = usePageSnapshot(effectivePage, pageSize, width);
 
   if (!url) {
     return (
@@ -32,6 +42,7 @@ export function PageThumbnail({
         page={page}
         pageSize={pageSize}
         scale={height / pageSize.h}
+        extraElements={extraElements}
         decorative
         className={className}
       />

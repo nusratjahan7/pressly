@@ -32,9 +32,11 @@ export const CURATED_FONTS: CuratedFont[] = [
   { name: "DM Serif Display", slug: "dm-serif-display", category: "serif", weights: [400], hasItalic: true },
   { name: "Bodoni Moda", slug: "bodoni-moda", category: "serif", weights: [400, 500, 600, 700], hasItalic: true },
 
-  // Display (6)
+  // Display (8)
+  { name: "Anton", slug: "anton", category: "display", weights: [400], hasItalic: false },
   { name: "Bebas Neue", slug: "bebas-neue", category: "display", weights: [400], hasItalic: false },
   { name: "Oswald", slug: "oswald", category: "display", weights: [400, 500, 600, 700], hasItalic: false },
+  { name: "Dancing Script", slug: "dancing-script", category: "display", weights: [400, 500, 600, 700], hasItalic: false },
   { name: "Abril Fatface", slug: "abril-fatface", category: "display", weights: [400], hasItalic: false },
   { name: "Syne", slug: "syne", category: "display", weights: [400, 500, 600, 700], hasItalic: false },
   { name: "Cinzel", slug: "cinzel", category: "display", weights: [400, 500, 600, 700], hasItalic: false },

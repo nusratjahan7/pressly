@@ -205,22 +205,20 @@ export function buildSpreadLayoutElements(
   for (const { index, type, rect } of rects) {
     const crossesSpine = rect.x < pageSize.w && rect.x + rect.width > pageSize.w;
     if (crossesSpine) {
-      // Split across spine cleanly so both halves remain independently editable.
-      const leftWidth = round(Math.max(8, pageSize.w - gapMm / 2 - rect.x), 2);
-      const rightX = round(gapMm / 2, 2);
-      const rightWidth = round(
-        Math.max(8, rect.x + rect.width - pageSize.w - gapMm / 2),
-        2,
-      );
+      // Keep cross-spine spread frames as one unified element spanning both pages.
       if (type === "text") {
         const text = existingTexts[textCursor++];
         left.push(
           createTextFrameElement(
-            { x: rect.x, y: rect.y, width: leftWidth, height: rect.height },
+            { x: rect.x, y: rect.y, width: rect.width, height: rect.height },
             left.length,
             text,
           ),
         );
+        left[left.length - 1] = {
+          ...left[left.length - 1]!,
+          spanSpread: true,
+        };
       } else {
         const photo = photoMap.get(index);
         left.push(
@@ -228,7 +226,7 @@ export function buildSpreadLayoutElements(
             {
               x: rect.x,
               y: rect.y,
-              width: leftWidth,
+              width: rect.width,
               height: rect.height,
               zIndex: left.length,
             },
@@ -239,19 +237,8 @@ export function buildSpreadLayoutElements(
               cropScale: photo?.cropScale ?? 1,
               cropX: photo?.cropX ?? 0,
               cropY: photo?.cropY ?? 0,
+              spanSpread: true,
             },
-          ),
-        );
-        right.push(
-          createImageElement(
-            {
-              x: rightX,
-              y: rect.y,
-              width: rightWidth,
-              height: rect.height,
-              zIndex: right.length,
-            },
-            { src: "", alt: "", fit: "cover" },
           ),
         );
       }

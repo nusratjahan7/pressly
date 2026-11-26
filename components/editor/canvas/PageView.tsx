@@ -1,7 +1,7 @@
 "use client";
 
 import type { CSSProperties } from "react";
-import type { Page, PageSize } from "@/types";
+import type { Element, Page, PageSize } from "@/types";
 import { getBackground } from "@/lib/backgrounds";
 import { useEditorStore } from "@/store";
 import { ElementView } from "@/components/editor/canvas/ElementView";
@@ -14,6 +14,7 @@ interface PageViewProps {
   interactive?: boolean;
   selectedElementId?: string | null;
   decorative?: boolean;
+  extraElements?: Element[];
   className?: string;
 }
 
@@ -24,6 +25,7 @@ export function PageView({
   interactive = false,
   selectedElementId = null,
   decorative = false,
+  extraElements = [],
   className,
 }: PageViewProps) {
   const selectPage = useEditorStore((state) => state.selectPage);
@@ -48,7 +50,7 @@ export function PageView({
 
   const elements = isEndPaper
     ? []
-    : [...page.elements].sort((a, b) => a.zIndex - b.zIndex);
+    : [...extraElements, ...page.elements].sort((a, b) => a.zIndex - b.zIndex);
   const canInteract = interactive && !isLocked;
 
   return (

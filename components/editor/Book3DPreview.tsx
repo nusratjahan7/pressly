@@ -172,6 +172,13 @@ export function Book3DPreview({
               page={frontCover}
               pageSize={pageSize}
               scale={scale}
+              extraElements={
+                backCover && !backCover.isEndPaper
+                  ? backCover.elements
+                      .filter((el) => Boolean(el.spanSpread))
+                      .map((el) => ({ ...el, x: el.x - pageSize.w }))
+                  : []
+              }
               decorative
             />
           </div>
@@ -346,6 +353,13 @@ export function Book3DPreview({
                   page={rightPage}
                   pageSize={pageSize}
                   scale={scale}
+                  extraElements={
+                    leftPage && !leftPage.isEndPaper
+                      ? leftPage.elements
+                          .filter((el) => Boolean(el.spanSpread))
+                          .map((el) => ({ ...el, x: el.x - pageSize.w }))
+                      : []
+                  }
                   decorative
                 />
                 <div

@@ -113,6 +113,13 @@ export function SpreadView({
             interactive={interactive}
             selectedElementId={selectedElementId}
             decorative={decorative}
+            extraElements={
+              items[0] && !items[0].page.isEndPaper
+                ? items[0].page.elements
+                    .filter((el) => el.spanSpread)
+                    .map((el) => ({ ...el, x: el.x - pageSize.w }))
+                : []
+            }
             className={cn(
               "rounded-[2px]",
               variant !== "thumbnail" && "shadow-paper",

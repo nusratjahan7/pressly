@@ -302,16 +302,33 @@ export function CanvasWorkspace() {
       ) {
         const localX = pt.x - offsetX;
         const localY = pt.y;
-        const imageFrame = [...candidate.elements]
-          .sort((a, b) => b.zIndex - a.zIndex)
+        const spanningHit = pages
+          .flatMap((p, pIdx) => {
+            if (p.isEndPaper || p.locked) return [];
+            const pOff = getPageOffsetX(pIdx, layout);
+            return p.elements
+              .filter((el): el is ImageElement => el.type === "image" && Boolean(el.spanSpread))
+              .map((el) => ({ el, pOff }));
+          })
           .find(
-            (el): el is ImageElement =>
-              el.type === "image" &&
-              localX >= el.x &&
-              localX <= el.x + el.width &&
-              localY >= el.y &&
-              localY <= el.y + el.height,
-          );
+            ({ el, pOff }) =>
+              pt.x >= pOff + el.x &&
+              pt.x <= pOff + el.x + el.width &&
+              pt.y >= el.y &&
+              pt.y <= el.y + el.height,
+          )?.el;
+        const imageFrame =
+          spanningHit ??
+          [...candidate.elements]
+            .sort((a, b) => b.zIndex - a.zIndex)
+            .find(
+              (el): el is ImageElement =>
+                el.type === "image" &&
+                localX >= el.x &&
+                localX <= el.x + el.width &&
+                localY >= el.y &&
+                localY <= el.y + el.height,
+            );
         return { page: candidate, localX, localY, imageFrame };
       }
     }
@@ -437,7 +454,7 @@ export function CanvasWorkspace() {
           targetPage.id,
           createQrElement(
             { x: round(x, 1), y: round(y, 1), width: sizeMm, height: sizeMm },
-            { value: parsed.value || "https://pressly.studio" },
+            { value: parsed.value?.trim() ?? "" },
           ),
         );
       } catch {

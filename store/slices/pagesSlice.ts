@@ -5,6 +5,10 @@ import { createPage } from "@/lib/project";
 import { createId } from "@/lib/id";
 import { canAddSpread, getBinding } from "@/lib/binding";
 import {
+  getMagazineTemplate,
+  instantiateTemplatePage,
+} from "@/lib/templates";
+import {
   buildPageLayoutElements,
   buildSpreadLayoutElements,
   computeFrameRectMm,
@@ -269,6 +273,103 @@ export const createPagesSlice: StateCreator<
         ),
       },
       selection: { pageId, elementId: null, elementIds: [], spineSelected: false },
+    }));
+  },
+
+  applyMagazineTemplate: (templateId, mode, options) => {
+    const template = getMagazineTemplate(templateId);
+    if (!template) return;
+    const state = get();
+    const targetSize = state.project.pageSize;
+    const srcSize = template.project.pageSize;
+
+    if (mode === "replace") {
+      const nextPages = template.project.pages.map((p) =>
+        instantiateTemplatePage(p, srcSize, targetSize),
+      );
+      get().pushHistory();
+      set((current) => ({
+        project: {
+          ...current.project,
+          spineText: template.project.spineText ?? template.name,
+          pages: nextPages,
+        },
+        selection: {
+          pageId: null,
+          elementId: null,
+          elementIds: [],
+          spineSelected: false,
+        },
+        ui: {
+          ...current.ui,
+          spreadIndex: 0,
+          layoutAnimSeq: current.ui.layoutAnimSeq + 1,
+          layoutAnimPageIds: nextPages.slice(0, 2).map((p) => p.id),
+        },
+      }));
+      return;
+    }
+
+    const spreads = getSpreads(state.project.pages);
+    const targetSpreadIdx =
+      options?.targetSpreadIndex ??
+      clampSpreadIndex(state.ui.spreadIndex, state.project.pages);
+    const targetSpread = spreads[targetSpreadIdx];
+    if (!targetSpread) return;
+
+    const tplSpreads = getSpreads(template.project.pages);
+    const tplSpreadIdx =
+      options?.templateSpreadIndex ??
+      Math.min(targetSpreadIdx, Math.max(0, tplSpreads.length - 1));
+    const tplSpread = tplSpreads[tplSpreadIdx] ?? tplSpreads[0];
+    if (!tplSpread) return;
+
+    const replacements = new Map<string, Page>();
+    targetSpread.pageIndices.forEach((pageIdx, slot) => {
+      const existingPage = state.project.pages[pageIdx];
+      if (!existingPage || existingPage.isEndPaper || existingPage.locked) {
+        return;
+      }
+      const tplPageIdx = tplSpread.pageIndices[slot];
+      let sourcePage =
+        tplPageIdx !== undefined ? template.project.pages[tplPageIdx] : undefined;
+      if (!sourcePage || sourcePage.isEndPaper) {
+        const fallbackIdx = tplSpread.pageIndices.find(
+          (i) => !template.project.pages[i]?.isEndPaper,
+        );
+        sourcePage =
+          fallbackIdx !== undefined ? template.project.pages[fallbackIdx] : undefined;
+      }
+      if (!sourcePage || sourcePage.isEndPaper) return;
+      const next = instantiateTemplatePage(sourcePage, srcSize, targetSize);
+      replacements.set(existingPage.id, {
+        ...next,
+        id: existingPage.id,
+        coverSide: existingPage.coverSide,
+      });
+    });
+
+    if (replacements.size === 0) return;
+
+    get().pushHistory();
+    set((current) => ({
+      project: {
+        ...current.project,
+        pages: current.project.pages.map(
+          (candidate) => replacements.get(candidate.id) ?? candidate,
+        ),
+      },
+      selection: {
+        pageId: null,
+        elementId: null,
+        elementIds: [],
+        spineSelected: false,
+      },
+      ui: {
+        ...current.ui,
+        layoutAnimSeq: current.ui.layoutAnimSeq + 1,
+        layoutAnimPageIds: Array.from(replacements.keys()),
+      },
     }));
   },
 

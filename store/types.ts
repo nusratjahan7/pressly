@@ -93,6 +93,14 @@ export interface PagesSlice {
     pageId: string,
     template: Pick<PageTemplate, "backgroundId" | "build">,
   ) => void;
+  applyMagazineTemplate: (
+    templateId: string,
+    mode: "replace" | "spread",
+    options?: {
+      targetSpreadIndex?: number;
+      templateSpreadIndex?: number;
+    },
+  ) => void;
   applyLayout: (
     pageId: string,
     layout: LayoutDefinition,

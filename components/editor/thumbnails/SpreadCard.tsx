@@ -121,6 +121,13 @@ export const SpreadCard = forwardRef<HTMLButtonElement, SpreadCardProps>(
                   page={spreadPages[1]}
                   pageSize={pageSize}
                   height={height}
+                  extraElements={
+                    spreadPages[0] && !spreadPages[0].isEndPaper
+                      ? spreadPages[0].elements
+                          .filter((el) => Boolean(el.spanSpread))
+                          .map((el) => ({ ...el, x: el.x - pageSize.w }))
+                      : []
+                  }
                   className={view === "grid" ? "!h-auto !min-w-0 !flex-1" : undefined}
                 />
               ) : showFadedBlankHalf ? (

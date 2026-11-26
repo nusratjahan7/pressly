@@ -31,7 +31,19 @@ export function QrNode({ element, width, height, listening = false }: QrNodeProp
           context.closePath();
           context.fillStrokeShape(shape);
 
-          if (!matrix) return;
+          if (!matrix) {
+            context.strokeStyle = "rgba(18,32,86,0.28)";
+            context.lineWidth = Math.max(0.3, Math.min(width, height) * 0.015);
+            context.setLineDash([1.6, 1.2]);
+            context.strokeRect(0.4, 0.4, Math.max(1, width - 0.8), Math.max(1, height - 0.8));
+            context.setLineDash([]);
+            context.fillStyle = "rgba(18,32,86,0.45)";
+            context.font = `${Math.max(2.5, Math.min(width, height) * 0.14)}px Montserrat, sans-serif`;
+            context.textAlign = "center";
+            context.textBaseline = "middle";
+            context.fillText("QR", width / 2, height / 2);
+            return;
+          }
 
           const count = matrix.length;
           const quietZone = 4;

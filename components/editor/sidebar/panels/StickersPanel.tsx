@@ -78,7 +78,7 @@ export function StickersPanel() {
   const [color, setColor] = useState(DEFAULT_TEXT_COLOR);
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState<FilterCategory>("All");
-  const [qrInput, setQrInput] = useState("https://pressly.studio");
+  const [qrInput, setQrInput] = useState("");
   const [recentIds, setRecentIds] = useState<string[]>(() =>
     typeof window !== "undefined" ? loadRecentStickerIds() : [],
   );
@@ -203,7 +203,7 @@ export function StickersPanel() {
           width: size,
           height: size,
         },
-        { value: qrInput.trim() || "https://pressly.studio" },
+        { value: qrInput.trim() },
       ),
     );
   };
@@ -341,7 +341,7 @@ export function StickersPanel() {
                   type="text"
                   value={qrInput}
                   onChange={(e) => setQrInput(e.target.value)}
-                  placeholder="https://..."
+                  placeholder="Enter URL or text…"
                   aria-label="QR code URL or text"
                   className="h-8 min-w-0 flex-1 rounded-field border border-line bg-surface px-2.5 text-[11px] text-ink outline-none placeholder:text-ink-subtle focus:border-accent"
                 />

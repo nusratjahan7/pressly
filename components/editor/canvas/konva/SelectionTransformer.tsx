@@ -116,7 +116,8 @@ export function SelectionTransformer({
           group.scaleX(1);
           group.scaleY(1);
 
-          const x = group.x() - pageOffsetX;
+          const nodeOriginOffsetX = single.spanSpread ? pageOffsetX : 0;
+          const x = group.x() - nodeOriginOffsetX;
           const y = group.y();
           const clampedX = Math.min(
             Math.max(x, single.rotation ? -nextWidth / 2 : 0),
@@ -170,9 +171,10 @@ export function SelectionTransformer({
           const nextH = Math.max(MIN_ELEMENT_MM, el.height * Math.abs(sy));
           node.scaleX(1);
           node.scaleY(1);
+          const nodeOriginOffsetX = el.spanSpread ? pageOffsetX : 0;
           updates.push({
             id: el.id,
-            x: node.x() - pageOffsetX,
+            x: node.x() - nodeOriginOffsetX,
             y: node.y(),
             width: nextW,
             height: nextH,

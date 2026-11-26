@@ -4,9 +4,11 @@ import { useCallback, useMemo, useState } from "react";
 import { Group, Layer, Line, Rect, Stage, Text } from "react-konva";
 import type { Element, Page, PageSize } from "@/types";
 import { getBackground } from "@/lib/backgrounds";
+import { getLargestEmptyFrameId } from "@/lib/layouts";
 import { getPageOffsetX, getSpreadLayout } from "@/lib/konva/geometry";
 import { useEditorStore } from "@/store";
 import { ptToMm } from "@/lib/units";
+import { ElementFrame } from "@/components/editor/canvas/konva/ElementFrame";
 import { PageNode } from "@/components/editor/canvas/konva/PageNode";
 import { SelectionTransformer } from "@/components/editor/canvas/konva/SelectionTransformer";
 
@@ -147,6 +149,27 @@ export function SpreadStage({
     [findImageTargetAtPointer, swapFramePhotos],
   );
 
+  const spanningItems = useMemo(
+    () =>
+      pages.flatMap((page, index) => {
+        if (page.isEndPaper) return [];
+        const pageOffsetX = getPageOffsetX(index, layout);
+        return page.elements
+          .filter((el) => Boolean(el.spanSpread))
+          .sort((a, b) => a.zIndex - b.zIndex)
+          .map((element) => ({ element, page, pageOffsetX }));
+      }),
+    [pages, layout],
+  );
+
+  const spreadLargestEmptyId = useMemo(
+    () =>
+      getLargestEmptyFrameId(
+        pages.flatMap((p) => (p.isEndPaper ? [] : p.elements)),
+      ),
+    [pages],
+  );
+
   // Locate selected elements so the transformer can attach across 1 or more nodes.
   const selected = useMemo((): {
     elements: Element[];
@@ -236,6 +259,41 @@ export function SpreadStage({
               onFrameDragEndSwap={handleFrameDragEndSwap}
             />
           ))}
+
+          {spanningItems.length > 0 ? (
+            <Group
+              clipX={0}
+              clipY={0}
+              clipWidth={layout.spreadWidth}
+              clipHeight={layout.spreadHeight}
+            >
+              {spanningItems.map(({ element, page, pageOffsetX }) => (
+                <ElementFrame
+                  key={element.id}
+                  element={element}
+                  pageId={page.id}
+                  pageOffsetX={pageOffsetX}
+                  pageWidth={layout.spreadWidth}
+                  pageHeight={layout.spreadHeight}
+                  selected={
+                    selectedElementIds.length > 0
+                      ? selectedElementIds.includes(element.id)
+                      : selectedElementId === element.id
+                  }
+                  decorative={Boolean(page.locked)}
+                  isLargestEmpty={element.id === spreadLargestEmptyId}
+                  isSwapTarget={element.id === swapTargetId}
+                  isCropping={element.id === croppingElementId}
+                  animSeq={animPageIds.includes(page.id) ? animSeq : 0}
+                  onOpenPhotoPicker={onOpenPhotoPicker}
+                  onDoubleClickFrame={onDoubleClickFrame}
+                  onContextMenuFrame={onContextMenuFrame}
+                  onFrameDragMove={handleFrameDragMove}
+                  onFrameDragEndSwap={handleFrameDragEndSwap}
+                />
+              ))}
+            </Group>
+          ) : null}
 
           {showFadedBlankHalf ? (
             <Group x={layout.pageWidth} y={0} listening={false}>
@@ -434,7 +492,11 @@ export function SpreadStage({
           <SelectionTransformer
             elements={croppingElementId ? [] : (selected?.elements ?? [])}
             pageOffsetX={selected?.pageOffsetX ?? 0}
-            pageWidth={layout.pageWidth}
+            pageWidth={
+              selected?.elements.some((el) => el.spanSpread)
+                ? layout.spreadWidth
+                : layout.pageWidth
+            }
             pageHeight={layout.pageHeight}
             scale={scale}
           />

@@ -16,7 +16,7 @@ import {
   getStarPoints,
   pointsToSvgPath,
 } from "@/lib/shapes";
-import { getPdfExportPages } from "@/lib/spreads";
+import { getPdfExportPages, getSpreads } from "@/lib/spreads";
 import {
   getSticker,
   loadCustomStickers,
@@ -465,6 +465,17 @@ export async function createProjectPdf(
   const mediaHeight = trimHeightPt + bleedPt * 2;
 
   const exportPages = getPdfExportPages(project.pages);
+  const rightToLeftPartner = new Map<string, Project["pages"][number]>();
+  for (const spread of getSpreads(project.pages)) {
+    if (spread.pageIndices.length === 2) {
+      const leftP = project.pages[spread.pageIndices[0]!];
+      const rightP = project.pages[spread.pageIndices[1]!];
+      if (leftP && rightP && !leftP.isEndPaper) {
+        rightToLeftPartner.set(rightP.id, leftP);
+      }
+    }
+  }
+
   for (const page of exportPages) {
     const pdfPage: PdfPage = document.addPage([mediaWidth, mediaHeight]);
     const background = getBackground(page.backgroundId);
@@ -487,7 +498,15 @@ export async function createProjectPdf(
       );
     }
 
-    const ordered = [...page.elements].sort((a, b) => a.zIndex - b.zIndex);
+    const leftPartner = rightToLeftPartner.get(page.id);
+    const spanningFromLeft = leftPartner
+      ? leftPartner.elements
+          .filter((el) => Boolean(el.spanSpread))
+          .map((el) => ({ ...el, x: el.x - project.pageSize.w }))
+      : [];
+    const ordered = [...spanningFromLeft, ...page.elements].sort(
+      (a, b) => a.zIndex - b.zIndex,
+    );
 
     for (const element of ordered) {
       if (element.opacity <= 0) continue;
