@@ -3,6 +3,7 @@ import {
   LayoutGrid,
   LayoutTemplate,
   PaintBucket,
+  Settings2,
   Sticker,
   type LucideIcon,
 } from "lucide-react";
@@ -20,6 +21,7 @@ export const SIDEBAR_ITEMS: SidebarItem[] = [
   { id: "layouts", label: "Layouts", icon: LayoutGrid },
   { id: "backgrounds", label: "Backgrounds", icon: PaintBucket },
   { id: "stickers", label: "Stickers", icon: Sticker },
+  { id: "setup", label: "Setup", icon: Settings2 },
 ];
 
 export const SIDEBAR_META: Record<
@@ -45,5 +47,9 @@ export const SIDEBAR_META: Record<
   stickers: {
     title: "Stickers",
     description: "Vector accents for covers and interiors.",
+  },
+  setup: {
+    title: "Page setup",
+    description: "Trim, bleed, margins and binding for this issue.",
   },
 };

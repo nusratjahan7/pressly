@@ -1,8 +1,26 @@
 import type { StateCreator } from "zustand";
-import type { Element, PageSize } from "@/types";
+import type { Element, Page, PageSize, Project } from "@/types";
 import type { EditorStore, ProjectSlice } from "@/store/types";
 import { createSeedProject } from "@/lib/project";
+import { createId } from "@/lib/id";
+import { createPage } from "@/lib/project";
 import { clamp, round } from "@/lib/units";
+
+export const MIN_TRIM_MM = 20;
+export const MAX_TRIM_MM = 1000;
+export const DEFAULT_BLEED_MM = 3;
+export const DEFAULT_SAFE_MARGIN_MM = 5;
+
+function normalizePageSize(pageSize: PageSize): PageSize {
+  return {
+    w: clamp(round(pageSize.w, 2), MIN_TRIM_MM, MAX_TRIM_MM),
+    h: clamp(round(pageSize.h, 2), MIN_TRIM_MM, MAX_TRIM_MM),
+    unit: "mm",
+    bleed: clamp(round(pageSize.bleed, 2), 0, 25),
+    safeMargin: clamp(round(pageSize.safeMargin, 2), 0, 50),
+    binding: pageSize.binding,
+  };
+}
 
 function scaleElement(element: Element, rx: number, ry: number): Element {
   const geometry = {
@@ -39,6 +57,28 @@ function scaleElement(element: Element, rx: number, ry: number): Element {
   }
 }
 
+/**
+ * Pure preview of a trim change: the pages that *would* result, without
+ * touching the store. The setup dialog uses this so its confirmation preview
+ * can show real rescaled content before anything is committed.
+ */
+export function previewPageSizeChange(
+  project: Project,
+  next: PageSize,
+): { pages: Page[]; rx: number; ry: number } {
+  const current = project.pageSize;
+  const rx = next.w / current.w;
+  const ry = next.h / current.h;
+  return {
+    rx,
+    ry,
+    pages: project.pages.map((page) => ({
+      ...page,
+      elements: page.elements.map((element) => scaleElement(element, rx, ry)),
+    })),
+  };
+}
+
 export const createProjectSlice: StateCreator<
   EditorStore,
   [],
@@ -58,17 +98,14 @@ export const createProjectSlice: StateCreator<
 
   setPageSize: (pageSize) => {
     const current = get().project.pageSize;
-    const next: PageSize = {
-      w: clamp(round(pageSize.w, 2), 20, 1000),
-      h: clamp(round(pageSize.h, 2), 20, 1000),
-      unit: "mm",
-      bleed: clamp(round(pageSize.bleed, 2), 0, 25),
-    };
+    const next = normalizePageSize({ ...current, ...pageSize });
 
     if (
       Math.abs(current.w - next.w) < 0.001 &&
       Math.abs(current.h - next.h) < 0.001 &&
-      Math.abs(current.bleed - next.bleed) < 0.001
+      Math.abs(current.bleed - next.bleed) < 0.001 &&
+      Math.abs(current.safeMargin - next.safeMargin) < 0.001 &&
+      current.binding === next.binding
     ) {
       return;
     }
@@ -87,6 +124,54 @@ export const createProjectSlice: StateCreator<
             scaleElement(element, rx, ry),
           ),
         })),
+      },
+    }));
+  },
+
+  setPageSetup: (patch) => {
+    const current = get().project.pageSize;
+    const next = normalizePageSize({
+      ...current,
+      bleed: patch.bleed ?? current.bleed,
+      safeMargin: patch.safeMargin ?? current.safeMargin,
+      binding: patch.binding ?? current.binding,
+    });
+
+    if (
+      Math.abs(current.bleed - next.bleed) < 0.001 &&
+      Math.abs(current.safeMargin - next.safeMargin) < 0.001 &&
+      current.binding === next.binding
+    ) {
+      return;
+    }
+
+    // Bleed and margins are print furniture, not geometry, so nothing rescales.
+    get().pushHistory();
+    set((state) => ({
+      project: { ...state.project, pageSize: next },
+    }));
+  },
+
+  createProject: ({ name, pageSize, spreads }) => {
+    const next = normalizePageSize(pageSize);
+    const spreadCount = clamp(Math.round(spreads), 1, 200);
+    const pages: Page[] = Array.from({ length: spreadCount * 2 }, () =>
+      createPage("paper"),
+    );
+
+    get().pushHistory();
+    set((state) => ({
+      project: {
+        id: createId(),
+        name: name.trim() || "Untitled Issue",
+        pageSize: next,
+        pages,
+      },
+      selection: { pageId: null, elementId: null },
+      ui: {
+        ...state.ui,
+        spreadIndex: 0,
+        viewCenter: { x: next.w, y: next.h / 2 },
       },
     }));
   },

@@ -1,4 +1,4 @@
-import type { Element, PageSize, Project } from "@/types";
+import type { BindingType, Element, PageSize, Project } from "@/types";
 import type { PageTemplate } from "@/lib/templates";
 
 export type SidebarTab =
@@ -6,7 +6,8 @@ export type SidebarTab =
   | "templates"
   | "layouts"
   | "backgrounds"
-  | "stickers";
+  | "stickers"
+  | "setup";
 
 export type SaveState = "idle" | "saving" | "saved" | "error";
 
@@ -24,6 +25,8 @@ export interface UiState {
   exportOpen: boolean;
   showSafeMargin: boolean;
   showBleed: boolean;
+  pageSetupOpen: boolean;
+  pageSetupMode: "setup" | "new";
 }
 
 export interface SelectionState {
@@ -36,10 +39,28 @@ export interface HistoryState {
   future: Project[];
 }
 
+export interface PageSetupPatch {
+  bleed?: number;
+  safeMargin?: number;
+  binding?: BindingType;
+}
+
+export interface CreateProjectOptions {
+  name: string;
+  pageSize: PageSize;
+  /** Number of spreads; each spread contributes two pages. */
+  spreads: number;
+}
+
 export interface ProjectSlice {
   project: Project;
   renameProject: (name: string) => void;
+  /** Applies trim dimensions immediately, rescaling elements proportionally. */
   setPageSize: (pageSize: PageSize) => void;
+  /** Applies non-geometric settings: bleed, safe margin and binding. */
+  setPageSetup: (patch: PageSetupPatch) => void;
+  /** Replaces the document with a blank project using these settings. */
+  createProject: (options: CreateProjectOptions) => void;
   replaceProject: (project: Project) => void;
 }
 
@@ -111,6 +132,8 @@ export interface UiSlice {
   setExportOpen: (open: boolean) => void;
   setShowSafeMargin: (show: boolean) => void;
   setShowBleed: (show: boolean) => void;
+  openPageSetup: (mode?: "setup" | "new") => void;
+  closePageSetup: () => void;
 }
 
 export type EditorStore = ProjectSlice &

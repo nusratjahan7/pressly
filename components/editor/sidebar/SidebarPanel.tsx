@@ -11,10 +11,13 @@ import { TemplatesPanel } from "@/components/editor/sidebar/panels/TemplatesPane
 import { LayoutsPanel } from "@/components/editor/sidebar/panels/LayoutsPanel";
 import { BackgroundsPanel } from "@/components/editor/sidebar/panels/BackgroundsPanel";
 import { StickersPanel } from "@/components/editor/sidebar/panels/StickersPanel";
+import { SetupPanel } from "@/components/editor/sidebar/panels/SetupPanel";
 import { IconButton } from "@/components/ui/icon-button";
 import { Modal } from "@/components/ui/modal";
 
 function PanelBody({ tab }: { tab: SidebarTab }) {
+  const openPageSetup = useEditorStore((state) => state.openPageSetup);
+
   switch (tab) {
     case "images":
       return <ImagesPanel />;
@@ -26,6 +29,13 @@ function PanelBody({ tab }: { tab: SidebarTab }) {
       return <BackgroundsPanel />;
     case "stickers":
       return <StickersPanel />;
+    case "setup":
+      return (
+        <SetupPanel
+          onOpenDialog={() => openPageSetup("setup")}
+          onCreateProject={() => openPageSetup("new")}
+        />
+      );
   }
 }
 

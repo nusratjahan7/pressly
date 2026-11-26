@@ -46,6 +46,8 @@ export const createUiSlice: StateCreator<EditorStore, [], [], UiSlice> = (
     exportOpen: false,
     showSafeMargin: true,
     showBleed: false,
+    pageSetupOpen: false,
+    pageSetupMode: "setup",
   },
 
   setActiveTab: (tab) =>
@@ -134,6 +136,14 @@ export const createUiSlice: StateCreator<EditorStore, [], [], UiSlice> = (
 
   setShowBleed: (show) =>
     set((state) => ({ ui: { ...state.ui, showBleed: show } })),
+
+  openPageSetup: (mode = "setup") =>
+    set((state) => ({
+      ui: { ...state.ui, pageSetupOpen: true, pageSetupMode: mode },
+    })),
+
+  closePageSetup: () =>
+    set((state) => ({ ui: { ...state.ui, pageSetupOpen: false } })),
 });
 
 export function getDefaultViewCenterForProject() {

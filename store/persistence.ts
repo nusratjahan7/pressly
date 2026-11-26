@@ -49,6 +49,31 @@ function isProject(value: unknown): value is Project {
   );
 }
 
+/**
+ * Documents saved before page setup existed have no `safeMargin` or `binding`.
+ * Fill them in rather than discarding the user's work.
+ */
+function migrateProject(project: Project): Project {
+  const pageSize = project.pageSize;
+  const binding =
+    pageSize.binding === "saddle-stitch" ||
+    pageSize.binding === "perfect-bound" ||
+    pageSize.binding === "hardcover"
+      ? pageSize.binding
+      : "perfect-bound";
+
+  return {
+    ...project,
+    pageSize: {
+      ...pageSize,
+      unit: "mm",
+      safeMargin:
+        typeof pageSize.safeMargin === "number" ? pageSize.safeMargin : 5,
+      binding,
+    },
+  };
+}
+
 async function loadDocument(): Promise<PersistedDocument | null> {
   try {
     const raw = await get<PersistedDocument>(PROJECT_KEY, projectStore);
@@ -92,7 +117,7 @@ export function useProjectPersistence() {
       if (cancelled) return;
 
       if (document) {
-        useEditorStore.getState().replaceProject(document.project);
+        useEditorStore.getState().replaceProject(migrateProject(document.project));
         useEditorStore.setState((state) => ({
           ui: {
             ...state.ui,
@@ -109,7 +134,8 @@ export function useProjectPersistence() {
               prefs.activeTab === "templates" ||
               prefs.activeTab === "layouts" ||
               prefs.activeTab === "backgrounds" ||
-              prefs.activeTab === "stickers"
+              prefs.activeTab === "stickers" ||
+              prefs.activeTab === "setup"
                 ? prefs.activeTab
                 : "images",
             thumbnailsOpen:

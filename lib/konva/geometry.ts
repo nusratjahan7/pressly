@@ -85,5 +85,10 @@ export function screenToSpread(
 }
 
 export function getSafeMarginInset(pageSize: PageSize) {
+  const configured = pageSize.safeMargin;
+  if (typeof configured === "number" && configured > 0) {
+    // Never let the guide consume more than a fifth of the page.
+    return Math.min(configured, Math.min(pageSize.w, pageSize.h) * 0.2);
+  }
   return Math.min(SAFE_MARGIN_MM, Math.min(pageSize.w, pageSize.h) * 0.15);
 }

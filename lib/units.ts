@@ -48,55 +48,49 @@ export interface PageSizePreset {
 }
 
 export const PAGE_SIZE_PRESETS: PageSizePreset[] = [
-  {
-    id: "a4",
-    label: "A4",
-    description: "210 × 297 mm",
-    w: 210,
-    h: 297,
-    bleed: 3,
-  },
-  {
-    id: "a5",
-    label: "A5",
-    description: "148 × 210 mm",
-    w: 148,
-    h: 210,
-    bleed: 3,
-  },
+  { id: "a4", label: "A4", description: "210 × 297 mm", w: 210, h: 297, bleed: 3 },
+  { id: "a5", label: "A5", description: "148 × 210 mm", w: 148, h: 210, bleed: 3 },
+  { id: "a3", label: "A3", description: "297 × 420 mm", w: 297, h: 420, bleed: 3 },
   {
     id: "letter",
-    label: "US Letter",
+    label: "Letter",
     description: "8.5 × 11 in",
     w: 215.9,
     h: 279.4,
     bleed: 3,
   },
   {
-    id: "square",
-    label: "Square",
-    description: "210 × 210 mm",
-    w: 210,
-    h: 210,
+    id: "square-8",
+    label: "Square 8 × 8 in",
+    description: "203.2 × 203.2 mm",
+    w: 203.2,
+    h: 203.2,
     bleed: 3,
   },
   {
-    id: "tabloid",
-    label: "Tabloid",
-    description: "279 × 432 mm",
-    w: 279,
-    h: 432,
-    bleed: 5,
+    id: "square-10",
+    label: "Square 10 × 10 in",
+    description: "254 × 254 mm",
+    w: 254,
+    h: 254,
+    bleed: 3,
   },
+  { id: "book-6x9", label: "Book 6 × 9 in", description: "152.4 × 228.6 mm", w: 152.4, h: 228.6, bleed: 3 },
 ];
 
-export function findPresetForSize(w: number, h: number, bleed: number) {
+export function findPresetForSize(w: number, h: number) {
   return PAGE_SIZE_PRESETS.find(
     (preset) =>
-      Math.abs(preset.w - w) < 0.1 &&
-      Math.abs(preset.h - h) < 0.1 &&
-      Math.abs(preset.bleed - bleed) < 0.1,
+      (Math.abs(preset.w - w) < 0.1 && Math.abs(preset.h - h) < 0.1) ||
+      (Math.abs(preset.w - h) < 0.1 && Math.abs(preset.h - w) < 0.1),
   );
+}
+
+export const inchesToMm = (inches: number) => inches * MM_PER_INCH;
+
+/** Millimetres to inches, rounded to a sensible editing precision. */
+export function mmToInchesRounded(mm: number, decimals = 2) {
+  return round(mm / MM_PER_INCH, decimals);
 }
 
 export function zoneFromPercentage(

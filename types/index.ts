@@ -1,10 +1,21 @@
+/** Internal geometry unit. Display units are a UI concern only. */
 export type Unit = "mm";
 
+export type BindingType = "saddle-stitch" | "perfect-bound" | "hardcover";
+
+export type Orientation = "portrait" | "landscape";
+
 export interface PageSize {
+  /** Trim width in millimetres. */
   w: number;
+  /** Trim height in millimetres. */
   h: number;
   unit: Unit;
+  /** Extra stock outside the trim edge, in millimetres. */
   bleed: number;
+  /** Inset from the trim edge kept free of critical content, in millimetres. */
+  safeMargin: number;
+  binding: BindingType;
 }
 
 export type ElementType = "image" | "text" | "shape" | "sticker" | "qr";

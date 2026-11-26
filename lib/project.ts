@@ -174,6 +174,8 @@ export function createSeedProject(): Project {
       h: 297,
       unit: "mm",
       bleed: 3,
+      safeMargin: 5,
+      binding: "perfect-bound",
     },
     pages,
   };

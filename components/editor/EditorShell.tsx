@@ -12,12 +12,16 @@ import { PropertiesPanel } from "@/components/editor/properties/PropertiesPanel"
 import { ThumbnailStrip } from "@/components/editor/thumbnails/ThumbnailStrip";
 import { PreviewDialog } from "@/components/editor/PreviewDialog";
 import { ExportDialog } from "@/components/editor/ExportDialog";
+import { PageSetupDialog } from "@/components/editor/setup/PageSetupDialog";
 import { KeyboardShortcuts } from "@/components/editor/KeyboardShortcuts";
 import { EditorSkeleton } from "@/components/editor/EditorSkeleton";
 
 export function EditorShell() {
   useProjectPersistence();
   const hydrated = useEditorStore((state) => state.ui.hydrated);
+  const pageSetupOpen = useEditorStore((state) => state.ui.pageSetupOpen);
+  const pageSetupMode = useEditorStore((state) => state.ui.pageSetupMode);
+  const closePageSetup = useEditorStore((state) => state.closePageSetup);
   const setSidebarOpen = useEditorStore((state) => state.setSidebarOpen);
   const isTablet = useMediaQuery("(max-width: 1023px)");
 
@@ -43,6 +47,11 @@ export function EditorShell() {
       </div>
       <PreviewDialog />
       <ExportDialog />
+      <PageSetupDialog
+        open={pageSetupOpen}
+        mode={pageSetupMode}
+        onClose={closePageSetup}
+      />
       <KeyboardShortcuts />
     </>
   );
