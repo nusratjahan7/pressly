@@ -49,10 +49,10 @@ export function TemplatesPanel() {
         </p>
       </div>
 
-      {!page ? (
+      {!page || page.isEndPaper || page.locked ? (
         <EmptyState
-          title="No page selected"
-          description="Select a page to apply a template."
+          title={page ? "Page is locked" : "No page selected"}
+          description="Select an editable page to apply a template."
           compact
         />
       ) : (

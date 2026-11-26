@@ -6,6 +6,8 @@ export interface SpreadLayout {
   pageWidth: number;
   pageHeight: number;
   pageCount: number;
+  /** Spine width in millimetres (non-zero on wrap-around covers). */
+  spineWidth: number;
   spreadWidth: number;
   spreadHeight: number;
   /** Horizontal position of the spine, or null for a single-page spread. */
@@ -15,16 +17,25 @@ export interface SpreadLayout {
 export function getSpreadLayout(
   pageSize: PageSize,
   pageCount: number,
+  spineWidth = 0,
 ): SpreadLayout {
   const count = Math.max(1, pageCount);
+  const effectiveSpine = count > 1 ? Math.max(0, spineWidth) : 0;
   return {
     pageWidth: pageSize.w,
     pageHeight: pageSize.h,
     pageCount: count,
-    spreadWidth: pageSize.w * count,
+    spineWidth: effectiveSpine,
+    spreadWidth: pageSize.w * count + effectiveSpine,
     spreadHeight: pageSize.h,
     spineX: count > 1 ? pageSize.w : null,
   };
+}
+
+/** Horizontal offset of a page within its spread, accounting for any spine. */
+export function getPageOffsetX(pagePositionInSpread: number, layout: SpreadLayout) {
+  if (pagePositionInSpread <= 0) return 0;
+  return pagePositionInSpread * layout.pageWidth + layout.spineWidth;
 }
 
 export function getFitScale(

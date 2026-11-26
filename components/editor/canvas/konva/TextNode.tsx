@@ -6,28 +6,26 @@ import { ptToMm } from "@/lib/units";
 
 interface TextNodeProps {
   element: TextElement;
+  width: number;
+  height: number;
   listening?: boolean;
 }
 
-export function TextNode({ element, listening = false }: TextNodeProps) {
+/**
+ * Text body drawn at the local origin. The enclosing frame owns position,
+ * rotation and opacity.
+ */
+export function TextNode({ element, width, height, listening = false }: TextNodeProps) {
   const fontSize = Math.max(0.2, ptToMm(element.fontSize));
   const letterSpacing = ptToMm(element.letterSpacing);
 
   return (
-    <Group
-      x={element.x}
-      y={element.y}
-      width={element.width}
-      height={element.height}
-      rotation={element.rotation}
-      opacity={element.opacity}
-      listening={listening}
-    >
+    <Group listening={listening}>
       {element.text ? (
         <Text
           text={element.text}
-          width={element.width}
-          height={element.height}
+          width={width}
+          height={height}
           fontFamily={`${element.fontFamily}, Inter, sans-serif`}
           fontSize={fontSize}
           fontStyle={element.fontWeight >= 600 ? "bold" : "normal"}
@@ -43,8 +41,8 @@ export function TextNode({ element, listening = false }: TextNodeProps) {
       ) : (
         // Empty text boxes still need a hit target so they can be selected.
         <Rect
-          width={element.width}
-          height={element.height}
+          width={width}
+          height={height}
           fill="transparent"
           listening={listening}
         />

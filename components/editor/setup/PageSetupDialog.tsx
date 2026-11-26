@@ -10,6 +10,7 @@ import {
   previewPageSizeChange,
 } from "@/store/slices/projectSlice";
 import { getBinding, getSpineWidth } from "@/lib/binding";
+import { getEditablePageCount } from "@/lib/spreads";
 import { formatNumber, PAGE_SIZE_PRESETS, round } from "@/lib/units";
 import {
   analyzePrintResolution,
@@ -102,7 +103,7 @@ export function PageSetupDialog({ open, mode, onClose }: PageSetupDialogProps) {
     setDraft(draftFromPageSize(project.pageSize));
     setName(project.name);
     setProjectName(project.name);
-    setSpreads(Math.max(1, Math.ceil(project.pages.length / 2)));
+    setSpreads(Math.max(1, Math.ceil(getEditablePageCount(project.pages) / 2)));
     setConfirming(false);
   }, [open, mode, project]);
 
@@ -155,7 +156,8 @@ export function PageSetupDialog({ open, mode, onClose }: PageSetupDialogProps) {
     widthInvalid || heightInvalid || bleedInvalid || marginInvalid;
 
   const orientation = getOrientation({ w: draft.wMm, h: draft.hMm });
-  const pageCount = mode === "new" ? spreads * 2 : project.pages.length;
+  const pageCount =
+    mode === "new" ? spreads * 2 : getEditablePageCount(project.pages);
   const spine = getSpineWidth(draft.binding, pageCount);
 
   const trimChanged =

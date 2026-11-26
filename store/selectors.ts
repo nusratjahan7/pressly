@@ -12,7 +12,11 @@ export function useSpreads() {
 
 export function useCurrentSpread() {
   const spreads = useSpreads();
-  const spreadIndex = useEditorStore((state) => state.ui.spreadIndex);
+  const rawSpreadIndex = useEditorStore((state) => state.ui.spreadIndex);
+  const spreadIndex = Math.min(
+    Math.max(rawSpreadIndex, 0),
+    Math.max(0, spreads.length - 1),
+  );
   return {
     spreads,
     spread: spreads[spreadIndex] ?? spreads[0],
@@ -51,7 +55,10 @@ export function useActivePage(): { page: Page | null; pageIndex: number } {
         (page) => page.id === selectedPageId,
       );
       if (pageIndex >= 0) {
-        return { page: project.pages[pageIndex]!, pageIndex };
+        const candidate = project.pages[pageIndex]!;
+        if (!candidate.isEndPaper && !candidate.locked) {
+          return { page: candidate, pageIndex };
+        }
       }
     }
 
@@ -60,15 +67,31 @@ export function useActivePage(): { page: Page | null; pageIndex: number } {
         page.elements.some((element) => element.id === selectedElementId),
       );
       if (pageIndex >= 0) {
-        return { page: project.pages[pageIndex]!, pageIndex };
+        const candidate = project.pages[pageIndex]!;
+        if (!candidate.isEndPaper && !candidate.locked) {
+          return { page: candidate, pageIndex };
+        }
       }
     }
 
-    const spread = getSpreads(project.pages)[spreadIndex];
-    const pageIndex = spread?.pageIndices[0] ?? 0;
+    const spreads = getSpreads(project.pages);
+    const clampedSpreadIndex = Math.min(
+      Math.max(spreadIndex, 0),
+      Math.max(0, spreads.length - 1),
+    );
+    const spread = spreads[clampedSpreadIndex];
+    const editableIndex =
+      spread?.pageIndices.find((index) => {
+        const candidate = project.pages[index];
+        return candidate && !candidate.isEndPaper && !candidate.locked;
+      }) ?? null;
+
+    if (editableIndex === null) {
+      return { page: null, pageIndex: -1 };
+    }
     return {
-      page: project.pages[pageIndex] ?? null,
-      pageIndex,
+      page: project.pages[editableIndex] ?? null,
+      pageIndex: editableIndex,
     };
   }, [project.pages, selectedPageId, selectedElementId, spreadIndex]);
 }

@@ -21,7 +21,7 @@ export function StickersPanel() {
   const pageLabel = page ? getPageLabel(pageIndex, project.pages) : "a page";
 
   const insert = (stickerId: string) => {
-    if (!page) return;
+    if (!page || page.isEndPaper || page.locked) return;
     const size = Math.max(18, Math.min(32, project.pageSize.w * 0.13));
     addElement(
       page.id,
@@ -42,10 +42,10 @@ export function StickersPanel() {
     <div className="flex flex-col gap-4">
       <PageContext label={pageLabel} />
 
-      {!page ? (
+      {!page || page.isEndPaper || page.locked ? (
         <EmptyState
-          title="No page selected"
-          description="Select a page on the canvas to add a sticker."
+          title={page ? "Page is locked" : "No page selected"}
+          description="Select an editable page on the canvas to add a sticker."
           compact
         />
       ) : (

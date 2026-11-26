@@ -6,6 +6,7 @@ import type { BindingType, PageSize } from "@/types";
 import { useEditorStore } from "@/store";
 import { getBinding, getSpineWidth } from "@/lib/binding";
 import { formatNumber, PAGE_SIZE_PRESETS } from "@/lib/units";
+import { getEditablePageCount } from "@/lib/spreads";
 import {
   analyzePrintResolution,
   MIN_PRINT_DPI,
@@ -37,6 +38,7 @@ export function SetupPanel({ onOpenDialog, onCreateProject }: SetupPanelProps) {
   const project = useEditorStore((state) => state.project);
   const setPageSize = useEditorStore((state) => state.setPageSize);
   const setPageSetup = useEditorStore((state) => state.setPageSetup);
+  const setSpineText = useEditorStore((state) => state.setSpineText);
   const showSafeMargin = useEditorStore((state) => state.ui.showSafeMargin);
   const showBleed = useEditorStore((state) => state.ui.showBleed);
   const setShowSafeMargin = useEditorStore((state) => state.setShowSafeMargin);
@@ -44,12 +46,19 @@ export function SetupPanel({ onOpenDialog, onCreateProject }: SetupPanelProps) {
 
   const [unit, setUnit] = useState<DisplayUnit>("mm");
   const [draft, setDraft] = useState<PageSize>(project.pageSize);
+  const [spineDraft, setSpineDraft] = useState(
+    project.spineText ?? project.name,
+  );
   const [report, setReport] = useState<ResolutionReport | null>(null);
 
   // Mirror the store into a local draft so typing does not commit per keystroke.
   useEffect(() => {
     setDraft(project.pageSize);
   }, [project.pageSize]);
+
+  useEffect(() => {
+    setSpineDraft(project.spineText ?? project.name);
+  }, [project.spineText, project.name]);
 
   useEffect(() => {
     let cancelled = false;
@@ -61,7 +70,7 @@ export function SetupPanel({ onOpenDialog, onCreateProject }: SetupPanelProps) {
     };
   }, [project]);
 
-  const pageCount = project.pages.length;
+  const pageCount = getEditablePageCount(project.pages);
   const spine = getSpineWidth(draft.binding, pageCount);
   const preset = PAGE_SIZE_PRESETS.find(
     (option) =>
@@ -225,6 +234,27 @@ export function SetupPanel({ onOpenDialog, onCreateProject }: SetupPanelProps) {
             </span>
           </SetupRow>
         </div>
+        <label className="flex flex-col gap-1.5">
+          <span className="text-[9.5px] font-semibold uppercase tracking-[0.13em] text-ink-subtle">
+            Spine text
+          </span>
+          <input
+            type="text"
+            value={spineDraft}
+            maxLength={80}
+            placeholder="Blank spine"
+            onChange={(event) => setSpineDraft(event.target.value)}
+            onBlur={() => setSpineText(spineDraft)}
+            onKeyDown={(event) => {
+              if (event.key === "Enter") {
+                event.preventDefault();
+                setSpineText(spineDraft);
+                event.currentTarget.blur();
+              }
+            }}
+            className="h-8 w-full rounded-field border border-line bg-surface px-2.5 text-[11.5px] text-ink outline-none transition-colors focus:border-accent focus:ring-2 focus:ring-accent/25"
+          />
+        </label>
       </PanelSection>
 
       <PanelSection title="Guides">

@@ -18,15 +18,22 @@ export function BackgroundsPanel() {
   const { spread } = useCurrentSpread();
   const [applyToSpread, setApplyToSpread] = useState(false);
 
-  const targets = applyToSpread
-    ? (spread?.pageIndices
-        .map((index) => project.pages[index])
-        .filter((candidate): candidate is NonNullable<typeof candidate> =>
-          Boolean(candidate),
-        ) ?? [])
-    : page
-      ? [page]
-      : [];
+  const editableInSpread =
+    spread?.pageIndices
+      .map((index) => project.pages[index])
+      .filter(
+        (candidate): candidate is NonNullable<typeof candidate> =>
+          Boolean(candidate && !candidate.isEndPaper && !candidate.locked),
+      ) ?? [];
+
+  const canApplyToSpread = editableInSpread.length >= 2;
+
+  const targets =
+    applyToSpread && canApplyToSpread
+      ? editableInSpread
+      : page && !page.isEndPaper && !page.locked
+        ? [page]
+        : [];
 
   const pageLabel = page ? getPageLabel(pageIndex, project.pages) : "a page";
 
@@ -104,13 +111,13 @@ export function BackgroundsPanel() {
         <Toggle
           label="Apply to entire spread"
           description={
-            spread?.pageIndices.length === 2
+            canApplyToSpread
               ? "Changes both pages in this spread together."
-              : "This spread has only one page."
+              : "This spread has only one editable page."
           }
-          checked={applyToSpread}
+          checked={applyToSpread && canApplyToSpread}
           onCheckedChange={setApplyToSpread}
-          disabled={!spread || spread.pageIndices.length < 2}
+          disabled={!canApplyToSpread}
         />
       </div>
     </div>

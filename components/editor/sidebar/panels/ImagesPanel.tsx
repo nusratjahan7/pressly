@@ -63,8 +63,10 @@ export function ImagesPanel() {
 
   const pageLabel = page ? getPageLabel(pageIndex, project.pages) : "a page";
 
+  const pageEditable = Boolean(page && !page.isEndPaper && !page.locked);
+
   const addFiles = async (fileList: FileList | File[]) => {
-    if (!page) return;
+    if (!page || !pageEditable) return;
     const files = Array.from(fileList);
     setError(null);
 
@@ -168,10 +170,10 @@ export function ImagesPanel() {
         }}
       />
 
-      {!page ? (
+      {!page || !pageEditable ? (
         <EmptyState
-          title="No page selected"
-          description="Select a page on the canvas to place images."
+          title={page ? "Page is locked" : "No page selected"}
+          description="Select an editable page on the canvas to place images."
           compact
         />
       ) : images.length === 0 ? (

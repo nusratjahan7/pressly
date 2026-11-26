@@ -1,27 +1,83 @@
 import type { Page } from "@/types";
 
+/**
+ * A printed book spread.
+ *
+ * Layout of the page array (never stored separately — always derived):
+ *   [0] back cover   [1] front cover        → spread 0, "Cover"
+ *   [2] end paper    [3] page 1             → spread 1, "Page 1"
+ *   [4] page 2       [5] page 3             → spread 2, "Pages 2–3"
+ *   …
+ *   [n-2] page N     [n-1] end paper        → final spread, "Page N"
+ */
 export interface Spread {
   index: number;
-  /** Page array indices. A spread is normally a pair, but a final odd page stands alone. */
+  /** Page array indices. Two for a normal spread, one for a lone page. */
   pageIndices: number[];
   isCover: boolean;
+  /** The first interior spread, which carries the inside front end paper. */
+  isFirstContent: boolean;
+  /** The final spread, which carries the inside back end paper. */
+  isLast: boolean;
 }
 
 export const PAGES_PER_SPREAD = 2;
+/** Back cover + front cover. */
+export const COVER_PAGE_COUNT = 2;
+/** Inside front and inside back end papers. */
+export const END_PAPER_COUNT = 2;
 
+/**
+ * Derives spreads from the page array. This is the single source of truth for
+ * spread structure — nothing stores spread boundaries.
+ */
 export function getSpreads(pages: Page[]): Spread[] {
   const spreads: Spread[] = [];
   for (let i = 0; i < pages.length; i += PAGES_PER_SPREAD) {
+    const pageIndices = Array.from(
+      { length: Math.min(PAGES_PER_SPREAD, pages.length - i) },
+      (_, offset) => i + offset,
+    );
     spreads.push({
       index: spreads.length,
-      pageIndices: Array.from(
-        { length: Math.min(PAGES_PER_SPREAD, pages.length - i) },
-        (_, offset) => i + offset,
-      ),
+      pageIndices,
       isCover: i === 0,
+      isFirstContent: i === COVER_PAGE_COUNT,
+      isLast: false,
     });
   }
+  if (spreads.length > 0) {
+    const last = spreads[spreads.length - 1]!;
+    if (!last.isCover) last.isLast = true;
+  }
   return spreads;
+}
+
+/**
+ * Page number printed on a page, or null for the cover and end papers.
+ *
+ * Numbering is computed from index among editable content pages: page 1 is the
+ * right side of spread 1, followed sequentially through page N on the left side
+ * of the final spread.
+ */
+export function getPageNumber(pageIndex: number, pages: Page[]): number | null {
+  const page = pages[pageIndex];
+  if (!page) return null;
+  if (page.coverSide || page.isEndPaper) return null;
+
+  let number = 0;
+  for (let i = 0; i <= pageIndex; i += 1) {
+    const candidate = pages[i];
+    if (candidate && !candidate.coverSide && !candidate.isEndPaper) {
+      number += 1;
+    }
+  }
+  return number > 0 ? number : null;
+}
+
+/** Number of editable content pages, excluding cover and end papers. */
+export function getEditablePageCount(pages: Page[]) {
+  return pages.filter((page) => !page.isEndPaper && !page.coverSide).length;
 }
 
 export function getSpreadIndexForPage(pageIndex: number) {
@@ -33,24 +89,83 @@ export function clampSpreadIndex(spreadIndex: number, pages: Page[]) {
   return Math.min(Math.max(spreadIndex, 0), count - 1);
 }
 
-export function getSpreadLabel(spread: Spread, pages: Page[]) {
-  if (spread.isCover) return "Cover spread";
-  const nums = spread.pageIndices.map((index) => index + 1);
-  return nums.length > 1 ? `Pages ${nums[0]}–${nums[1]}` : `Page ${nums[0]}`;
+function spreadPageNumbers(spread: Spread, pages: Page[]) {
+  return spread.pageIndices
+    .map((index) => getPageNumber(index, pages))
+    .filter((value): value is number => value !== null);
 }
 
-export function getShortSpreadLabel(spread: Spread) {
+/** Display label, e.g. "Cover spread", "Page 1", "Pages 2–3". */
+export function getSpreadLabel(spread: Spread, pages: Page[]) {
+  if (spread.isCover) return "Cover spread";
+  const numbers = spreadPageNumbers(spread, pages);
+  if (numbers.length === 0) return "End papers";
+  const first = numbers[0]!;
+  const last = numbers[numbers.length - 1]!;
+  return first === last ? `Page ${first}` : `Pages ${first}–${last}`;
+}
+
+/** Compact label used in the thumbnail strip. */
+export function getShortSpreadLabel(spread: Spread, pages: Page[]) {
   if (spread.isCover) return "Cover";
-  const first = spread.pageIndices[0] + 1;
-  const last = spread.pageIndices[spread.pageIndices.length - 1] + 1;
+  const numbers = spreadPageNumbers(spread, pages);
+  if (numbers.length === 0) return "End papers";
+  const first = numbers[0]!;
+  const last = numbers[numbers.length - 1]!;
   return first === last ? `Page ${first}` : `Pages ${first}–${last}`;
 }
 
 export function getPageLabel(pageIndex: number, pages: Page[]) {
-  if (pages.length <= 2) return pageIndex === 0 ? "Front cover" : "Back cover";
-  if (pageIndex === 0) return "Front cover";
-  if (pageIndex === 1) return "Inside front cover";
-  if (pageIndex === pages.length - 1) return "Back cover";
-  if (pageIndex === pages.length - 2) return "Inside back cover";
-  return `Page ${pageIndex + 1}`;
+  const page = pages[pageIndex];
+  if (!page) return "a page";
+  if (page.coverSide === "back") return "Back cover";
+  if (page.coverSide === "front") return "Front cover";
+  if (page.isEndPaper) {
+    return pageIndex < pages.length / 2
+      ? "Inside front cover"
+      : "Inside back cover";
+  }
+  const number = getPageNumber(pageIndex, pages);
+  return number === null ? "Page" : `Page ${number}`;
+}
+
+/**
+ * Derives reading-order pages for PDF export directly from `getSpreads(pages)`:
+ * front cover, interior editable pages in spread order, then back cover.
+ * Locked end papers are inside-cover stock and are omitted from body output.
+ */
+export function getPdfExportPages(pages: Page[]): Page[] {
+  const spreads = getSpreads(pages);
+  const coverSpread = spreads.find((spread) => spread.isCover);
+  const interiorSpreads = spreads.filter((spread) => !spread.isCover);
+
+  const ordered: Page[] = [];
+
+  if (coverSpread) {
+    const coverPages = coverSpread.pageIndices
+      .map((index) => pages[index])
+      .filter((page): page is Page => Boolean(page));
+    const frontCover =
+      coverPages.find((page) => page.coverSide === "front") ?? coverPages[1];
+    if (frontCover) ordered.push(frontCover);
+  }
+
+  for (const spread of interiorSpreads) {
+    for (const pageIndex of spread.pageIndices) {
+      const page = pages[pageIndex];
+      if (!page || page.isEndPaper) continue;
+      ordered.push(page);
+    }
+  }
+
+  if (coverSpread) {
+    const coverPages = coverSpread.pageIndices
+      .map((index) => pages[index])
+      .filter((page): page is Page => Boolean(page));
+    const backCover =
+      coverPages.find((page) => page.coverSide === "back") ?? coverPages[0];
+    if (backCover) ordered.push(backCover);
+  }
+
+  return ordered;
 }

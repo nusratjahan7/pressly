@@ -17,6 +17,9 @@ import {
 import type { Element, Page } from "@/types";
 import { useEditorStore } from "@/store";
 import { useSelectedElement } from "@/store/selectors";
+import { getSpineWidth } from "@/lib/binding";
+import { getEditablePageCount } from "@/lib/spreads";
+import { formatNumber } from "@/lib/units";
 import {
   ELEMENT_TYPE_LABEL,
   getElementLabel,
@@ -503,8 +506,90 @@ function PropertiesContent({
   );
 }
 
+function SpinePropertiesContent() {
+  const project = useEditorStore((state) => state.project);
+  const setSpineText = useEditorStore((state) => state.setSpineText);
+  const clearSelection = useEditorStore((state) => state.clearSelection);
+
+  const spineText = project.spineText ?? project.name;
+  const physicalSpine = getSpineWidth(
+    project.pageSize.binding,
+    getEditablePageCount(project.pages),
+  );
+
+  return (
+    <motion.aside
+      key="cover-spine"
+      initial={{ opacity: 0, x: 18 }}
+      animate={{ opacity: 1, x: 0 }}
+      exit={{ opacity: 0, x: 18 }}
+      transition={{ duration: 0.18, ease: [0.22, 1, 0.36, 1] }}
+      aria-label="Cover spine properties"
+      className="absolute z-30 flex max-h-[min(56dvh,460px)] flex-col overflow-hidden rounded-card border border-line bg-surface shadow-panel max-lg:inset-x-3 max-lg:bottom-3 lg:bottom-4 lg:right-4 lg:top-4 lg:max-h-none lg:w-[300px]"
+    >
+      <header className="flex shrink-0 items-start gap-2 border-b border-line px-3.5 py-3">
+        <div className="flex min-w-0 flex-1 flex-col gap-0.5">
+          <span className="text-[9.5px] font-semibold uppercase tracking-[0.14em] text-ink-subtle">
+            Cover · Spine
+          </span>
+          <h2 className="truncate text-[12.5px] font-semibold leading-4 tracking-[-0.01em] text-ink">
+            {spineText.trim() || "Blank spine"}
+          </h2>
+        </div>
+        <IconButton
+          icon={X}
+          label="Close properties"
+          tooltip="Close properties"
+          size="sm"
+          variant="ghost"
+          onClick={clearSelection}
+        />
+      </header>
+
+      <div className="min-h-0 flex-1 overflow-y-auto">
+        <PropertySection title="Spine text">
+          <TextField
+            label="Label"
+            value={spineText}
+            placeholder="Enter spine text"
+            onCommit={(value) => setSpineText(value)}
+          />
+          <div className="flex items-center justify-between gap-2 pt-1">
+            <button
+              type="button"
+              onClick={() => setSpineText(project.name)}
+              className="text-[10.5px] font-medium text-accent underline-offset-2 hover:underline"
+            >
+              Match project title
+            </button>
+            <button
+              type="button"
+              onClick={() => setSpineText("")}
+              className="text-[10.5px] font-medium text-ink-muted underline-offset-2 hover:text-ink hover:underline"
+            >
+              Clear
+            </button>
+          </div>
+        </PropertySection>
+
+        <div className="border-t border-line px-3.5 py-3">
+          <p className="text-[10px] leading-3.5 text-ink-subtle">
+            Calculated spine{" "}
+            {physicalSpine > 0 ? `${formatNumber(physicalSpine, 1)} mm` : "fold crease"}{" "}
+            · Double-click the spine on the cover to edit inline.
+          </p>
+        </div>
+      </div>
+    </motion.aside>
+  );
+}
+
 export function PropertiesPanel() {
   const selected = useSelectedElement();
+  const spineSelected = useEditorStore((state) =>
+    Boolean(state.selection.spineSelected),
+  );
+  const spreadIndex = useEditorStore((state) => state.ui.spreadIndex);
 
   return (
     <AnimatePresence>
@@ -514,6 +599,8 @@ export function PropertiesPanel() {
           element={selected.element}
           page={selected.page}
         />
+      ) : spineSelected && spreadIndex === 0 ? (
+        <SpinePropertiesContent key="cover-spine" />
       ) : null}
     </AnimatePresence>
   );

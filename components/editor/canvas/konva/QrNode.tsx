@@ -7,27 +7,27 @@ import { getQrMatrix } from "@/lib/qr";
 
 interface QrNodeProps {
   element: QrElement;
+  width: number;
+  height: number;
   listening?: boolean;
 }
 
-export function QrNode({ element, listening = false }: QrNodeProps) {
+/**
+ * QR body drawn at the local origin, directly in millimetres. One node draws
+ * every module, so a dense code costs nothing to resize.
+ */
+export function QrNode({ element, width, height, listening = false }: QrNodeProps) {
   const matrix = getQrMatrix(element.value, element.errorCorrection);
 
   return (
-    <Group
-      x={element.x}
-      y={element.y}
-      rotation={element.rotation}
-      opacity={element.opacity}
-      listening={listening}
-    >
+    <Group listening={listening}>
       <Shape
-        width={element.width}
-        height={element.height}
+        width={width}
+        height={height}
         fill={element.background}
         sceneFunc={(context: Konva.Context, shape: Konva.Shape) => {
           context.beginPath();
-          context.rect(0, 0, element.width, element.height);
+          context.rect(0, 0, width, height);
           context.closePath();
           context.fillStrokeShape(shape);
 
@@ -36,15 +36,18 @@ export function QrNode({ element, listening = false }: QrNodeProps) {
           const count = matrix.length;
           const quietZone = 4;
           const total = count + quietZone * 2;
-          const module = element.width / total;
+          const module = Math.min(width, height) / total;
+          const offsetX = (width - module * total) / 2;
+          const offsetY = (height - module * total) / 2;
+
           context.fillStyle = element.foreground;
           for (let row = 0; row < count; row += 1) {
             const line = matrix[row]!;
             for (let col = 0; col < count; col += 1) {
               if (line[col]) {
                 context.fillRect(
-                  (col + quietZone) * module,
-                  (row + quietZone) * module,
+                  offsetX + (col + quietZone) * module,
+                  offsetY + (row + quietZone) * module,
                   module,
                   module,
                 );

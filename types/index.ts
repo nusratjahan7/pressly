@@ -108,11 +108,28 @@ export interface Page {
   id: string;
   backgroundId: string;
   elements: Element[];
+  /**
+   * End papers are glued to the inside of the cover. They are part of the
+   * physical book but cannot hold content.
+   */
+  isEndPaper?: boolean;
+  /**
+   * Locked pages reject drops, text and stickers, and render with a
+   * non-interactive overlay. End papers are always locked.
+   */
+  locked?: boolean;
+  /**
+   * Which half of the wrap-around cover this page is. Only set on the two
+   * pages of the cover spread.
+   */
+  coverSide?: "back" | "front";
 }
 
 export interface Project {
   id: string;
   name: string;
+  /** Optional custom text printed vertically on the cover spine. Defaults to project name when undefined. */
+  spineText?: string;
   pageSize: PageSize;
   pages: Page[];
 }

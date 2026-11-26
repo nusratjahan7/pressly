@@ -5,16 +5,23 @@ import type { ShapeElement } from "@/types";
 
 interface ShapeNodeProps {
   element: ShapeElement;
+  /** Frame size from the enclosing transform group, in millimetres. */
+  width: number;
+  height: number;
   listening?: boolean;
 }
 
-export function ShapeNode({ element, listening = false }: ShapeNodeProps) {
-  const { x, y, width, height, rotation, opacity } = element;
+/**
+ * Shape body drawn at the local origin. The enclosing frame owns position,
+ * rotation and opacity, so this component never sets `x`/`y`.
+ */
+export function ShapeNode({
+  element,
+  width,
+  height,
+  listening = false,
+}: ShapeNodeProps) {
   const common = {
-    x,
-    y,
-    rotation,
-    opacity,
     perfectDrawEnabled: false,
     listening,
     shadowForStrokeEnabled: false,
@@ -42,8 +49,8 @@ export function ShapeNode({ element, listening = false }: ShapeNodeProps) {
     return (
       <Ellipse
         {...common}
-        x={x + width / 2}
-        y={y + height / 2}
+        x={width / 2}
+        y={height / 2}
         radiusX={width / 2}
         radiusY={height / 2}
         fill={hasFill ? element.fill : undefined}

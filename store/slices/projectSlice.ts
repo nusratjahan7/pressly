@@ -3,7 +3,7 @@ import type { Element, Page, PageSize, Project } from "@/types";
 import type { EditorStore, ProjectSlice } from "@/store/types";
 import { createSeedProject } from "@/lib/project";
 import { createId } from "@/lib/id";
-import { createPage } from "@/lib/project";
+import { createCoverPage, createEndPaper, createPage } from "@/lib/project";
 import { clamp, round } from "@/lib/units";
 
 export const MIN_TRIM_MM = 20;
@@ -96,6 +96,15 @@ export const createProjectSlice: StateCreator<
     }));
   },
 
+  setSpineText: (spineText) => {
+    const normalized = spineText.replace(/[\r\n]+/g, " ").slice(0, 80);
+    if (normalized === (get().project.spineText ?? get().project.name)) return;
+    get().pushHistory();
+    set((state) => ({
+      project: { ...state.project, spineText: normalized },
+    }));
+  },
+
   setPageSize: (pageSize) => {
     const current = get().project.pageSize;
     const next = normalizePageSize({ ...current, ...pageSize });
@@ -155,9 +164,19 @@ export const createProjectSlice: StateCreator<
   createProject: ({ name, pageSize, spreads }) => {
     const next = normalizePageSize(pageSize);
     const spreadCount = clamp(Math.round(spreads), 1, 200);
-    const pages: Page[] = Array.from({ length: spreadCount * 2 }, () =>
-      createPage("paper"),
-    );
+
+    // Build a real book: cover spread, first spread with the inside-front end
+    // paper, then content pages, ending with the inside-back end paper.
+    const contentPages = spreadCount * 2;
+    const pages: Page[] = [
+      createCoverPage("back"),
+      createCoverPage("front", "ivory"),
+      createEndPaper(),
+    ];
+    for (let index = 0; index < contentPages; index += 1) {
+      pages.push(createPage("paper"));
+    }
+    pages.push(createEndPaper());
 
     get().pushHistory();
     set((state) => ({

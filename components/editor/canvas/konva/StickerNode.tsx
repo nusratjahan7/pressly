@@ -7,43 +7,44 @@ import { getSticker } from "@/lib/stickers";
 
 interface StickerNodeProps {
   element: StickerElement;
+  width: number;
+  height: number;
   listening?: boolean;
 }
 
-export function StickerNode({ element, listening = false }: StickerNodeProps) {
+/**
+ * Sticker body drawn at the local origin. The 24×24 viewBox is scaled to the
+ * element frame so the ink fills the resize box exactly.
+ */
+export function StickerNode({ element, width, height, listening = false }: StickerNodeProps) {
   const sticker = getSticker(element.stickerId);
 
-  // The sticker viewBox is 24x24, so one viewBox unit is width/24 millimetres.
   const scale = useMemo(
-    () => Math.min(element.width, element.height) / 24,
-    [element.width, element.height],
+    () => Math.min(width, height) / 24,
+    [width, height],
   );
 
   return (
     <Group
-      x={element.x}
-      y={element.y}
-      width={element.width}
-      height={element.height}
-      rotation={element.rotation}
-      opacity={element.opacity}
+      x={(width - 24 * scale) / 2}
+      y={(height - 24 * scale) / 2}
+      scaleX={scale}
+      scaleY={scale}
       listening={listening}
     >
-      <Group scaleX={scale} scaleY={scale}>
-        {sticker.paths.map((path, index) => (
-          <Path
-            key={index}
-            data={path.d}
-            fill={path.fill === "currentColor" ? element.color : undefined}
-            stroke={path.stroke === "currentColor" ? element.color : undefined}
-            strokeWidth={path.strokeWidth ?? 0}
-            lineCap="round"
-            lineJoin="round"
-            perfectDrawEnabled={false}
-            listening={listening}
-          />
-        ))}
-      </Group>
+      {sticker.paths.map((path, index) => (
+        <Path
+          key={index}
+          data={path.d}
+          fill={path.fill === "currentColor" ? element.color : undefined}
+          stroke={path.stroke === "currentColor" ? element.color : undefined}
+          strokeWidth={path.strokeWidth ?? 0}
+          lineCap="round"
+          lineJoin="round"
+          perfectDrawEnabled={false}
+          listening={listening}
+        />
+      ))}
     </Group>
   );
 }

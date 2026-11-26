@@ -1,12 +1,13 @@
 "use client";
 
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import dynamic from "next/dynamic";
 import { useEditorStore } from "@/store";
-import { useCurrentSpread, useSpreads } from "@/store/selectors";
+import { useCurrentSpread } from "@/store/selectors";
 import { useElementSize } from "@/lib/useElementSize";
 import { formatDimensions, formatNumber } from "@/lib/units";
-import { getSpreadLabel } from "@/lib/spreads";
+import { getEditablePageCount, getPageLabel, getSpreadLabel } from "@/lib/spreads";
+import { getCoverDisplaySpineWidth } from "@/lib/binding";
 import { getFitScale, getSpreadLayout } from "@/lib/konva/geometry";
 import { useStagePanZoom } from "@/components/editor/canvas/konva/useStagePanZoom";
 import { EmptyState } from "@/components/editor/EmptyState";
@@ -23,14 +24,24 @@ const SpreadStage = dynamic(
 
 export function CanvasWorkspace() {
   const project = useEditorStore((state) => state.project);
-  const spreadIndex = useEditorStore((state) => state.ui.spreadIndex);
   const showSafeMargin = useEditorStore((state) => state.ui.showSafeMargin);
   const showBleed = useEditorStore((state) => state.ui.showBleed);
   const setViewCenter = useEditorStore((state) => state.setViewCenter);
   const addSpread = useEditorStore((state) => state.addSpread);
-  const { spread } = useCurrentSpread();
-  const spreads = useSpreads();
+  const selectedElementId = useEditorStore(
+    (state) => state.selection.elementId,
+  );
+  const spineSelected = useEditorStore((state) =>
+    Boolean(state.selection.spineSelected),
+  );
+  const selectPage = useEditorStore((state) => state.selectPage);
+  const selectSpine = useEditorStore((state) => state.selectSpine);
+  const setSpineText = useEditorStore((state) => state.setSpineText);
+  const clearSelection = useEditorStore((state) => state.clearSelection);
+  const { spread, spreads, spreadIndex } = useCurrentSpread();
   const { ref, size, element } = useElementSize<HTMLDivElement>();
+  const [editingSpine, setEditingSpine] = useState(false);
+  const [spineDraft, setSpineDraft] = useState("");
 
   const pages = useMemo(
     () =>
@@ -40,9 +51,30 @@ export function CanvasWorkspace() {
     [spread, project.pages],
   );
 
+  const isCover = Boolean(spread?.isCover);
+  const spineWidth = useMemo(
+    () =>
+      isCover
+        ? getCoverDisplaySpineWidth(
+            project.pageSize.binding,
+            getEditablePageCount(project.pages),
+          )
+        : 0,
+    [isCover, project.pageSize.binding, project.pages],
+  );
+
+  const pageLabels = useMemo(
+    () =>
+      spread?.pageIndices.map((pageIndex) =>
+        getPageLabel(pageIndex, project.pages).toLowerCase(),
+      ) ?? [],
+    [spread, project.pages],
+  );
+
+  const displayPageCount = isCover ? pages.length : Math.max(2, pages.length);
   const layout = useMemo(
-    () => getSpreadLayout(project.pageSize, pages.length),
-    [project.pageSize, pages.length],
+    () => getSpreadLayout(project.pageSize, displayPageCount, spineWidth),
+    [project.pageSize, displayPageCount, spineWidth],
   );
 
   const fitScale = useMemo(
@@ -83,7 +115,42 @@ export function CanvasWorkspace() {
     ? getSpreadLabel(spread, project.pages)
     : "No spread";
 
+  const resolvedSpineText = project.spineText ?? project.name;
   const ready = pages.length > 0 && size.width > 0 && size.height > 0;
+
+  useEffect(() => {
+    if (!isCover) setEditingSpine(false);
+  }, [isCover]);
+
+  const openSpineEditor = () => {
+    if (!isCover) return;
+    selectSpine();
+    setSpineDraft(resolvedSpineText);
+    setEditingSpine(true);
+  };
+
+  const commitSpineEditor = () => {
+    setSpineText(spineDraft);
+    setEditingSpine(false);
+  };
+
+  const spineCenterLeft =
+    layout.spineX !== null
+      ? Math.max(
+          110,
+          Math.min(
+            size.width - 110,
+            transform.panX + (layout.spineX + layout.spineWidth / 2) * transform.scale,
+          ),
+        )
+      : size.width / 2;
+  const spineCenterTop = Math.max(
+    48,
+    Math.min(
+      size.height - 48,
+      transform.panY + (layout.spreadHeight / 2) * transform.scale,
+    ),
+  );
 
   return (
     <section
@@ -117,8 +184,21 @@ export function CanvasWorkspace() {
           scale={transform.scale}
           pageSize={project.pageSize}
           pages={pages}
+          pageLabels={pageLabels}
+          spineText={resolvedSpineText}
+          isCover={isCover}
+          spineWidth={spineWidth}
+          spineSelected={spineSelected && isCover}
           showSafeMargin={showSafeMargin}
           showBleed={showBleed}
+          selectedElementId={selectedElementId}
+          onSelectPage={selectPage}
+          onSelectSpine={selectSpine}
+          onEditSpine={openSpineEditor}
+          onClearSelection={() => {
+            setEditingSpine(false);
+            clearSelection();
+          }}
         />
       ) : pages.length === 0 ? (
         <div className="flex h-full items-center justify-center">
@@ -134,12 +214,41 @@ export function CanvasWorkspace() {
         </div>
       ) : null}
 
+      {editingSpine && isCover ? (
+        <div
+          className="absolute z-20 -translate-x-1/2 -translate-y-1/2 rounded-field border border-accent bg-surface p-1.5 shadow-panel"
+          style={{ left: spineCenterLeft, top: spineCenterTop }}
+          onPointerDown={(event) => event.stopPropagation()}
+        >
+          <input
+            type="text"
+            autoFocus
+            value={spineDraft}
+            maxLength={80}
+            aria-label="Edit spine text"
+            placeholder="Spine text"
+            onChange={(event) => setSpineDraft(event.target.value)}
+            onBlur={commitSpineEditor}
+            onKeyDown={(event) => {
+              if (event.key === "Enter") {
+                event.preventDefault();
+                commitSpineEditor();
+              } else if (event.key === "Escape") {
+                event.preventDefault();
+                setEditingSpine(false);
+              }
+            }}
+            className="h-7 w-44 rounded-[6px] border border-line bg-surface-muted/50 px-2 text-center text-[11.5px] font-medium text-ink outline-none focus:border-accent"
+          />
+        </div>
+      ) : null}
+
       <div
         aria-hidden="true"
         className="pointer-events-none absolute bottom-4 right-5 hidden items-center gap-2 font-mono text-[10px] uppercase tracking-[0.16em] text-ink-subtle lg:flex"
       >
         <span>
-          {String(spreadIndex + 1)} / {spreads.length}
+          Spread {spreadIndex + 1} of {spreads.length}
         </span>
       </div>
     </section>

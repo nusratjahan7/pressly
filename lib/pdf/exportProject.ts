@@ -6,6 +6,7 @@ import type {
   TextElement,
 } from "@/types";
 import { getBackground, type BackgroundPattern } from "@/lib/backgrounds";
+import { getPdfExportPages } from "@/lib/spreads";
 import { getSticker, stickerToSvgString } from "@/lib/stickers";
 import { mmToPt } from "@/lib/units";
 
@@ -261,7 +262,8 @@ export async function createProjectPdf(
   const mediaWidth = trimWidthPt + bleedPt * 2;
   const mediaHeight = trimHeightPt + bleedPt * 2;
 
-  for (const page of project.pages) {
+  const exportPages = getPdfExportPages(project.pages);
+  for (const page of exportPages) {
     const pdfPage: PdfPage = document.addPage([mediaWidth, mediaHeight]);
     const background = getBackground(page.backgroundId);
     const backgroundRgb = hexToRgb(background.baseColor);

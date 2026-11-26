@@ -27,11 +27,13 @@ export interface UiState {
   showBleed: boolean;
   pageSetupOpen: boolean;
   pageSetupMode: "setup" | "new";
+  thumbnailView: "strip" | "grid";
 }
 
 export interface SelectionState {
   pageId: string | null;
   elementId: string | null;
+  spineSelected?: boolean;
 }
 
 export interface HistoryState {
@@ -55,6 +57,7 @@ export interface CreateProjectOptions {
 export interface ProjectSlice {
   project: Project;
   renameProject: (name: string) => void;
+  setSpineText: (spineText: string) => void;
   /** Applies trim dimensions immediately, rescaling elements proportionally. */
   setPageSize: (pageSize: PageSize) => void;
   /** Applies non-geometric settings: bleed, safe margin and binding. */
@@ -68,6 +71,8 @@ export interface PagesSlice {
   addSpread: () => void;
   duplicateSpread: () => void;
   removeSpread: () => void;
+  /** Moves a spread to a new position. The cover is pinned at index 0. */
+  moveSpread: (fromIndex: number, toIndex: number) => void;
   goToSpread: (index: number) => void;
   nextSpread: () => void;
   prevSpread: () => void;
@@ -101,6 +106,7 @@ export interface SelectionSlice {
   selection: SelectionState;
   selectElement: (pageId: string, elementId: string) => void;
   selectPage: (pageId: string) => void;
+  selectSpine: () => void;
   clearSelection: () => void;
 }
 
@@ -134,6 +140,7 @@ export interface UiSlice {
   setShowBleed: (show: boolean) => void;
   openPageSetup: (mode?: "setup" | "new") => void;
   closePageSetup: () => void;
+  setThumbnailView: (view: "strip" | "grid") => void;
 }
 
 export type EditorStore = ProjectSlice &

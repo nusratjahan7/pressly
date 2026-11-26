@@ -2,8 +2,10 @@
 
 import { useEffect, useRef } from "react";
 import { createStore, get, set } from "idb-keyval";
-import type { Project } from "@/types";
+import type { Page, Project } from "@/types";
 import { useEditorStore } from "@/store";
+import { createCoverPage, createEndPaper, createPage } from "@/lib/project";
+import { clampSpreadIndex } from "@/lib/spreads";
 
 const PROJECT_KEY = "pressly.project.v1";
 const PREFS_KEY = "pressly.prefs.v1";
@@ -49,6 +51,35 @@ function isProject(value: unknown): value is Project {
   );
 }
 
+function migratePages(pages: Page[]): Page[] {
+  const hasBookStructure = pages.some((page) => page.coverSide || page.isEndPaper);
+  if (hasBookStructure) {
+    return pages.map((page) =>
+      page.isEndPaper ? { ...page, locked: true } : page,
+    );
+  }
+
+  // Legacy documents had [frontCover, ...middle, backCover]. Rebuild into the
+  // printed book layout: [backCover, frontCover, endPaper, ...pages, endPaper].
+  const legacyFront = pages[0];
+  const legacyBack = pages.length > 1 ? pages[pages.length - 1] : undefined;
+  const backCover: Page = legacyBack
+    ? { ...legacyBack, coverSide: "back" }
+    : createCoverPage("back");
+  const frontCover: Page = legacyFront
+    ? { ...legacyFront, coverSide: "front" }
+    : createCoverPage("front", "ivory");
+
+  const interior = pages.slice(1, Math.max(1, pages.length - 1));
+  if (interior.length === 0) {
+    interior.push(createPage("paper"), createPage("paper"));
+  } else if (interior.length % 2 === 1) {
+    interior.push(createPage("paper"));
+  }
+
+  return [backCover, frontCover, createEndPaper(), ...interior, createEndPaper()];
+}
+
 /**
  * Documents saved before page setup existed have no `safeMargin` or `binding`.
  * Fill them in rather than discarding the user's work.
@@ -71,6 +102,7 @@ function migrateProject(project: Project): Project {
         typeof pageSize.safeMargin === "number" ? pageSize.safeMargin : 5,
       binding,
     },
+    pages: migratePages(project.pages),
   };
 }
 
@@ -117,11 +149,12 @@ export function useProjectPersistence() {
       if (cancelled) return;
 
       if (document) {
-        useEditorStore.getState().replaceProject(migrateProject(document.project));
+        const migrated = migrateProject(document.project);
+        useEditorStore.getState().replaceProject(migrated);
         useEditorStore.setState((state) => ({
           ui: {
             ...state.ui,
-            spreadIndex: document.spreadIndex,
+            spreadIndex: clampSpreadIndex(document.spreadIndex, migrated.pages),
           },
         }));
       }

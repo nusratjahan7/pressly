@@ -53,7 +53,89 @@ export function getSpineWidth(binding: BindingType, pageCount: number): number {
   return round(block + HARDBOARD_ALLOWANCE_MM, 2);
 }
 
+/**
+ * Visual spine width in millimetres for rendering Spread 0 as a single wide
+ * wrap-around cover (back cover | spine | front cover) even on thin books.
+ */
+export function getCoverDisplaySpineWidth(
+  binding: BindingType,
+  pageCount: number,
+): number {
+  const physical = getSpineWidth(binding, pageCount);
+  if (binding === "saddle-stitch") return Math.max(4, physical);
+  return Math.max(10, physical);
+}
+
 /** Minimum page count the binding can physically handle. */
 export function getBindingMinimumPages(binding: BindingType): number {
   return binding === "saddle-stitch" ? 4 : 32;
+}
+
+export interface BindingLimits {
+  min: number;
+  max: number;
+  /**
+   * Saddle stitch is folded from signatures, so pages must divide evenly into
+   * groups of four. `null` means any even count is acceptable.
+   */
+  signature: number | null;
+}
+
+export const BINDING_LIMITS: Record<BindingType, BindingLimits> = {
+  "saddle-stitch": { min: 4, max: 64, signature: 4 },
+  "perfect-bound": { min: 32, max: 800, signature: null },
+  hardcover: { min: 32, max: 500, signature: null },
+};
+
+export function getBindingLimits(binding: BindingType): BindingLimits {
+  return BINDING_LIMITS[binding];
+}
+
+export type PageCountLevel = "ok" | "warning" | "error";
+
+export interface PageCountStatus {
+  level: PageCountLevel;
+  message: string | null;
+}
+
+/**
+ * Validates the page count against what the chosen binding can produce.
+ * Messages are written for the editor, not for print engineers.
+ */
+export function validatePageCount(
+  binding: BindingType,
+  pageCount: number,
+): PageCountStatus {
+  const limits = getBindingLimits(binding);
+  const name = getBinding(binding).name;
+
+  if (pageCount < limits.min) {
+    const short = limits.min - pageCount;
+    return {
+      level: "error",
+      message: `${name} needs at least ${limits.min} pages. Add ${short} more.`,
+    };
+  }
+
+  if (pageCount > limits.max) {
+    const over = pageCount - limits.max;
+    return {
+      level: "error",
+      message: `${name} supports at most ${limits.max} pages. Remove ${over}.`,
+    };
+  }
+
+  if (limits.signature && pageCount % limits.signature !== 0) {
+    const nextMultiple = Math.ceil(pageCount / limits.signature) * limits.signature;
+    return {
+      level: "warning",
+      message: `${name} folds in groups of ${limits.signature}. ${pageCount} pages leaves a partial signature; ${nextMultiple} would be even.`,
+    };
+  }
+
+  return { level: "ok", message: null };
+}
+
+export function canAddSpread(binding: BindingType, pageCount: number) {
+  return pageCount + 2 <= getBindingLimits(binding).max;
 }

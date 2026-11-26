@@ -3,7 +3,7 @@
 import { useId } from "react";
 import { ArrowLeftRight } from "lucide-react";
 import type { BindingType, Orientation, PageSize } from "@/types";
-import { BINDING_TYPES } from "@/lib/binding";
+import { BINDING_TYPES, validatePageCount } from "@/lib/binding";
 import {
   formatNumber,
   inchesToMm,
@@ -185,6 +185,12 @@ export function BindingField({ value, onChange, pageCount }: BindingFieldProps) 
         <p className="text-[10.5px] leading-4 text-ink-subtle">
           {pageCount} pages is short for glue binding; saddle stitch may hold
           better.
+        </p>
+      ) : null}
+      {value === "saddle-stitch" &&
+      validatePageCount(value, pageCount).message ? (
+        <p className="text-[10.5px] leading-4 text-accent">
+          {validatePageCount(value, pageCount).message}
         </p>
       ) : null}
     </fieldset>

@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { AlertCircle, Download, FileText } from "lucide-react";
 import { useEditorStore } from "@/store";
 import { formatNumber } from "@/lib/units";
-import { getSpreads } from "@/lib/spreads";
+import { getEditablePageCount, getSpreads } from "@/lib/spreads";
 import { slugify } from "@/lib/cn";
 import { createProjectPdf } from "@/lib/pdf/exportProject";
 import { Modal } from "@/components/ui/modal";
@@ -20,6 +20,7 @@ export function ExportDialog() {
   const [error, setError] = useState<string | null>(null);
 
   const spreads = getSpreads(project.pages);
+  const editablePageCount = getEditablePageCount(project.pages);
   const hasBleed = project.pageSize.bleed > 0;
 
   useEffect(() => {
@@ -95,7 +96,7 @@ export function ExportDialog() {
               {project.name}
             </p>
             <p className="text-[10.5px] text-ink-muted">
-              {project.pages.length} pages · {spreads.length} spreads
+              {editablePageCount} pages + cover · {spreads.length} spreads
             </p>
           </div>
         </div>

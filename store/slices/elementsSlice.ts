@@ -3,6 +3,11 @@ import type { EditorStore, ElementsSlice } from "@/store/types";
 import type { Element } from "@/types";
 import { nextZIndex } from "@/lib/elements";
 
+function isPageEditable(state: { project: { pages: Array<{ id: string; isEndPaper?: boolean; locked?: boolean }> } }, pageId: string) {
+  const page = state.project.pages.find((candidate) => candidate.id === pageId);
+  return Boolean(page && !page.isEndPaper && !page.locked);
+}
+
 function normalizeLayers(elements: Element[]) {
   return elements.map((element, index) => ({ ...element, zIndex: index }));
 }
@@ -14,8 +19,11 @@ export const createElementsSlice: StateCreator<
   ElementsSlice
 > = (set, get) => ({
   addElement: (pageId, element) => {
-    const page = get().project.pages.find((candidate) => candidate.id === pageId);
+    const step = get();
+    const page = step.project.pages.find((candidate) => candidate.id === pageId);
     if (!page) return;
+    // End papers and locked pages are structural and reject new content.
+    if (!isPageEditable(step, pageId)) return;
 
     const placed: Element = {
       ...element,
@@ -38,8 +46,10 @@ export const createElementsSlice: StateCreator<
 
   addElements: (pageId, elements) => {
     if (elements.length === 0) return;
-    const page = get().project.pages.find((candidate) => candidate.id === pageId);
+    const step = get();
+    const page = step.project.pages.find((candidate) => candidate.id === pageId);
     if (!page) return;
+    if (!isPageEditable(step, pageId)) return;
 
     let z = nextZIndex(page.elements);
     const placed = elements.map((element) => ({
@@ -66,7 +76,7 @@ export const createElementsSlice: StateCreator<
     const page = state.project.pages.find((candidate) =>
       candidate.elements.some((element) => element.id === elementId),
     );
-    if (!page) return;
+    if (!page || !isPageEditable(state, page.id)) return;
 
     const existing = page.elements.find((element) => element.id === elementId);
     if (!existing) return;
@@ -101,7 +111,7 @@ export const createElementsSlice: StateCreator<
     const page = state.project.pages.find((candidate) =>
       candidate.elements.some((element) => element.id === elementId),
     );
-    if (!page) return;
+    if (!page || !isPageEditable(state, page.id)) return;
 
     get().pushHistory();
     set((current) => ({
@@ -132,7 +142,7 @@ export const createElementsSlice: StateCreator<
     const page = state.project.pages.find((candidate) =>
       candidate.elements.some((element) => element.id === elementId),
     );
-    if (!page) return;
+    if (!page || !isPageEditable(state, page.id)) return;
 
     const ordered = [...page.elements].sort((a, b) => a.zIndex - b.zIndex);
     const index = ordered.findIndex((element) => element.id === elementId);

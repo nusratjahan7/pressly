@@ -4,6 +4,7 @@ import { ChevronDown, Ruler } from "lucide-react";
 import { useEditorStore } from "@/store";
 import { findPresetForSize, formatNumber } from "@/lib/units";
 import { getSpineWidth } from "@/lib/binding";
+import { getEditablePageCount } from "@/lib/spreads";
 import { Button } from "@/components/ui/button";
 
 /**
@@ -15,7 +16,7 @@ export function PageSizeMenu() {
   const openPageSetup = useEditorStore((state) => state.openPageSetup);
 
   const preset = findPresetForSize(project.pageSize.w, project.pageSize.h);
-  const spine = getSpineWidth(project.pageSize.binding, project.pages.length);
+  const spine = getSpineWidth(project.pageSize.binding, getEditablePageCount(project.pages));
 
   return (
     <Button

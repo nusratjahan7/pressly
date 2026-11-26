@@ -44,10 +44,10 @@ export function LayoutsPanel() {
         <p>Frames are added as shapes you can move, resize, or delete.</p>
       </div>
 
-      {!page ? (
+      {!page || page.isEndPaper || page.locked ? (
         <EmptyState
-          title="No page selected"
-          description="Select a page to add a frame layout."
+          title={page ? "Page is locked" : "No page selected"}
+          description="Select an editable page to add a frame layout."
           compact
         />
       ) : (

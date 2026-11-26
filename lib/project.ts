@@ -16,13 +16,34 @@ export function createPage(backgroundId = "paper"): Page {
   };
 }
 
-export const SEED_PAGE_COUNT = 8;
+/** End papers are glued to the cover and cannot hold content. */
+export function createEndPaper(backgroundId = "mist"): Page {
+  return {
+    id: createId(),
+    backgroundId,
+    elements: [],
+    isEndPaper: true,
+    locked: true,
+  };
+}
+
+export function createCoverPage(side: "back" | "front", backgroundId = "ink") {
+  return {
+    ...createPage(backgroundId),
+    coverSide: side,
+  } satisfies Page;
+}
+
+/** Editable content pages in the seed document. */
+export const SEED_PAGE_COUNT = 6;
 
 export function createSeedProject(): Project {
   const pages: Page[] = [];
 
-  const cover = createPage("ivory");
-  cover.elements = [
+  // Spread 0 — wrap-around cover: back cover | front cover.
+  pages.push(createCoverPage("back"));
+  const frontCover = createCoverPage("front", "ivory");
+  frontCover.elements = [
     createTextElement(
       { x: 20, y: 26, width: 132, height: 8, zIndex: 0 },
       {
@@ -65,106 +86,19 @@ export function createSeedProject(): Project {
       { stickerId: "sparkle", color: DEFAULT_ACCENT },
     ),
   ];
-  pages.push(cover);
+  pages.push(frontCover);
 
-  const insideFront = createPage("ivory");
-  insideFront.elements = [
-    createTextElement(
-      { x: 20, y: 26, width: 100, height: 8, zIndex: 0 },
-      {
-        text: "PRESSLY",
-        fontSize: 8,
-        fontWeight: 600,
-        letterSpacing: 3,
-        color: "#565E8E",
-        lineHeight: 1,
-      },
-    ),
-    createShapeElement(
-      { x: 20, y: 38, width: 26, height: 1.2, zIndex: 1 },
-      { fill: DEFAULT_ACCENT, stroke: "transparent", strokeWidth: 0 },
-    ),
-    createTextElement(
-      { x: 20, y: 118, width: 170, height: 8, zIndex: 2 },
-      {
-        text: "A PRESSLY PUBLICATION",
-        fontSize: 8,
-        fontWeight: 500,
-        letterSpacing: 2.4,
-        color: "#565E8E",
-        align: "center",
-        lineHeight: 1,
-      },
-    ),
-    createTextElement(
-      { x: 20, y: 136, width: 170, height: 18, zIndex: 3 },
-      {
-        text: "Issue 01",
-        fontSize: 40,
-        fontWeight: 500,
-        lineHeight: 1,
-        letterSpacing: -1.2,
-        color: DEFAULT_TEXT_COLOR,
-        align: "center",
-      },
-    ),
-    createShapeElement(
-      { x: 93, y: 188, width: 24, height: 1.2, zIndex: 4 },
-      { fill: DEFAULT_ACCENT, stroke: "transparent", strokeWidth: 0 },
-    ),
-    createTextElement(
-      { x: 20, y: 202, width: 170, height: 8, zIndex: 5 },
-      {
-        text: "MMXXVI",
-        fontSize: 9,
-        fontWeight: 500,
-        letterSpacing: 3,
-        color: "#565E8E",
-        align: "center",
-        lineHeight: 1,
-      },
-    ),
-    createStickerElement(
-      { x: 158, y: 240, width: 30, height: 30, zIndex: 6, opacity: 0.28 },
-      { stickerId: "ring", color: DEFAULT_ACCENT },
-    ),
-  ];
-  pages.push(insideFront);
+  // Spread 1 — inside front end paper | page 1.
+  pages.push(createEndPaper());
+  pages.push(createPage("paper"));
 
-  for (let index = 2; index < SEED_PAGE_COUNT - 1; index += 1) {
+  // Remaining content pages, so the total editable count is SEED_PAGE_COUNT.
+  for (let index = 1; index < SEED_PAGE_COUNT; index += 1) {
     pages.push(createPage("paper"));
   }
 
-  const backCover = createPage("ink");
-  backCover.elements = [
-    createTextElement(
-      { x: 20, y: 244, width: 170, height: 10, zIndex: 0 },
-      {
-        text: "Pressly",
-        fontSize: 20,
-        fontWeight: 500,
-        letterSpacing: -0.4,
-        color: "#FFFFFF",
-        lineHeight: 1,
-      },
-    ),
-    createTextElement(
-      { x: 20, y: 260, width: 170, height: 6, zIndex: 1 },
-      {
-        text: "pressly.studio",
-        fontSize: 8,
-        fontWeight: 400,
-        letterSpacing: 1.2,
-        color: "#A6ACD8",
-        lineHeight: 1,
-      },
-    ),
-    createShapeElement(
-      { x: 20, y: 234, width: 18, height: 1.2, zIndex: 2 },
-      { fill: DEFAULT_ACCENT, stroke: "transparent", strokeWidth: 0 },
-    ),
-  ];
-  pages.push(backCover);
+  // Final spread — last page | inside back end paper.
+  pages.push(createEndPaper());
 
   return {
     id: createId(),
