@@ -11,14 +11,16 @@ import {
   Type,
   Underline,
 } from "lucide-react";
-import type { TextElement } from "@/types";
+import type { FontWeight, TextElement } from "@/types";
 import { useEditorStore } from "@/store";
 import {
-  CURATED_FONTS,
   ensureGoogleFontLoaded,
   FONT_PAIRING_PRESETS,
+  FONT_SELECT_OPTIONS,
   getCuratedFont,
+  getFontOptionValue,
   preloadAllCuratedFonts,
+  resolveFontOption,
   type FontPairingPreset,
 } from "@/lib/fonts";
 import { createTextElement } from "@/lib/elements";
@@ -132,29 +134,35 @@ export function TextToolbar({
       }}
     >
       <div className="pointer-events-auto flex max-w-full flex-wrap items-center justify-center gap-1 rounded-ui border border-line bg-surface/95 px-2 py-1 shadow-panel backdrop-blur">
-        {/* Font family (25 curated Google fonts) */}
+        {/* Font family */}
         <select
           aria-label="Font family"
-          value={element.fontFamily}
+          value={getFontOptionValue(element.fontFamily, element.fontWeight)}
           onChange={(event) => {
-            const font = event.target.value;
-            ensureGoogleFontLoaded(
-              font,
+            const resolved = resolveFontOption(
+              event.target.value,
               element.fontWeight,
+            );
+            ensureGoogleFontLoaded(
+              resolved.fontFamily,
+              resolved.fontWeight,
               element.fontStyle === "italic",
             );
-            update({ fontFamily: font });
+            update(resolved);
           }}
           style={{ fontFamily: `"${element.fontFamily}", var(--font-montserrat), sans-serif` }}
-          className="h-6 max-w-28 shrink-0 rounded-[6px] border border-line bg-surface px-1.5 text-[10.5px] font-medium text-ink outline-none focus:border-accent"
+          className="h-6 max-w-36 shrink-0 rounded-[6px] border border-line bg-surface px-1.5 text-[10.5px] font-medium text-ink outline-none focus:border-accent"
         >
-          {CURATED_FONTS.map((font) => (
+          {FONT_SELECT_OPTIONS.map((option) => (
             <option
-              key={font.slug}
-              value={font.name}
-              style={{ fontFamily: `"${font.name}", sans-serif` }}
+              key={option.value}
+              value={option.value}
+              style={{
+                fontFamily: `"${option.fontFamily}", sans-serif`,
+                fontWeight: option.defaultWeight ?? 400,
+              }}
             >
-              {font.name}
+              {option.label}
             </option>
           ))}
         </select>
@@ -200,11 +208,13 @@ export function TextToolbar({
         {/* Weight */}
         {(() => {
           const weights = getCuratedFont(element.fontFamily).weights;
-          const weightLabels: Record<400 | 500 | 600 | 700, string> = {
+          const weightLabels: Record<FontWeight, string> = {
+            300: "Light",
             400: "Reg",
             500: "Med",
             600: "Semi",
             700: "Bold",
+            900: "Black",
           };
           return (
             <select
@@ -215,7 +225,7 @@ export function TextToolbar({
                   : weights[0]
               }
               onChange={(event) => {
-                const w = Number(event.target.value) as 400 | 500 | 600 | 700;
+                const w = Number(event.target.value) as FontWeight;
                 ensureGoogleFontLoaded(
                   element.fontFamily,
                   w,

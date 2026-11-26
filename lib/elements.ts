@@ -1,6 +1,7 @@
 import type {
   Element,
   ElementType,
+  FontWeight,
   ImageElement,
   QrElement,
   ShapeElement,
@@ -30,7 +31,8 @@ const geometryDefaults = {
 
 export const DEFAULT_TEXT_COLOR = "#122056";
 export const DEFAULT_ACCENT = "#5B65DC";
-export const FONT_FAMILY = "Montserrat";
+export const FONT_FAMILY = "Londrina Solid";
+export const DEFAULT_FONT_WEIGHT: FontWeight = 900;
 
 export function createTextElement(
   geometry: Geometry,
@@ -47,7 +49,7 @@ export function createTextElement(
     text: "",
     fontFamily: FONT_FAMILY,
     fontSize: 24,
-    fontWeight: 400,
+    fontWeight: DEFAULT_FONT_WEIGHT,
     color: DEFAULT_TEXT_COLOR,
     align: "left",
     lineHeight: 1.25,

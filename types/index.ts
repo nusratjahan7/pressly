@@ -79,6 +79,7 @@ export interface ImageElement extends ElementBase {
 }
 
 export type TextAlign = "left" | "center" | "right";
+export type FontWeight = 300 | 400 | 500 | 600 | 700 | 900;
 
 export interface TextElement extends ElementBase {
   type: "text";
@@ -86,7 +87,7 @@ export interface TextElement extends ElementBase {
   fontFamily: string;
   /** Font size in points. */
   fontSize: number;
-  fontWeight: 400 | 500 | 600 | 700;
+  fontWeight: FontWeight;
   fontStyle?: "normal" | "italic";
   textDecoration?: "none" | "underline";
   textTransform?: "none" | "uppercase";

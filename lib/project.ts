@@ -48,8 +48,7 @@ export function createSeedProject(): Project {
       { x: 20, y: 26, width: 132, height: 8, zIndex: 0 },
       {
         text: "PRESSLY STUDIO",
-        fontSize: 8,
-        fontWeight: 600,
+        fontSize: 9,
         letterSpacing: 2.2,
         color: "#565E8E",
         lineHeight: 1,
@@ -64,9 +63,8 @@ export function createSeedProject(): Project {
       {
         text: "Untitled Issue",
         fontSize: 58,
-        fontWeight: 600,
         lineHeight: 0.94,
-        letterSpacing: -1.8,
+        letterSpacing: -0.6,
         color: DEFAULT_TEXT_COLOR,
       },
     ),
@@ -74,8 +72,7 @@ export function createSeedProject(): Project {
       { x: 20, y: 258, width: 150, height: 8, zIndex: 3 },
       {
         text: "ISSUE 01 — MMXXVI",
-        fontSize: 9,
-        fontWeight: 500,
+        fontSize: 10,
         letterSpacing: 1.6,
         color: "#565E8E",
         lineHeight: 1,

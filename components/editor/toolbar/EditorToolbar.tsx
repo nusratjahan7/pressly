@@ -57,7 +57,6 @@ export function EditorToolbar() {
         {
           text: "Double-click to edit",
           fontSize: 22,
-          fontWeight: 600,
           align: "center",
           boxMode: "auto",
         },

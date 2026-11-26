@@ -167,6 +167,10 @@ export function CanvasWorkspace() {
   ]);
 
   useEffect(() => {
+    ensureGoogleFontLoaded("Londrina Solid", 900, false);
+  }, []);
+
+  useEffect(() => {
     setQuickLayoutPageId(null);
     setCroppingElementId(null);
     setEditingText(null);
@@ -269,7 +273,6 @@ export function CanvasWorkspace() {
       {
         text: "Your text here",
         fontSize: 20,
-        fontWeight: 600,
         align: "center",
         boxMode: "auto",
       },

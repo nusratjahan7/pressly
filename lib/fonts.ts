@@ -1,15 +1,25 @@
+import type { FontWeight } from "@/types";
+
 export type FontCategory = "sans" | "serif" | "display" | "mono";
 
 export interface CuratedFont {
   name: string;
   slug: string;
   category: FontCategory;
-  weights: Array<400 | 500 | 600 | 700>;
+  weights: FontWeight[];
   hasItalic: boolean;
 }
 
-/** 25 curated Google Fonts including editorial serifs, display, sans, and mono. */
+export const DEFAULT_MAGAZINE_FONT_FAMILY = "Londrina Solid";
+export const DEFAULT_MAGAZINE_FONT_WEIGHT: FontWeight = 900;
+
+/** Curated Google Fonts including display, sans, editorial serifs, and mono. */
 export const CURATED_FONTS: CuratedFont[] = [
+  // Featured Display Fonts
+  { name: "Londrina Solid", slug: "londrina-solid", category: "display", weights: [300, 400, 900], hasItalic: false },
+  { name: "Eater", slug: "eater", category: "display", weights: [400], hasItalic: false },
+  { name: "Bangers", slug: "bangers", category: "display", weights: [400], hasItalic: false },
+  { name: "Ultra", slug: "ultra", category: "display", weights: [400], hasItalic: false },
   // Editorial Sans (8)
   { name: "Montserrat", slug: "montserrat", category: "sans", weights: [400, 500, 600, 700], hasItalic: true },
   { name: "Inter", slug: "inter", category: "sans", weights: [400, 500, 600, 700], hasItalic: false },
@@ -53,7 +63,7 @@ export interface FontPairingPreset {
   heading: {
     fontFamily: string;
     fontSize: number;
-    fontWeight: 400 | 500 | 600 | 700;
+    fontWeight: FontWeight;
     letterSpacing: number;
     textTransform?: "none" | "uppercase";
     text: string;
@@ -61,7 +71,7 @@ export interface FontPairingPreset {
   subheading: {
     fontFamily: string;
     fontSize: number;
-    fontWeight: 400 | 500 | 600 | 700;
+    fontWeight: FontWeight;
     letterSpacing: number;
     textTransform?: "none" | "uppercase";
     text: string;
@@ -69,7 +79,7 @@ export interface FontPairingPreset {
   body: {
     fontFamily: string;
     fontSize: number;
-    fontWeight: 400 | 500 | 600 | 700;
+    fontWeight: FontWeight;
     lineHeight: number;
     text: string;
   };
@@ -307,11 +317,57 @@ export function ensureGoogleFontLoaded(
   loadSpecificFace();
 }
 
+export interface FontOption {
+  value: string;
+  label: string;
+  fontFamily: string;
+  defaultWeight?: FontWeight;
+}
+
+export const FONT_SELECT_OPTIONS: FontOption[] = [
+  {
+    value: "Londrina Solid Black",
+    label: "Londrina Solid Black",
+    fontFamily: "Londrina Solid",
+    defaultWeight: 900,
+  },
+  ...CURATED_FONTS.map((font) => ({
+    value: font.name,
+    label: font.name,
+    fontFamily: font.name,
+  })),
+];
+
+export function getFontOptionValue(
+  fontFamily: string,
+  fontWeight: FontWeight,
+): string {
+  if (fontFamily === "Londrina Solid" && fontWeight === 900) {
+    return "Londrina Solid Black";
+  }
+  return fontFamily;
+}
+
+export function resolveFontOption(
+  selectedValue: string,
+  currentWeight: FontWeight,
+): { fontFamily: string; fontWeight: FontWeight } {
+  if (selectedValue === "Londrina Solid Black") {
+    return { fontFamily: "Londrina Solid", fontWeight: 900 };
+  }
+  const supported = getCuratedFont(selectedValue).weights;
+  const nextWeight = supported.includes(currentWeight)
+    ? currentWeight
+    : (supported[0] ?? 400);
+  return { fontFamily: selectedValue, fontWeight: nextWeight };
+}
+
 /** Preloads stylesheets for all curated fonts so dropdown & canvas switching is instant. */
 export function preloadAllCuratedFonts(): void {
   if (typeof document === "undefined") return;
+  ensureGoogleFontLoaded("Londrina Solid", 900, false);
   for (const font of CURATED_FONTS) {
-    ensureGoogleFontLoaded(font.name, 400, false);
+    ensureGoogleFontLoaded(font.name, font.weights[0] ?? 400, false);
   }
 }
 

@@ -37,7 +37,7 @@ import {
   Unlock,
   X,
 } from "lucide-react";
-import type { Element, Page } from "@/types";
+import type { Element, FontWeight, Page } from "@/types";
 import { useEditorStore } from "@/store";
 import {
   useCurrentSpread,
@@ -47,10 +47,12 @@ import {
 import { getSpineWidth } from "@/lib/binding";
 import { getEditablePageCount } from "@/lib/spreads";
 import {
-  CURATED_FONTS,
   ensureGoogleFontLoaded,
+  FONT_SELECT_OPTIONS,
   getCuratedFont,
+  getFontOptionValue,
   preloadAllCuratedFonts,
+  resolveFontOption,
 } from "@/lib/fonts";
 import { useMediaQuery } from "@/lib/useMediaQuery";
 import { formatNumber } from "@/lib/units";
@@ -317,43 +319,50 @@ function SingleElementInspector({
             </PropertyGrid>
             <SelectField
               label="Font"
-              value={element.fontFamily}
+              value={getFontOptionValue(element.fontFamily, element.fontWeight)}
               disabled={locked}
-              options={CURATED_FONTS.map((font) => ({
-                value: font.name,
-                label: font.name,
+              options={FONT_SELECT_OPTIONS.map((option) => ({
+                value: option.value,
+                label: option.label,
               }))}
               onChange={(value) => {
                 preloadAllCuratedFonts();
-                const supported = getCuratedFont(value).weights;
-                const nextWeight = supported.includes(element.fontWeight)
-                  ? element.fontWeight
-                  : (supported[0] ?? 400);
+                const resolved = resolveFontOption(value, element.fontWeight);
                 ensureGoogleFontLoaded(
-                  value,
-                  nextWeight,
+                  resolved.fontFamily,
+                  resolved.fontWeight,
                   element.fontStyle === "italic",
                 );
-                update({ fontFamily: value, fontWeight: nextWeight });
+                update(resolved);
               }}
             />
             <SelectField
               label="Weight"
-              value={element.fontWeight}
+              value={
+                getCuratedFont(element.fontFamily).weights.includes(
+                  element.fontWeight,
+                )
+                  ? element.fontWeight
+                  : (getCuratedFont(element.fontFamily).weights[0] ?? 400)
+              }
               disabled={locked}
               options={getCuratedFont(element.fontFamily).weights.map((w) => ({
                 value: w,
                 label:
-                  w === 400
-                    ? "Regular (400)"
-                    : w === 500
-                      ? "Medium (500)"
-                      : w === 600
-                        ? "Semibold (600)"
-                        : "Bold (700)",
+                  w === 300
+                    ? "Light (300)"
+                    : w === 400
+                      ? "Regular (400)"
+                      : w === 500
+                        ? "Medium (500)"
+                        : w === 600
+                          ? "Semibold (600)"
+                          : w === 700
+                            ? "Bold (700)"
+                            : "Black (900)",
               }))}
               onChange={(value) => {
-                const w = value as 400 | 500 | 600 | 700;
+                const w = Number(value) as FontWeight;
                 ensureGoogleFontLoaded(
                   element.fontFamily,
                   w,

@@ -111,7 +111,6 @@ function createTextFrameElement(
     {
       text: hasExisting ? existingText! : "text",
       fontSize,
-      fontWeight: 700,
       align: "center",
       color: hasExisting ? "#122056" : "#D4A3B8",
       lineHeight: 1.15,
