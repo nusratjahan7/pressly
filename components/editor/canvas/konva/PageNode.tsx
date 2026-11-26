@@ -83,11 +83,12 @@ export function PageNode({
   const isEndPaper = Boolean(page.isEndPaper);
   const isLocked = Boolean(page.locked || isEndPaper);
 
-  const ordered = [...page.elements]
+  const visibleElements = page.elements.filter((el) => !el.hidden);
+  const ordered = [...visibleElements]
     .filter((el) => !el.spanSpread)
     .sort((a, b) => a.zIndex - b.zIndex);
-  const largestEmptyId = getLargestEmptyFrameId(page.elements);
-  const gutters = isLocked ? [] : findLayoutGutters(page.elements);
+  const largestEmptyId = getLargestEmptyFrameId(visibleElements);
+  const gutters = isLocked ? [] : findLayoutGutters(visibleElements);
 
   return (
     <Group x={x} y={0}>

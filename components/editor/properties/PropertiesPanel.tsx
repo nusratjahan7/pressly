@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import {
   AlignCenter,
@@ -19,10 +19,13 @@ import {
   ChevronUp,
   ChevronsDown,
   ChevronsUp,
+  Eye,
+  EyeOff,
   FlipHorizontal2,
   FlipVertical2,
   Group,
   Italic,
+  Layers,
   Lock,
   PanelRightClose,
   RotateCcw,
@@ -36,7 +39,11 @@ import {
 } from "lucide-react";
 import type { Element, Page } from "@/types";
 import { useEditorStore } from "@/store";
-import { useSelectedElement, useSelectedElements } from "@/store/selectors";
+import {
+  useCurrentSpread,
+  useSelectedElement,
+  useSelectedElements,
+} from "@/store/selectors";
 import { getSpineWidth } from "@/lib/binding";
 import { getEditablePageCount } from "@/lib/spreads";
 import {
@@ -53,6 +60,7 @@ import {
 } from "@/lib/elements";
 import { SHAPE_PRESETS } from "@/lib/shapes";
 import { SVG_STICKERS } from "@/lib/stickers";
+import { LayersList } from "@/components/editor/properties/LayersList";
 import {
   NumberField,
   PropertyGrid,
@@ -65,6 +73,7 @@ import { ColorPicker } from "@/components/ui/color-picker";
 import { IconButton } from "@/components/ui/icon-button";
 import { Slider } from "@/components/ui/slider";
 import { Toggle } from "@/components/ui/toggle";
+import { cn } from "@/lib/cn";
 
 function ColorField({
   label,
@@ -95,7 +104,7 @@ function ColorField({
   );
 }
 
-function PropertiesContent({
+function SingleElementInspector({
   element,
   page,
 }: {
@@ -113,69 +122,16 @@ function PropertiesContent({
   const alignElements = useEditorStore((state) => state.alignElements);
   const flipElements = useEditorStore((state) => state.flipElements);
   const ungroupElements = useEditorStore((state) => state.ungroupElements);
-  const clearSelection = useEditorStore((state) => state.clearSelection);
-
-  const isCompact = useMediaQuery("(max-width: 1023px)");
-  const [expanded, setExpanded] = useState<boolean | null>(null);
-  const isCollapsed = expanded === null ? isCompact : !expanded;
 
   const locked = element.locked;
+  const hidden = Boolean(element.hidden);
   const label = getElementLabel(element, element.zIndex);
   const update = (patch: Partial<Element>) =>
     updateElement(element.id, patch);
 
-  if (isCollapsed) {
-    return (
-      <motion.div
-        key={`pill-${element.id}`}
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        exit={{ opacity: 0, y: 10 }}
-        transition={{ duration: 0.15 }}
-        className="absolute bottom-3 right-3 z-30 flex max-w-[calc(100%-24px)] items-center gap-1 rounded-full border border-line bg-surface/95 py-1 pl-3 pr-1.5 shadow-panel backdrop-blur"
-      >
-        <button
-          type="button"
-          onClick={() => setExpanded(true)}
-          className="flex min-w-0 items-center gap-1.5 text-left text-[11px] font-medium text-ink hover:text-accent"
-        >
-          <SlidersHorizontal className="size-3.5 shrink-0 text-accent" />
-          <span className="truncate">{label}</span>
-          <span className="shrink-0 text-[10px] text-ink-subtle">
-            · Properties
-          </span>
-          <ChevronUp className="size-3.5 shrink-0 text-ink-subtle" />
-        </button>
-        <IconButton
-          icon={Trash2}
-          label="Remove element"
-          size="sm"
-          variant="danger-ghost"
-          onClick={() => removeElement(element.id)}
-          disabled={locked}
-        />
-        <IconButton
-          icon={X}
-          label="Close properties"
-          size="sm"
-          variant="ghost"
-          onClick={clearSelection}
-        />
-      </motion.div>
-    );
-  }
-
   return (
-    <motion.aside
-      key={element.id}
-      initial={{ opacity: 0, x: 18 }}
-      animate={{ opacity: 1, x: 0 }}
-      exit={{ opacity: 0, x: 18 }}
-      transition={{ duration: 0.18, ease: [0.22, 1, 0.36, 1] }}
-      aria-label={`${ELEMENT_TYPE_LABEL[element.type]} properties`}
-      className="z-30 flex flex-col overflow-hidden bg-surface max-lg:absolute max-lg:inset-x-3 max-lg:bottom-3 max-lg:max-h-[min(44dvh,420px)] max-lg:rounded-card max-lg:border max-lg:border-line max-lg:shadow-panel lg:h-full lg:w-[260px] lg:shrink-0 lg:border-l lg:border-line xl:w-[296px]"
-    >
-      <header className="flex shrink-0 items-start gap-2 border-b border-line px-3.5 py-3">
+    <div className="min-h-0 flex-1 overflow-y-auto">
+      <div className="flex items-center gap-2 border-b border-line px-3.5 py-2.5">
         <div className="flex min-w-0 flex-1 flex-col gap-0.5">
           <span className="text-[9.5px] font-semibold uppercase tracking-[0.14em] text-ink-subtle">
             Selected · {ELEMENT_TYPE_LABEL[element.type]}
@@ -189,12 +145,12 @@ function PropertiesContent({
         </div>
         <div className="flex shrink-0 items-center gap-0.5">
           <IconButton
-            icon={isCompact ? ChevronDown : PanelRightClose}
-            label="Collapse properties"
-            tooltip="Collapse properties"
+            icon={hidden ? EyeOff : Eye}
+            label={hidden ? "Show layer" : "Hide layer"}
+            tooltip={hidden ? "Show layer" : "Hide layer"}
             size="sm"
             variant="ghost"
-            onClick={() => setExpanded(false)}
+            onClick={() => update({ hidden: !hidden })}
           />
           <IconButton
             icon={locked ? Unlock : Lock}
@@ -213,33 +169,50 @@ function PropertiesContent({
             onClick={() => removeElement(element.id)}
             disabled={locked}
           />
-          <IconButton
-            icon={X}
-            label="Close properties"
-            tooltip="Close properties"
-            size="sm"
-            variant="ghost"
-            onClick={clearSelection}
-          />
         </div>
-      </header>
+      </div>
 
-      <div className="min-h-0 flex-1 overflow-y-auto">
-        {locked ? (
-          <div className="flex items-center gap-2 border-b border-line bg-surface-muted px-3.5 py-2.5 text-[10.5px] leading-4 text-ink-muted">
-            <Lock className="size-3 shrink-0" aria-hidden="true" />
-            <span className="flex-1">This element is locked.</span>
-            <button
-              type="button"
-              onClick={() => update({ locked: false })}
-              className="font-medium text-accent underline-offset-2 hover:underline"
-            >
-              Unlock
-            </button>
-          </div>
-        ) : null}
+      {hidden ? (
+        <div className="flex items-center gap-2 border-b border-line bg-surface-muted px-3.5 py-2 text-[10.5px] leading-4 text-ink-muted">
+          <EyeOff className="size-3 shrink-0" aria-hidden="true" />
+          <span className="flex-1">This layer is hidden on canvas & PDF.</span>
+          <button
+            type="button"
+            onClick={() => update({ hidden: false })}
+            className="font-medium text-accent underline-offset-2 hover:underline"
+          >
+            Show
+          </button>
+        </div>
+      ) : null}
 
-        <PropertySection title="Position & size">
+      {locked ? (
+        <div className="flex items-center gap-2 border-b border-line bg-surface-muted px-3.5 py-2 text-[10.5px] leading-4 text-ink-muted">
+          <Lock className="size-3 shrink-0" aria-hidden="true" />
+          <span className="flex-1">This element is locked.</span>
+          <button
+            type="button"
+            onClick={() => update({ locked: false })}
+            className="font-medium text-accent underline-offset-2 hover:underline"
+          >
+            Unlock
+          </button>
+        </div>
+      ) : null}
+
+      <PropertySection title="Layer name">
+        <TextField
+          label="Name"
+          value={element.name ?? ""}
+          placeholder={label}
+          disabled={locked}
+          onCommit={(value) =>
+            update({ name: value.trim() ? value.trim() : undefined })
+          }
+        />
+      </PropertySection>
+
+      <PropertySection title="Position & size">
           <PropertyGrid>
             <NumberField
               label="X"
@@ -1192,17 +1165,12 @@ function PropertiesContent({
           </p>
         </div>
       </div>
-    </motion.aside>
   );
 }
 
-function SpinePropertiesContent() {
+function SpineInspector() {
   const project = useEditorStore((state) => state.project);
   const setSpineText = useEditorStore((state) => state.setSpineText);
-  const clearSelection = useEditorStore((state) => state.clearSelection);
-  const isCompact = useMediaQuery("(max-width: 1023px)");
-  const [expanded, setExpanded] = useState<boolean | null>(null);
-  const isCollapsed = expanded === null ? isCompact : !expanded;
 
   const spineText = project.spineText ?? project.name;
   const physicalSpine = getSpineWidth(
@@ -1210,114 +1178,54 @@ function SpinePropertiesContent() {
     getEditablePageCount(project.pages),
   );
 
-  if (isCollapsed) {
-    return (
-      <motion.div
-        key="pill-cover-spine"
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        exit={{ opacity: 0, y: 10 }}
-        transition={{ duration: 0.15 }}
-        className="absolute bottom-3 right-3 z-30 flex max-w-[calc(100%-24px)] items-center gap-1 rounded-full border border-line bg-surface/95 py-1 pl-3 pr-1.5 shadow-panel backdrop-blur"
-      >
-        <button
-          type="button"
-          onClick={() => setExpanded(true)}
-          className="flex min-w-0 items-center gap-1.5 text-left text-[11px] font-medium text-ink hover:text-accent"
-        >
-          <SlidersHorizontal className="size-3.5 shrink-0 text-accent" />
-          <span className="truncate">Spine · {spineText.trim() || "Blank"}</span>
-          <ChevronUp className="size-3.5 shrink-0 text-ink-subtle" />
-        </button>
-        <IconButton
-          icon={X}
-          label="Close properties"
-          size="sm"
-          variant="ghost"
-          onClick={clearSelection}
-        />
-      </motion.div>
-    );
-  }
-
   return (
-    <motion.aside
-      key="cover-spine"
-      initial={{ opacity: 0, x: 18 }}
-      animate={{ opacity: 1, x: 0 }}
-      exit={{ opacity: 0, x: 18 }}
-      transition={{ duration: 0.18, ease: [0.22, 1, 0.36, 1] }}
-      aria-label="Cover spine properties"
-      className="z-30 flex flex-col overflow-hidden bg-surface max-lg:absolute max-lg:inset-x-3 max-lg:bottom-3 max-lg:max-h-[min(44dvh,420px)] max-lg:rounded-card max-lg:border max-lg:border-line max-lg:shadow-panel lg:h-full lg:w-[260px] lg:shrink-0 lg:border-l lg:border-line xl:w-[296px]"
-    >
-      <header className="flex shrink-0 items-start gap-2 border-b border-line px-3.5 py-3">
-        <div className="flex min-w-0 flex-1 flex-col gap-0.5">
-          <span className="text-[9.5px] font-semibold uppercase tracking-[0.14em] text-ink-subtle">
-            Cover · Spine
-          </span>
-          <h2 className="truncate text-[12.5px] font-semibold leading-4 tracking-[-0.01em] text-ink">
-            {spineText.trim() || "Blank spine"}
-          </h2>
-        </div>
-        <div className="flex shrink-0 items-center gap-0.5">
-          <IconButton
-            icon={isCompact ? ChevronDown : PanelRightClose}
-            label="Collapse properties"
-            tooltip="Collapse properties"
-            size="sm"
-            variant="ghost"
-            onClick={() => setExpanded(false)}
-          />
-          <IconButton
-            icon={X}
-            label="Close properties"
-            tooltip="Close properties"
-            size="sm"
-            variant="ghost"
-            onClick={clearSelection}
-          />
-        </div>
-      </header>
-
-      <div className="min-h-0 flex-1 overflow-y-auto">
-        <PropertySection title="Spine text">
-          <TextField
-            label="Label"
-            value={spineText}
-            placeholder="Enter spine text"
-            onCommit={(value) => setSpineText(value)}
-          />
-          <div className="flex items-center justify-between gap-2 pt-1">
-            <button
-              type="button"
-              onClick={() => setSpineText(project.name)}
-              className="text-[10.5px] font-medium text-accent underline-offset-2 hover:underline"
-            >
-              Match project title
-            </button>
-            <button
-              type="button"
-              onClick={() => setSpineText("")}
-              className="text-[10.5px] font-medium text-ink-muted underline-offset-2 hover:text-ink hover:underline"
-            >
-              Clear
-            </button>
-          </div>
-        </PropertySection>
-
-        <div className="border-t border-line px-3.5 py-3">
-          <p className="text-[10px] leading-3.5 text-ink-subtle">
-            Calculated spine{" "}
-            {physicalSpine > 0 ? `${formatNumber(physicalSpine, 1)} mm` : "fold crease"}{" "}
-            · Double-click the spine on the cover to edit inline.
-          </p>
-        </div>
+    <div className="min-h-0 flex-1 overflow-y-auto">
+      <div className="flex flex-col gap-0.5 border-b border-line px-3.5 py-2.5">
+        <span className="text-[9.5px] font-semibold uppercase tracking-[0.14em] text-ink-subtle">
+          Cover · Spine
+        </span>
+        <h2 className="truncate text-[12.5px] font-semibold leading-4 tracking-[-0.01em] text-ink">
+          {spineText.trim() || "Blank spine"}
+        </h2>
       </div>
-    </motion.aside>
+
+      <PropertySection title="Spine text">
+        <TextField
+          label="Label"
+          value={spineText}
+          placeholder="Enter spine text"
+          onCommit={(value) => setSpineText(value)}
+        />
+        <div className="flex items-center justify-between gap-2 pt-1">
+          <button
+            type="button"
+            onClick={() => setSpineText(project.name)}
+            className="text-[10.5px] font-medium text-accent underline-offset-2 hover:underline"
+          >
+            Match project title
+          </button>
+          <button
+            type="button"
+            onClick={() => setSpineText("")}
+            className="text-[10.5px] font-medium text-ink-muted underline-offset-2 hover:text-ink hover:underline"
+          >
+            Clear
+          </button>
+        </div>
+      </PropertySection>
+
+      <div className="border-t border-line px-3.5 py-3">
+        <p className="text-[10px] leading-3.5 text-ink-subtle">
+          Calculated spine{" "}
+          {physicalSpine > 0 ? `${formatNumber(physicalSpine, 1)} mm` : "fold crease"}{" "}
+          · Double-click the spine on the cover to edit inline.
+        </p>
+      </div>
+    </div>
   );
 }
 
-function MultiSelectionProperties({
+function MultiSelectionInspector({
   elements,
   page,
 }: {
@@ -1331,10 +1239,6 @@ function MultiSelectionProperties({
   const ungroupElements = useEditorStore((state) => state.ungroupElements);
   const setElementsLocked = useEditorStore((state) => state.setElementsLocked);
   const removeElements = useEditorStore((state) => state.removeElements);
-  const clearSelection = useEditorStore((state) => state.clearSelection);
-  const isCompact = useMediaQuery("(max-width: 1023px)");
-  const [expanded, setExpanded] = useState<boolean | null>(null);
-  const isCollapsed = expanded === null ? isCompact : !expanded;
 
   const ids = elements.map((el) => el.id);
   const unlockedCount = elements.filter((el) => !el.locked).length;
@@ -1344,57 +1248,9 @@ function MultiSelectionProperties({
     elements[0]?.groupId &&
     elements.every((el) => el.groupId === elements[0]?.groupId);
 
-  if (isCollapsed) {
-    return (
-      <motion.div
-        key="pill-multi"
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        exit={{ opacity: 0, y: 10 }}
-        transition={{ duration: 0.15 }}
-        className="absolute bottom-3 right-3 z-30 flex max-w-[calc(100%-24px)] items-center gap-1 rounded-full border border-line bg-surface/95 py-1 pl-3 pr-1.5 shadow-panel backdrop-blur"
-      >
-        <button
-          type="button"
-          onClick={() => setExpanded(true)}
-          className="flex min-w-0 items-center gap-1.5 text-left text-[11px] font-medium text-ink hover:text-accent"
-        >
-          <Group className="size-3.5 shrink-0 text-accent" />
-          <span className="truncate">
-            {sharedGroupId ? `Group (${elements.length})` : `${elements.length} selected`}
-          </span>
-          <ChevronUp className="size-3.5 shrink-0 text-ink-subtle" />
-        </button>
-        <IconButton
-          icon={Trash2}
-          label="Delete selected"
-          size="sm"
-          variant="danger-ghost"
-          onClick={() => removeElements(ids)}
-          disabled={allLocked}
-        />
-        <IconButton
-          icon={X}
-          label="Clear selection"
-          size="sm"
-          variant="ghost"
-          onClick={clearSelection}
-        />
-      </motion.div>
-    );
-  }
-
   return (
-    <motion.aside
-      key="multi-selection"
-      initial={{ opacity: 0, x: 18 }}
-      animate={{ opacity: 1, x: 0 }}
-      exit={{ opacity: 0, x: 18 }}
-      transition={{ duration: 0.18, ease: [0.22, 1, 0.36, 1] }}
-      aria-label="Selection properties"
-      className="z-30 flex flex-col overflow-hidden bg-surface max-lg:absolute max-lg:inset-x-3 max-lg:bottom-3 max-lg:max-h-[min(44dvh,420px)] max-lg:rounded-card max-lg:border max-lg:border-line max-lg:shadow-panel lg:h-full lg:w-[260px] lg:shrink-0 lg:border-l lg:border-line xl:w-[296px]"
-    >
-      <header className="flex shrink-0 items-start gap-2 border-b border-line px-3.5 py-3">
+    <div className="min-h-0 flex-1 overflow-y-auto">
+      <div className="flex items-center gap-2 border-b border-line px-3.5 py-2.5">
         <div className="flex min-w-0 flex-1 flex-col gap-0.5">
           <span className="text-[9.5px] font-semibold uppercase tracking-[0.14em] text-ink-subtle">
             {sharedGroupId ? "Group" : "Multi-selection"}
@@ -1404,14 +1260,6 @@ function MultiSelectionProperties({
           </h2>
         </div>
         <div className="flex shrink-0 items-center gap-0.5">
-          <IconButton
-            icon={isCompact ? ChevronDown : PanelRightClose}
-            label="Collapse"
-            tooltip="Collapse"
-            size="sm"
-            variant="ghost"
-            onClick={() => setExpanded(false)}
-          />
           <IconButton
             icon={allLocked ? Unlock : Lock}
             label={allLocked ? "Unlock selected" : "Lock selected"}
@@ -1427,181 +1275,327 @@ function MultiSelectionProperties({
             onClick={() => removeElements(ids)}
             disabled={allLocked}
           />
+        </div>
+      </div>
+
+      <PropertySection title="Group & Transform">
+        <div className="grid grid-cols-2 gap-1.5">
+          {!sharedGroupId ? (
+            <button
+              type="button"
+              disabled={unlockedCount < 2}
+              onClick={() => groupElements(ids)}
+              className="inline-flex h-7 items-center justify-center gap-1 rounded-field border border-line text-[10.5px] font-medium text-ink hover:border-accent hover:text-accent disabled:opacity-45"
+            >
+              <Group className="size-3.5" />
+              Group
+            </button>
+          ) : null}
+          {hasGroup ? (
+            <button
+              type="button"
+              onClick={() => ungroupElements(ids)}
+              className="inline-flex h-7 items-center justify-center gap-1 rounded-field border border-line text-[10.5px] font-medium text-ink hover:border-accent hover:text-accent"
+            >
+              <Ungroup className="size-3.5" />
+              Ungroup
+            </button>
+          ) : null}
+          <button
+            type="button"
+            disabled={allLocked}
+            onClick={() => flipElements(ids, "horizontal")}
+            className="inline-flex h-7 items-center justify-center gap-1 rounded-field border border-line text-[10.5px] font-medium text-ink-muted hover:text-ink disabled:opacity-45"
+          >
+            <FlipHorizontal2 className="size-3.5" />
+            Flip H
+          </button>
+          <button
+            type="button"
+            disabled={allLocked}
+            onClick={() => flipElements(ids, "vertical")}
+            className="inline-flex h-7 items-center justify-center gap-1 rounded-field border border-line text-[10.5px] font-medium text-ink-muted hover:text-ink disabled:opacity-45"
+          >
+            <FlipVertical2 className="size-3.5" />
+            Flip V
+          </button>
+        </div>
+      </PropertySection>
+
+      <PropertySection title="Align selection">
+        <div className="grid grid-cols-6 gap-1">
           <IconButton
-            icon={X}
-            label="Clear selection"
+            icon={AlignStartVertical}
+            label="Align left"
+            tooltip="Align left"
             size="sm"
-            variant="ghost"
-            onClick={clearSelection}
+            variant="secondary"
+            className="w-full"
+            disabled={allLocked}
+            onClick={() => alignElements(page.id, ids, "left")}
+          />
+          <IconButton
+            icon={AlignCenterVertical}
+            label="Align center"
+            tooltip="Align center"
+            size="sm"
+            variant="secondary"
+            className="w-full"
+            disabled={allLocked}
+            onClick={() => alignElements(page.id, ids, "center")}
+          />
+          <IconButton
+            icon={AlignEndVertical}
+            label="Align right"
+            tooltip="Align right"
+            size="sm"
+            variant="secondary"
+            className="w-full"
+            disabled={allLocked}
+            onClick={() => alignElements(page.id, ids, "right")}
+          />
+          <IconButton
+            icon={AlignStartHorizontal}
+            label="Align top"
+            tooltip="Align top"
+            size="sm"
+            variant="secondary"
+            className="w-full"
+            disabled={allLocked}
+            onClick={() => alignElements(page.id, ids, "top")}
+          />
+          <IconButton
+            icon={AlignCenterHorizontal}
+            label="Align middle"
+            tooltip="Align middle"
+            size="sm"
+            variant="secondary"
+            className="w-full"
+            disabled={allLocked}
+            onClick={() => alignElements(page.id, ids, "middle")}
+          />
+          <IconButton
+            icon={AlignEndHorizontal}
+            label="Align bottom"
+            tooltip="Align bottom"
+            size="sm"
+            variant="secondary"
+            className="w-full"
+            disabled={allLocked}
+            onClick={() => alignElements(page.id, ids, "bottom")}
           />
         </div>
-      </header>
 
-      <div className="min-h-0 flex-1 overflow-y-auto">
-        <PropertySection title="Group & Transform">
-          <div className="grid grid-cols-2 gap-1.5">
-            {!sharedGroupId ? (
-              <button
-                type="button"
-                disabled={unlockedCount < 2}
-                onClick={() => groupElements(ids)}
-                className="inline-flex h-7 items-center justify-center gap-1 rounded-field border border-line text-[10.5px] font-medium text-ink hover:border-accent hover:text-accent disabled:opacity-45"
-              >
-                <Group className="size-3.5" />
-                Group
-              </button>
-            ) : null}
-            {hasGroup ? (
-              <button
-                type="button"
-                onClick={() => ungroupElements(ids)}
-                className="inline-flex h-7 items-center justify-center gap-1 rounded-field border border-line text-[10.5px] font-medium text-ink hover:border-accent hover:text-accent"
-              >
-                <Ungroup className="size-3.5" />
-                Ungroup
-              </button>
-            ) : null}
-            <button
-              type="button"
-              disabled={allLocked}
-              onClick={() => flipElements(ids, "horizontal")}
-              className="inline-flex h-7 items-center justify-center gap-1 rounded-field border border-line text-[10.5px] font-medium text-ink-muted hover:text-ink disabled:opacity-45"
-            >
-              <FlipHorizontal2 className="size-3.5" />
-              Flip H
-            </button>
-            <button
-              type="button"
-              disabled={allLocked}
-              onClick={() => flipElements(ids, "vertical")}
-              className="inline-flex h-7 items-center justify-center gap-1 rounded-field border border-line text-[10.5px] font-medium text-ink-muted hover:text-ink disabled:opacity-45"
-            >
-              <FlipVertical2 className="size-3.5" />
-              Flip V
-            </button>
-          </div>
-        </PropertySection>
-
-        <PropertySection title="Align selection">
-          <div className="grid grid-cols-6 gap-1">
-            <IconButton
-              icon={AlignStartVertical}
-              label="Align left"
-              tooltip="Align left"
-              size="sm"
-              variant="secondary"
-              className="w-full"
-              disabled={allLocked}
-              onClick={() => alignElements(page.id, ids, "left")}
-            />
-            <IconButton
-              icon={AlignCenterVertical}
-              label="Align center"
-              tooltip="Align center"
-              size="sm"
-              variant="secondary"
-              className="w-full"
-              disabled={allLocked}
-              onClick={() => alignElements(page.id, ids, "center")}
-            />
-            <IconButton
-              icon={AlignEndVertical}
-              label="Align right"
-              tooltip="Align right"
-              size="sm"
-              variant="secondary"
-              className="w-full"
-              disabled={allLocked}
-              onClick={() => alignElements(page.id, ids, "right")}
-            />
-            <IconButton
-              icon={AlignStartHorizontal}
-              label="Align top"
-              tooltip="Align top"
-              size="sm"
-              variant="secondary"
-              className="w-full"
-              disabled={allLocked}
-              onClick={() => alignElements(page.id, ids, "top")}
-            />
-            <IconButton
-              icon={AlignCenterHorizontal}
-              label="Align middle"
-              tooltip="Align middle"
-              size="sm"
-              variant="secondary"
-              className="w-full"
-              disabled={allLocked}
-              onClick={() => alignElements(page.id, ids, "middle")}
-            />
-            <IconButton
-              icon={AlignEndHorizontal}
-              label="Align bottom"
-              tooltip="Align bottom"
-              size="sm"
-              variant="secondary"
-              className="w-full"
-              disabled={allLocked}
-              onClick={() => alignElements(page.id, ids, "bottom")}
-            />
-          </div>
-
-          <div className="grid grid-cols-2 gap-1.5">
-            <button
-              type="button"
-              disabled={unlockedCount < 3}
-              onClick={() => distributeElements(page.id, ids, "horizontal")}
-              className="inline-flex h-7 items-center justify-center gap-1 rounded-field border border-line text-[10.5px] font-medium text-ink-muted hover:text-ink disabled:opacity-45"
-            >
-              <AlignHorizontalDistributeCenter className="size-3.5" />
-              Distribute H
-            </button>
-            <button
-              type="button"
-              disabled={unlockedCount < 3}
-              onClick={() => distributeElements(page.id, ids, "vertical")}
-              className="inline-flex h-7 items-center justify-center gap-1 rounded-field border border-line text-[10.5px] font-medium text-ink-muted hover:text-ink disabled:opacity-45"
-            >
-              <AlignVerticalDistributeCenter className="size-3.5" />
-              Distribute V
-            </button>
-          </div>
-          {unlockedCount < 3 ? (
-            <p className="text-[10px] text-ink-subtle">
-              Hold Shift + click on canvas to select 3+ items to distribute.
-            </p>
-          ) : null}
-        </PropertySection>
-      </div>
-    </motion.aside>
+        <div className="grid grid-cols-2 gap-1.5">
+          <button
+            type="button"
+            disabled={unlockedCount < 3}
+            onClick={() => distributeElements(page.id, ids, "horizontal")}
+            className="inline-flex h-7 items-center justify-center gap-1 rounded-field border border-line text-[10.5px] font-medium text-ink-muted hover:text-ink disabled:opacity-45"
+          >
+            <AlignHorizontalDistributeCenter className="size-3.5" />
+            Distribute H
+          </button>
+          <button
+            type="button"
+            disabled={unlockedCount < 3}
+            onClick={() => distributeElements(page.id, ids, "vertical")}
+            className="inline-flex h-7 items-center justify-center gap-1 rounded-field border border-line text-[10.5px] font-medium text-ink-muted hover:text-ink disabled:opacity-45"
+          >
+            <AlignVerticalDistributeCenter className="size-3.5" />
+            Distribute V
+          </button>
+        </div>
+        {unlockedCount < 3 ? (
+          <p className="text-[10px] text-ink-subtle">
+            Hold Shift + click on canvas to select 3+ items to distribute.
+          </p>
+        ) : null}
+      </PropertySection>
+    </div>
   );
 }
 
 export function PropertiesPanel() {
+  const project = useEditorStore((state) => state.project);
   const selected = useSelectedElement();
   const selectedMany = useSelectedElements();
   const spineSelected = useEditorStore((state) =>
     Boolean(state.selection.spineSelected),
   );
   const spreadIndex = useEditorStore((state) => state.ui.spreadIndex);
+  const clearSelection = useEditorStore((state) => state.clearSelection);
+  const { spread } = useCurrentSpread();
+
+  const isCompact = useMediaQuery("(max-width: 1023px)");
+  const [expanded, setExpanded] = useState<boolean | null>(null);
+  const [tab, setTab] = useState<"inspect" | "layers">("layers");
+
+  const hasSelection = Boolean(
+    (selectedMany && selectedMany.elements.length > 1) ||
+      selected ||
+      (spineSelected && spreadIndex === 0),
+  );
+
+  const selectionSignature = selectedMany && selectedMany.elements.length > 1
+    ? `multi:${selectedMany.elements.map((e) => e.id).join(",")}`
+    : selected
+      ? `single:${selected.element.id}`
+      : spineSelected && spreadIndex === 0
+        ? "spine"
+        : "";
+
+  useEffect(() => {
+    if (selectionSignature) {
+      setTab("inspect");
+    } else {
+      setTab("layers");
+    }
+  }, [selectionSignature]);
+
+  const spreadLayerCount = (spread?.pageIndices ?? []).reduce((sum, idx) => {
+    const p = project.pages[idx];
+    return sum + (p && !p.isEndPaper ? p.elements.length : 0);
+  }, 0);
+
+  const isCollapsed = expanded === null ? isCompact : !expanded;
+
+  const pillLabel =
+    selectedMany && selectedMany.elements.length > 1
+      ? `${selectedMany.elements.length} selected`
+      : selected
+        ? getElementLabel(selected.element, selected.element.zIndex)
+        : spineSelected && spreadIndex === 0
+          ? "Cover spine"
+          : `Layers (${spreadLayerCount})`;
+
+  if (isCollapsed) {
+    return (
+      <div className="pointer-events-none absolute bottom-3 right-3 z-30 flex items-center justify-end">
+        <div className="pointer-events-auto flex max-w-[calc(100vw-24px)] items-center gap-1 rounded-full border border-line bg-surface/95 py-1 pl-3 pr-1.5 shadow-panel backdrop-blur">
+          <button
+            type="button"
+            onClick={() => setExpanded(true)}
+            className="flex min-w-0 items-center gap-1.5 text-left text-[11px] font-medium text-ink hover:text-accent"
+          >
+            {hasSelection ? (
+              <SlidersHorizontal className="size-3.5 shrink-0 text-accent" />
+            ) : (
+              <Layers className="size-3.5 shrink-0 text-accent" />
+            )}
+            <span className="truncate">{pillLabel}</span>
+            <span className="shrink-0 text-[10px] text-ink-subtle">
+              · {hasSelection ? "Inspect" : "Panel"}
+            </span>
+            <ChevronUp className="size-3.5 shrink-0 text-ink-subtle" />
+          </button>
+          {hasSelection ? (
+            <IconButton
+              icon={X}
+              label="Clear selection"
+              size="sm"
+              variant="ghost"
+              onClick={clearSelection}
+            />
+          ) : null}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <AnimatePresence>
-      {selectedMany && selectedMany.elements.length > 1 ? (
-        <MultiSelectionProperties
-          key="multi-selection"
-          elements={selectedMany.elements}
-          page={selectedMany.page}
-        />
-      ) : selected ? (
-        <PropertiesContent
-          key={selected.element.id}
-          element={selected.element}
-          page={selected.page}
-        />
-      ) : spineSelected && spreadIndex === 0 ? (
-        <SpinePropertiesContent key="cover-spine" />
-      ) : null}
+      <motion.aside
+        key="right-inspector-panel"
+        initial={{ opacity: 0, x: 18 }}
+        animate={{ opacity: 1, x: 0 }}
+        exit={{ opacity: 0, x: 18 }}
+        transition={{ duration: 0.18, ease: [0.22, 1, 0.36, 1] }}
+        aria-label="Inspector and layers panel"
+        className="z-30 flex flex-col overflow-hidden bg-surface max-lg:absolute max-lg:inset-x-3 max-lg:bottom-3 max-lg:max-h-[min(46dvh,440px)] max-lg:rounded-card max-lg:border max-lg:border-line max-lg:shadow-panel lg:h-full lg:w-[264px] lg:shrink-0 lg:border-l lg:border-line xl:w-[296px]"
+      >
+        <div className="flex shrink-0 items-center gap-1.5 border-b border-line px-2.5 py-2">
+          <div
+            role="tablist"
+            aria-label="Panel view"
+            className="grid flex-1 grid-cols-2 rounded-field border border-line bg-surface-muted p-0.5 text-[11px] font-medium"
+          >
+            <button
+              type="button"
+              role="tab"
+              aria-selected={tab === "inspect"}
+              onClick={() => setTab("inspect")}
+              className={cn(
+                "flex h-6 items-center justify-center gap-1 rounded-[5px] transition-colors",
+                tab === "inspect"
+                  ? "bg-surface text-ink shadow-sm"
+                  : "text-ink-muted hover:text-ink",
+              )}
+            >
+              <SlidersHorizontal className="size-3" />
+              Inspect
+            </button>
+            <button
+              type="button"
+              role="tab"
+              aria-selected={tab === "layers"}
+              onClick={() => setTab("layers")}
+              className={cn(
+                "flex h-6 items-center justify-center gap-1 rounded-[5px] transition-colors",
+                tab === "layers"
+                  ? "bg-surface text-ink shadow-sm"
+                  : "text-ink-muted hover:text-ink",
+              )}
+            >
+              <Layers className="size-3" />
+              Layers
+              <span className="rounded-full bg-surface-muted px-1.5 text-[9.5px] tabular-nums text-ink-subtle">
+                {spreadLayerCount}
+              </span>
+            </button>
+          </div>
+          <IconButton
+            icon={isCompact ? ChevronDown : PanelRightClose}
+            label="Collapse panel"
+            tooltip="Collapse panel"
+            size="sm"
+            variant="ghost"
+            onClick={() => setExpanded(false)}
+          />
+        </div>
+
+        {tab === "layers" ? (
+          <LayersList />
+        ) : selectedMany && selectedMany.elements.length > 1 ? (
+          <MultiSelectionInspector
+            elements={selectedMany.elements}
+            page={selectedMany.page}
+          />
+        ) : selected ? (
+          <SingleElementInspector
+            element={selected.element}
+            page={selected.page}
+          />
+        ) : spineSelected && spreadIndex === 0 ? (
+          <SpineInspector />
+        ) : (
+          <div className="flex flex-1 flex-col items-center justify-center px-5 py-8 text-center">
+            <SlidersHorizontal className="mb-2 size-5 text-ink-subtle" />
+            <p className="text-[12px] font-medium text-ink">Nothing selected</p>
+            <p className="mt-1 text-[10.5px] leading-4 text-ink-subtle">
+              Click any photo, text box, shape, sticker, or QR code on the
+              canvas — or manage your stacking order in Layers.
+            </p>
+            <button
+              type="button"
+              onClick={() => setTab("layers")}
+              className="mt-3 rounded-field border border-line bg-surface-muted px-3 py-1.5 text-[11px] font-medium text-ink hover:border-accent hover:text-accent"
+            >
+              View spread layers ({spreadLayerCount})
+            </button>
+          </div>
+        )}
+      </motion.aside>
     </AnimatePresence>
   );
 }

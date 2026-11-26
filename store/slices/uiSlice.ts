@@ -42,8 +42,10 @@ export const createUiSlice: StateCreator<EditorStore, [], [], UiSlice> = (
     spreadIndex: 0,
     hydrated: false,
     saveState: "idle",
+    lastSavedAt: null,
     previewOpen: false,
     exportOpen: false,
+    dashboardOpen: false,
     showSafeMargin: true,
     showBleed: false,
     pageSetupOpen: false,
@@ -129,11 +131,17 @@ export const createUiSlice: StateCreator<EditorStore, [], [], UiSlice> = (
   setSaveState: (saveState) =>
     set((state) => ({ ui: { ...state.ui, saveState } })),
 
+  setLastSavedAt: (lastSavedAt) =>
+    set((state) => ({ ui: { ...state.ui, lastSavedAt } })),
+
   setPreviewOpen: (open) =>
     set((state) => ({ ui: { ...state.ui, previewOpen: open } })),
 
   setExportOpen: (open) =>
     set((state) => ({ ui: { ...state.ui, exportOpen: open } })),
+
+  setDashboardOpen: (open) =>
+    set((state) => ({ ui: { ...state.ui, dashboardOpen: open } })),
 
   setShowSafeMargin: (show) =>
     set((state) => ({ ui: { ...state.ui, showSafeMargin: show } })),

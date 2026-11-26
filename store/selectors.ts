@@ -122,7 +122,12 @@ export function useActivePage(): { page: Page | null; pageIndex: number } {
 }
 
 export function useCanUndo() {
-  return useEditorStore((state) => state.history.past.length > 0);
+  return useEditorStore(
+    (state) =>
+      state.history.past.length > 0 ||
+      (state.history.pending !== null &&
+        state.history.pending.project !== state.project),
+  );
 }
 
 export function useCanRedo() {

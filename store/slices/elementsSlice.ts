@@ -4,6 +4,7 @@ import type { Element, ImageElement, MediaAsset } from "@/types";
 import { nextZIndex } from "@/lib/elements";
 import { createId } from "@/lib/id";
 import { round } from "@/lib/units";
+import { createPageElementsCommand } from "@/lib/history/commands";
 
 function mergeMedia(
   existing: MediaAsset[] | undefined,
@@ -20,7 +21,11 @@ function mergeMedia(
 }
 
 function isPageEditable(
-  state: { project: { pages: Array<{ id: string; isEndPaper?: boolean; locked?: boolean }> } },
+  state: {
+    project: {
+      pages: Array<{ id: string; isEndPaper?: boolean; locked?: boolean }>;
+    };
+  },
   pageId: string,
 ) {
   const page = state.project.pages.find((candidate) => candidate.id === pageId);
@@ -46,30 +51,36 @@ export const createElementsSlice: StateCreator<
       ...element,
       zIndex: nextZIndex(page.elements),
     };
+    const afterElements = [...page.elements, placed];
+    const nextMedia =
+      placed.type === "image" && placed.src
+        ? mergeMedia(step.project.mediaLibrary, [
+            { src: placed.src, alt: placed.alt },
+          ])
+        : undefined;
 
-    get().pushHistory();
-    set((state) => ({
-      project: {
-        ...state.project,
-        mediaLibrary:
-          placed.type === "image" && placed.src
-            ? mergeMedia(state.project.mediaLibrary, [
-                { src: placed.src, alt: placed.alt },
-              ])
-            : state.project.mediaLibrary,
-        pages: state.project.pages.map((candidate) =>
-          candidate.id === pageId
-            ? { ...candidate, elements: [...candidate.elements, placed] }
-            : candidate,
-        ),
-      },
-      selection: {
-        pageId,
-        elementId: placed.id,
-        elementIds: [placed.id],
-        spineSelected: false,
-      },
-    }));
+    step.executeCommand(
+      createPageElementsCommand({
+        type: "add-element",
+        label: "Add element",
+        patches: [
+          {
+            pageId,
+            beforeElements: page.elements,
+            afterElements,
+          },
+        ],
+        beforeMedia: nextMedia ? step.project.mediaLibrary : undefined,
+        afterMedia: nextMedia,
+        beforeSelection: step.selection,
+        afterSelection: {
+          pageId,
+          elementId: placed.id,
+          elementIds: [placed.id],
+          spineSelected: false,
+        },
+      }),
+    );
   },
 
   addElements: (pageId, elements) => {
@@ -86,28 +97,33 @@ export const createElementsSlice: StateCreator<
     const newMedia = placed
       .filter((el): el is ImageElement => el.type === "image" && Boolean(el.src))
       .map((el) => ({ src: el.src, alt: el.alt }));
+    const nextMedia =
+      newMedia.length > 0
+        ? mergeMedia(step.project.mediaLibrary, newMedia)
+        : undefined;
 
-    get().pushHistory();
-    set((state) => ({
-      project: {
-        ...state.project,
-        mediaLibrary:
-          newMedia.length > 0
-            ? mergeMedia(state.project.mediaLibrary, newMedia)
-            : state.project.mediaLibrary,
-        pages: state.project.pages.map((candidate) =>
-          candidate.id === pageId
-            ? { ...candidate, elements: [...candidate.elements, ...placed] }
-            : candidate,
-        ),
-      },
-      selection: {
-        pageId,
-        elementId: null,
-        elementIds: [],
-        spineSelected: false,
-      },
-    }));
+    step.executeCommand(
+      createPageElementsCommand({
+        type: "add-elements",
+        label: "Add elements",
+        patches: [
+          {
+            pageId,
+            beforeElements: page.elements,
+            afterElements: [...page.elements, ...placed],
+          },
+        ],
+        beforeMedia: nextMedia ? step.project.mediaLibrary : undefined,
+        afterMedia: nextMedia,
+        beforeSelection: step.selection,
+        afterSelection: {
+          pageId,
+          elementId: null,
+          elementIds: [],
+          spineSelected: false,
+        },
+      }),
+    );
   },
 
   updateElement: (elementId, patch, options) => {
@@ -120,27 +136,56 @@ export const createElementsSlice: StateCreator<
     const existing = page.elements.find((element) => element.id === elementId);
     if (!existing) return;
 
-    if (options?.commit !== false) get().pushHistory();
+    const nextElements = page.elements.map((element) =>
+      element.id === elementId
+        ? ({
+            ...element,
+            ...patch,
+            id: element.id,
+            type: element.type,
+          } as Element)
+        : element,
+    );
+
+    if (options?.commit !== false) {
+      const label =
+        "hidden" in patch
+          ? patch.hidden
+            ? "Hide layer"
+            : "Show layer"
+          : "locked" in patch
+            ? patch.locked
+              ? "Lock layer"
+              : "Unlock layer"
+            : "name" in patch
+              ? "Rename layer"
+              : "Edit element";
+
+      state.executeCommand(
+        createPageElementsCommand({
+          type: "update-element",
+          label,
+          patches: [
+            {
+              pageId: page.id,
+              beforeElements: page.elements,
+              afterElements: nextElements,
+            },
+          ],
+          beforeSelection: state.selection,
+        }),
+      );
+      return;
+    }
 
     set((current) => ({
       project: {
         ...current.project,
-        pages: current.project.pages.map((candidate) => {
-          if (candidate.id !== page.id) return candidate;
-          return {
-            ...candidate,
-            elements: candidate.elements.map((element) =>
-              element.id === elementId
-                ? ({
-                    ...element,
-                    ...patch,
-                    id: element.id,
-                    type: element.type,
-                  } as Element)
-                : element,
-            ),
-          };
-        }),
+        pages: current.project.pages.map((candidate) =>
+          candidate.id === page.id
+            ? { ...candidate, elements: nextElements }
+            : candidate,
+        ),
       },
     }));
   },
@@ -154,20 +199,36 @@ export const createElementsSlice: StateCreator<
     );
     if (!page || !isPageEditable(state, page.id)) return;
 
-    if (options?.commit !== false) get().pushHistory();
+    const nextElements = page.elements.map((el) => {
+      const u = map.get(el.id);
+      if (!u || el.locked) return el;
+      return { ...el, x: round(u.x), y: round(u.y) };
+    });
+
+    if (options?.commit !== false) {
+      state.executeCommand(
+        createPageElementsCommand({
+          type: "move-elements",
+          label: "Move elements",
+          patches: [
+            {
+              pageId: page.id,
+              beforeElements: page.elements,
+              afterElements: nextElements,
+            },
+          ],
+          beforeSelection: state.selection,
+        }),
+      );
+      return;
+    }
+
     set((current) => ({
       project: {
         ...current.project,
         pages: current.project.pages.map((candidate) =>
           candidate.id === page.id
-            ? {
-                ...candidate,
-                elements: candidate.elements.map((el) => {
-                  const u = map.get(el.id);
-                  if (!u || el.locked) return el;
-                  return { ...el, x: round(u.x), y: round(u.y) };
-                }),
-              }
+            ? { ...candidate, elements: nextElements }
             : candidate,
         ),
       },
@@ -183,27 +244,43 @@ export const createElementsSlice: StateCreator<
     );
     if (!page || !isPageEditable(state, page.id)) return;
 
-    if (options?.commit !== false) get().pushHistory();
+    const nextElements = page.elements.map((el) => {
+      const u = map.get(el.id);
+      if (!u || el.locked) return el;
+      return {
+        ...el,
+        x: round(u.x),
+        y: round(u.y),
+        width: round(u.width),
+        height: round(u.height),
+        rotation: round(u.rotation),
+      };
+    });
+
+    if (options?.commit !== false) {
+      state.executeCommand(
+        createPageElementsCommand({
+          type: "transform-elements",
+          label: "Transform elements",
+          patches: [
+            {
+              pageId: page.id,
+              beforeElements: page.elements,
+              afterElements: nextElements,
+            },
+          ],
+          beforeSelection: state.selection,
+        }),
+      );
+      return;
+    }
+
     set((current) => ({
       project: {
         ...current.project,
         pages: current.project.pages.map((candidate) =>
           candidate.id === page.id
-            ? {
-                ...candidate,
-                elements: candidate.elements.map((el) => {
-                  const u = map.get(el.id);
-                  if (!u || el.locked) return el;
-                  return {
-                    ...el,
-                    x: round(u.x),
-                    y: round(u.y),
-                    width: round(u.width),
-                    height: round(u.height),
-                    rotation: round(u.rotation),
-                  };
-                }),
-              }
+            ? { ...candidate, elements: nextElements }
             : candidate,
         ),
       },
@@ -230,41 +307,42 @@ export const createElementsSlice: StateCreator<
     );
     if (removable.size === 0) return;
 
-    get().pushHistory();
-    set((current) => {
-      const remainingIds = current.selection.elementIds.filter(
-        (id) => !removable.has(id),
-      );
-      return {
-        project: {
-          ...current.project,
-          pages: current.project.pages.map((candidate) =>
-            candidate.id === page.id
-              ? {
-                  ...candidate,
-                  elements: normalizeLayers(
-                    candidate.elements.filter((el) => !removable.has(el.id)),
-                  ),
-                }
-              : candidate,
-          ),
-        },
-        selection:
-          remainingIds.length > 0
-            ? {
-                pageId: page.id,
-                elementId: remainingIds[remainingIds.length - 1]!,
-                elementIds: remainingIds,
-                spineSelected: false,
-              }
-            : {
-                pageId: null,
-                elementId: null,
-                elementIds: [],
-                spineSelected: false,
-              },
-      };
-    });
+    const nextElements = normalizeLayers(
+      page.elements.filter((el) => !removable.has(el.id)),
+    );
+    const remainingIds = state.selection.elementIds.filter(
+      (id) => !removable.has(id),
+    );
+    const nextSelection =
+      remainingIds.length > 0
+        ? {
+            pageId: page.id,
+            elementId: remainingIds[remainingIds.length - 1]!,
+            elementIds: remainingIds,
+            spineSelected: false,
+          }
+        : {
+            pageId: null,
+            elementId: null,
+            elementIds: [],
+            spineSelected: false,
+          };
+
+    state.executeCommand(
+      createPageElementsCommand({
+        type: "remove-elements",
+        label: removable.size > 1 ? "Delete layers" : "Delete layer",
+        patches: [
+          {
+            pageId: page.id,
+            beforeElements: page.elements,
+            afterElements: nextElements,
+          },
+        ],
+        beforeSelection: state.selection,
+        afterSelection: nextSelection,
+      }),
+    );
   },
 
   setElementsLocked: (elementIds, locked) => {
@@ -276,22 +354,24 @@ export const createElementsSlice: StateCreator<
     );
     if (!page || !isPageEditable(state, page.id)) return;
 
-    get().pushHistory();
-    set((current) => ({
-      project: {
-        ...current.project,
-        pages: current.project.pages.map((candidate) =>
-          candidate.id === page.id
-            ? {
-                ...candidate,
-                elements: candidate.elements.map((el) =>
-                  idSet.has(el.id) ? { ...el, locked } : el,
-                ),
-              }
-            : candidate,
-        ),
-      },
-    }));
+    const nextElements = page.elements.map((el) =>
+      idSet.has(el.id) ? { ...el, locked } : el,
+    );
+
+    state.executeCommand(
+      createPageElementsCommand({
+        type: "lock-elements",
+        label: locked ? "Lock layers" : "Unlock layers",
+        patches: [
+          {
+            pageId: page.id,
+            beforeElements: page.elements,
+            afterElements: nextElements,
+          },
+        ],
+        beforeSelection: state.selection,
+      }),
+    );
   },
 
   groupElements: (elementIds) => {
@@ -307,22 +387,24 @@ export const createElementsSlice: StateCreator<
 
     const groupId = createId();
     const targetIds = new Set(targets.map((t) => t.id));
-    get().pushHistory();
-    set((current) => ({
-      project: {
-        ...current.project,
-        pages: current.project.pages.map((candidate) =>
-          candidate.id === page.id
-            ? {
-                ...candidate,
-                elements: candidate.elements.map((el) =>
-                  targetIds.has(el.id) ? { ...el, groupId } : el,
-                ),
-              }
-            : candidate,
-        ),
-      },
-    }));
+    const nextElements = page.elements.map((el) =>
+      targetIds.has(el.id) ? { ...el, groupId } : el,
+    );
+
+    state.executeCommand(
+      createPageElementsCommand({
+        type: "group-elements",
+        label: "Group layers",
+        patches: [
+          {
+            pageId: page.id,
+            beforeElements: page.elements,
+            afterElements: nextElements,
+          },
+        ],
+        beforeSelection: state.selection,
+      }),
+    );
   },
 
   ungroupElements: (elementIds) => {
@@ -340,24 +422,26 @@ export const createElementsSlice: StateCreator<
     );
     if (groupIds.size === 0) return;
 
-    get().pushHistory();
-    set((current) => ({
-      project: {
-        ...current.project,
-        pages: current.project.pages.map((candidate) =>
-          candidate.id === page.id
-            ? {
-                ...candidate,
-                elements: candidate.elements.map((el) =>
-                  idSet.has(el.id) || (el.groupId && groupIds.has(el.groupId))
-                    ? { ...el, groupId: undefined }
-                    : el,
-                ),
-              }
-            : candidate,
-        ),
-      },
-    }));
+    const nextElements = page.elements.map((el) =>
+      idSet.has(el.id) || (el.groupId && groupIds.has(el.groupId))
+        ? { ...el, groupId: undefined }
+        : el,
+    );
+
+    state.executeCommand(
+      createPageElementsCommand({
+        type: "ungroup-elements",
+        label: "Ungroup layers",
+        patches: [
+          {
+            pageId: page.id,
+            beforeElements: page.elements,
+            afterElements: nextElements,
+          },
+        ],
+        beforeSelection: state.selection,
+      }),
+    );
   },
 
   flipElements: (elementIds, axis) => {
@@ -376,34 +460,36 @@ export const createElementsSlice: StateCreator<
     const minY = Math.min(...targets.map((el) => el.y));
     const maxY = Math.max(...targets.map((el) => el.y + el.height));
 
-    get().pushHistory();
-    set((current) => ({
-      project: {
-        ...current.project,
-        pages: current.project.pages.map((candidate) =>
-          candidate.id === page.id
-            ? {
-                ...candidate,
-                elements: candidate.elements.map((el) => {
-                  if (!idSet.has(el.id) || el.locked) return el;
-                  if (axis === "horizontal") {
-                    const nextX =
-                      targets.length > 1
-                        ? round(maxX - (el.x - minX) - el.width)
-                        : el.x;
-                    return { ...el, x: nextX, flipX: !el.flipX };
-                  }
-                  const nextY =
-                    targets.length > 1
-                      ? round(maxY - (el.y - minY) - el.height)
-                      : el.y;
-                  return { ...el, y: nextY, flipY: !el.flipY };
-                }),
-              }
-            : candidate,
-        ),
-      },
-    }));
+    const nextElements = page.elements.map((el) => {
+      if (!idSet.has(el.id) || el.locked) return el;
+      if (axis === "horizontal") {
+        const nextX =
+          targets.length > 1
+            ? round(maxX - (el.x - minX) - el.width)
+            : el.x;
+        return { ...el, x: nextX, flipX: !el.flipX };
+      }
+      const nextY =
+        targets.length > 1
+          ? round(maxY - (el.y - minY) - el.height)
+          : el.y;
+      return { ...el, y: nextY, flipY: !el.flipY };
+    });
+
+    state.executeCommand(
+      createPageElementsCommand({
+        type: "flip-elements",
+        label: axis === "horizontal" ? "Flip horizontal" : "Flip vertical",
+        patches: [
+          {
+            pageId: page.id,
+            beforeElements: page.elements,
+            afterElements: nextElements,
+          },
+        ],
+        beforeSelection: state.selection,
+      }),
+    );
   },
 
   alignElements: (pageId, elementIds, alignment) => {
@@ -428,42 +514,38 @@ export const createElementsSlice: StateCreator<
         ? state.project.pageSize.h
         : Math.max(...targets.map((el) => el.y + el.height));
 
-    get().pushHistory();
-    set((current) => ({
-      project: {
-        ...current.project,
-        pages: current.project.pages.map((candidate) =>
-          candidate.id === page.id
-            ? {
-                ...candidate,
-                elements: candidate.elements.map((el) => {
-                  if (!idSet.has(el.id) || el.locked) return el;
-                  switch (alignment) {
-                    case "left":
-                      return { ...el, x: round(refMinX) };
-                    case "center":
-                      return {
-                        ...el,
-                        x: round((refMinX + refMaxX - el.width) / 2),
-                      };
-                    case "right":
-                      return { ...el, x: round(refMaxX - el.width) };
-                    case "top":
-                      return { ...el, y: round(refMinY) };
-                    case "middle":
-                      return {
-                        ...el,
-                        y: round((refMinY + refMaxY - el.height) / 2),
-                      };
-                    case "bottom":
-                      return { ...el, y: round(refMaxY - el.height) };
-                  }
-                }),
-              }
-            : candidate,
-        ),
-      },
-    }));
+    const nextElements = page.elements.map((el) => {
+      if (!idSet.has(el.id) || el.locked) return el;
+      switch (alignment) {
+        case "left":
+          return { ...el, x: round(refMinX) };
+        case "center":
+          return { ...el, x: round((refMinX + refMaxX - el.width) / 2) };
+        case "right":
+          return { ...el, x: round(refMaxX - el.width) };
+        case "top":
+          return { ...el, y: round(refMinY) };
+        case "middle":
+          return { ...el, y: round((refMinY + refMaxY - el.height) / 2) };
+        case "bottom":
+          return { ...el, y: round(refMaxY - el.height) };
+      }
+    });
+
+    state.executeCommand(
+      createPageElementsCommand({
+        type: "align-elements",
+        label: `Align ${alignment}`,
+        patches: [
+          {
+            pageId: page.id,
+            beforeElements: page.elements,
+            afterElements: nextElements,
+          },
+        ],
+        beforeSelection: state.selection,
+      }),
+    );
   },
 
   distributeElements: (pageId, elementIds, axis) => {
@@ -502,24 +584,29 @@ export const createElementsSlice: StateCreator<
       }
     }
 
-    get().pushHistory();
-    set((current) => ({
-      project: {
-        ...current.project,
-        pages: current.project.pages.map((candidate) =>
-          candidate.id === page.id
-            ? {
-                ...candidate,
-                elements: candidate.elements.map((el) => {
-                  const val = nextPos.get(el.id);
-                  if (val === undefined) return el;
-                  return axis === "horizontal" ? { ...el, x: val } : { ...el, y: val };
-                }),
-              }
-            : candidate,
-        ),
-      },
-    }));
+    const nextElements = page.elements.map((el) => {
+      const val = nextPos.get(el.id);
+      if (val === undefined) return el;
+      return axis === "horizontal" ? { ...el, x: val } : { ...el, y: val };
+    });
+
+    state.executeCommand(
+      createPageElementsCommand({
+        type: "distribute-elements",
+        label:
+          axis === "horizontal"
+            ? "Distribute horizontally"
+            : "Distribute vertically",
+        patches: [
+          {
+            pageId: page.id,
+            beforeElements: page.elements,
+            afterElements: nextElements,
+          },
+        ],
+        beforeSelection: state.selection,
+      }),
+    );
   },
 
   moveElementLayer: (elementId, direction) => {
@@ -543,24 +630,137 @@ export const createElementsSlice: StateCreator<
     const [moved] = ordered.splice(index, 1);
     ordered.splice(target, 0, moved);
     const layerMap = new Map(ordered.map((element, layer) => [element.id, layer]));
-
-    get().pushHistory();
-    set((current) => ({
-      project: {
-        ...current.project,
-        pages: current.project.pages.map((candidate) =>
-          candidate.id === page.id
-            ? {
-                ...candidate,
-                elements: candidate.elements.map((element) => ({
-                  ...element,
-                  zIndex: layerMap.get(element.id) ?? element.zIndex,
-                })),
-              }
-            : candidate,
-        ),
-      },
+    const nextElements = page.elements.map((element) => ({
+      ...element,
+      zIndex: layerMap.get(element.id) ?? element.zIndex,
     }));
+
+    state.executeCommand(
+      createPageElementsCommand({
+        type: "reorder-layer",
+        label: "Reorder layer",
+        patches: [
+          {
+            pageId: page.id,
+            beforeElements: page.elements,
+            afterElements: nextElements,
+          },
+        ],
+        beforeSelection: state.selection,
+      }),
+    );
+  },
+
+  reorderPageLayers: (pageId, orderedElementIdsBottomToTop) => {
+    const state = get();
+    const page = state.project.pages.find((candidate) => candidate.id === pageId);
+    if (!page || !isPageEditable(state, page.id)) return;
+
+    const rankMap = new Map(
+      orderedElementIdsBottomToTop.map((id, idx) => [id, idx]),
+    );
+    let fallback = orderedElementIdsBottomToTop.length;
+    const sorted = [...page.elements].sort((a, b) => {
+      const ra = rankMap.get(a.id) ?? fallback++;
+      const rb = rankMap.get(b.id) ?? fallback++;
+      return ra - rb;
+    });
+    const changed = sorted.some((el, idx) => el.zIndex !== idx);
+    if (!changed) return;
+
+    const nextElements = normalizeLayers(sorted);
+    state.executeCommand(
+      createPageElementsCommand({
+        type: "reorder-layers",
+        label: "Reorder layers",
+        patches: [
+          {
+            pageId: page.id,
+            beforeElements: page.elements,
+            afterElements: nextElements,
+          },
+        ],
+        beforeSelection: state.selection,
+      }),
+    );
+  },
+
+  moveElementToPage: (elementId, targetPageId, targetIndexBottomToTop) => {
+    const state = get();
+    const sourcePage = state.project.pages.find((candidate) =>
+      candidate.elements.some((el) => el.id === elementId),
+    );
+    const targetPage = state.project.pages.find(
+      (candidate) => candidate.id === targetPageId,
+    );
+    if (
+      !sourcePage ||
+      !targetPage ||
+      !isPageEditable(state, sourcePage.id) ||
+      !isPageEditable(state, targetPage.id)
+    ) {
+      return;
+    }
+
+    const moving = sourcePage.elements.find((el) => el.id === elementId);
+    if (!moving) return;
+
+    if (sourcePage.id === targetPage.id) {
+      const ordered = [...sourcePage.elements]
+        .filter((el) => el.id !== elementId)
+        .sort((a, b) => a.zIndex - b.zIndex);
+      const insertAt = Math.max(
+        0,
+        Math.min(ordered.length, targetIndexBottomToTop ?? ordered.length),
+      );
+      ordered.splice(insertAt, 0, moving);
+      state.reorderPageLayers(
+        sourcePage.id,
+        ordered.map((el) => el.id),
+      );
+      return;
+    }
+
+    const nextSourceElements = normalizeLayers(
+      sourcePage.elements
+        .filter((el) => el.id !== elementId)
+        .sort((a, b) => a.zIndex - b.zIndex),
+    );
+    const targetOrdered = [...targetPage.elements].sort(
+      (a, b) => a.zIndex - b.zIndex,
+    );
+    const insertAt = Math.max(
+      0,
+      Math.min(targetOrdered.length, targetIndexBottomToTop ?? targetOrdered.length),
+    );
+    targetOrdered.splice(insertAt, 0, { ...moving, groupId: undefined });
+    const nextTargetElements = normalizeLayers(targetOrdered);
+
+    state.executeCommand(
+      createPageElementsCommand({
+        type: "move-element-page",
+        label: "Move layer to page",
+        patches: [
+          {
+            pageId: sourcePage.id,
+            beforeElements: sourcePage.elements,
+            afterElements: nextSourceElements,
+          },
+          {
+            pageId: targetPage.id,
+            beforeElements: targetPage.elements,
+            afterElements: nextTargetElements,
+          },
+        ],
+        beforeSelection: state.selection,
+        afterSelection: {
+          pageId: targetPage.id,
+          elementId,
+          elementIds: [elementId],
+          spineSelected: false,
+        },
+      }),
+    );
   },
 
   fillFramePhoto: (elementId, photo) => {
@@ -572,39 +772,43 @@ export const createElementsSlice: StateCreator<
     const target = page.elements.find((el) => el.id === elementId);
     if (!target || target.type !== "image") return;
 
-    get().pushHistory();
-    set((current) => ({
-      project: {
-        ...current.project,
-        mediaLibrary: mergeMedia(current.project.mediaLibrary, [photo]),
-        pages: current.project.pages.map((candidate) =>
-          candidate.id === page.id
-            ? {
-                ...candidate,
-                elements: candidate.elements.map((el) =>
-                  el.id === elementId && el.type === "image"
-                    ? {
-                        ...el,
-                        src: photo.src,
-                        alt: photo.alt,
-                        fit: "cover",
-                        cropScale: 1,
-                        cropX: 0,
-                        cropY: 0,
-                      }
-                    : el,
-                ),
-              }
-            : candidate,
-        ),
-      },
-      selection: {
-        pageId: page.id,
-        elementId,
-        elementIds: [elementId],
-        spineSelected: false,
-      },
-    }));
+    const nextMedia = mergeMedia(state.project.mediaLibrary, [photo]);
+    const nextElements = page.elements.map((el) =>
+      el.id === elementId && el.type === "image"
+        ? {
+            ...el,
+            src: photo.src,
+            alt: photo.alt,
+            fit: "cover" as const,
+            cropScale: 1,
+            cropX: 0,
+            cropY: 0,
+          }
+        : el,
+    );
+
+    state.executeCommand(
+      createPageElementsCommand({
+        type: "fill-frame-photo",
+        label: "Place photo",
+        patches: [
+          {
+            pageId: page.id,
+            beforeElements: page.elements,
+            afterElements: nextElements,
+          },
+        ],
+        beforeMedia: state.project.mediaLibrary,
+        afterMedia: nextMedia,
+        beforeSelection: state.selection,
+        afterSelection: {
+          pageId: page.id,
+          elementId,
+          elementIds: [elementId],
+          spineSelected: false,
+        },
+      }),
+    );
   },
 
   clearFramePhoto: (elementId) => {
@@ -616,34 +820,38 @@ export const createElementsSlice: StateCreator<
     const target = page.elements.find((el) => el.id === elementId);
     if (!target || target.type !== "image" || !target.src) return;
 
-    get().pushHistory();
-    set((current) => ({
-      project: {
-        ...current.project,
-        mediaLibrary: mergeMedia(current.project.mediaLibrary, [
-          { src: target.src, alt: target.alt },
-        ]),
-        pages: current.project.pages.map((candidate) =>
-          candidate.id === page.id
-            ? {
-                ...candidate,
-                elements: candidate.elements.map((el) =>
-                  el.id === elementId && el.type === "image"
-                    ? {
-                        ...el,
-                        src: "",
-                        alt: "",
-                        cropScale: 1,
-                        cropX: 0,
-                        cropY: 0,
-                      }
-                    : el,
-                ),
-              }
-            : candidate,
-        ),
-      },
-    }));
+    const nextMedia = mergeMedia(state.project.mediaLibrary, [
+      { src: target.src, alt: target.alt },
+    ]);
+    const nextElements = page.elements.map((el) =>
+      el.id === elementId && el.type === "image"
+        ? {
+            ...el,
+            src: "",
+            alt: "",
+            cropScale: 1,
+            cropX: 0,
+            cropY: 0,
+          }
+        : el,
+    );
+
+    state.executeCommand(
+      createPageElementsCommand({
+        type: "clear-frame-photo",
+        label: "Clear photo",
+        patches: [
+          {
+            pageId: page.id,
+            beforeElements: page.elements,
+            afterElements: nextElements,
+          },
+        ],
+        beforeMedia: state.project.mediaLibrary,
+        afterMedia: nextMedia,
+        beforeSelection: state.selection,
+      }),
+    );
   },
 
   swapFramePhotos: (sourceElementId, targetElementId) => {
@@ -687,65 +895,100 @@ export const createElementsSlice: StateCreator<
       cropY: target.cropY ?? 0,
     };
 
-    get().pushHistory();
-    set((current) => ({
-      project: {
-        ...current.project,
-        pages: current.project.pages.map((candidate) => {
-          if (candidate.id !== sourcePage.id && candidate.id !== targetPage.id) {
-            return candidate;
-          }
-          return {
-            ...candidate,
-            elements: candidate.elements.map((el) => {
-              if (el.id === sourceElementId && el.type === "image") {
-                return { ...el, ...targetPayload };
-              }
-              if (el.id === targetElementId && el.type === "image") {
-                return { ...el, ...sourcePayload };
-              }
-              return el;
-            }),
-          };
-        }),
-      },
-      selection: {
-        pageId: targetPage.id,
-        elementId: targetElementId,
-        elementIds: [targetElementId],
-        spineSelected: false,
-      },
-    }));
+    const swapOnPage = (elements: Element[]) =>
+      elements.map((el) => {
+        if (el.id === sourceElementId && el.type === "image") {
+          return { ...el, ...targetPayload };
+        }
+        if (el.id === targetElementId && el.type === "image") {
+          return { ...el, ...sourcePayload };
+        }
+        return el;
+      });
+
+    const patches =
+      sourcePage.id === targetPage.id
+        ? [
+            {
+              pageId: sourcePage.id,
+              beforeElements: sourcePage.elements,
+              afterElements: swapOnPage(sourcePage.elements),
+            },
+          ]
+        : [
+            {
+              pageId: sourcePage.id,
+              beforeElements: sourcePage.elements,
+              afterElements: swapOnPage(sourcePage.elements),
+            },
+            {
+              pageId: targetPage.id,
+              beforeElements: targetPage.elements,
+              afterElements: swapOnPage(targetPage.elements),
+            },
+          ];
+
+    state.executeCommand(
+      createPageElementsCommand({
+        type: "swap-photos",
+        label: "Swap photos",
+        patches,
+        beforeSelection: state.selection,
+        afterSelection: {
+          pageId: targetPage.id,
+          elementId: targetElementId,
+          elementIds: [targetElementId],
+          spineSelected: false,
+        },
+      }),
+    );
   },
 
   resizeGutterFrames: (pageId, updates, options) => {
     if (updates.length === 0) return;
     const state = get();
-    if (!isPageEditable(state, pageId)) return;
+    const page = state.project.pages.find((candidate) => candidate.id === pageId);
+    if (!page || !isPageEditable(state, pageId)) return;
 
-    if (options?.commit !== false) get().pushHistory();
     const map = new Map(updates.map((u) => [u.id, u]));
+    const nextElements = page.elements.map((el) => {
+      const patch = map.get(el.id);
+      if (!patch) return el;
+      return {
+        ...el,
+        x: patch.x ?? el.x,
+        y: patch.y ?? el.y,
+        width: patch.width ?? el.width,
+        height: patch.height ?? el.height,
+      };
+    });
+
+    if (options?.commit !== false) {
+      state.executeCommand(
+        createPageElementsCommand({
+          type: "resize-gutter",
+          label: "Resize grid gutter",
+          patches: [
+            {
+              pageId,
+              beforeElements: page.elements,
+              afterElements: nextElements,
+            },
+          ],
+          beforeSelection: state.selection,
+        }),
+      );
+      return;
+    }
 
     set((current) => ({
       project: {
         ...current.project,
-        pages: current.project.pages.map((candidate) => {
-          if (candidate.id !== pageId) return candidate;
-          return {
-            ...candidate,
-            elements: candidate.elements.map((el) => {
-              const patch = map.get(el.id);
-              if (!patch) return el;
-              return {
-                ...el,
-                x: patch.x ?? el.x,
-                y: patch.y ?? el.y,
-                width: patch.width ?? el.width,
-                height: patch.height ?? el.height,
-              };
-            }),
-          };
-        }),
+        pages: current.project.pages.map((candidate) =>
+          candidate.id === pageId
+            ? { ...candidate, elements: nextElements }
+            : candidate,
+        ),
       },
     }));
   },

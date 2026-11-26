@@ -164,6 +164,8 @@ const SHAPE_LABEL_MAP: Record<ShapeElement["shape"], string> = {
 };
 
 export function getElementLabel(element: Element, index: number) {
+  const customName = element.name?.trim();
+  if (customName) return customName;
   switch (element.type) {
     case "text":
       return element.text.trim().slice(0, 48) || `Text ${index + 1}`;

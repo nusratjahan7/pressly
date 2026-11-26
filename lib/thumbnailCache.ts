@@ -35,6 +35,7 @@ function getElementsSignature(page: Page) {
       element.rotation,
       element.opacity,
       element.zIndex,
+      element.hidden ? 1 : 0,
       element.flipX ? 1 : 0,
       element.flipY ? 1 : 0,
     ];

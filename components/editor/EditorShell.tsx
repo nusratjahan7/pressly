@@ -12,6 +12,7 @@ import { PropertiesPanel } from "@/components/editor/properties/PropertiesPanel"
 import { ThumbnailStrip } from "@/components/editor/thumbnails/ThumbnailStrip";
 import { PreviewDialog } from "@/components/editor/PreviewDialog";
 import { ExportDialog } from "@/components/editor/ExportDialog";
+import { ProjectsDashboardModal } from "@/components/editor/dashboard/ProjectsDashboardModal";
 import { PageSetupDialog } from "@/components/editor/setup/PageSetupDialog";
 import { ToastViewport } from "@/components/ui/toast";
 import { KeyboardShortcuts } from "@/components/editor/KeyboardShortcuts";
@@ -48,6 +49,7 @@ export function EditorShell() {
       </div>
       <PreviewDialog />
       <ExportDialog />
+      <ProjectsDashboardModal />
       <PageSetupDialog
         open={pageSetupOpen}
         mode={pageSetupMode}

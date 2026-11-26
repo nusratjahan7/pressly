@@ -4,7 +4,7 @@ import type { EditorStore, ProjectSlice } from "@/store/types";
 import { createSeedProject } from "@/lib/project";
 import { createId } from "@/lib/id";
 import { createCoverPage, createEndPaper, createPage } from "@/lib/project";
-import { deleteOriginalMediaBlob, extractAssetId } from "@/lib/mediaStorage";
+import { createProjectMetaCommand } from "@/lib/history/commands";
 import { clamp, round } from "@/lib/units";
 
 export const MIN_TRIM_MM = 20;
@@ -90,24 +90,35 @@ export const createProjectSlice: StateCreator<
 
   renameProject: (name) => {
     const trimmed = name.trim().replace(/\s+/g, " ").slice(0, 80);
-    if (!trimmed || trimmed === get().project.name) return;
-    get().pushHistory();
-    set((state) => ({
-      project: { ...state.project, name: trimmed },
-    }));
+    const current = get().project.name;
+    if (!trimmed || trimmed === current) return;
+    get().executeCommand(
+      createProjectMetaCommand({
+        type: "rename-project",
+        label: "Rename project",
+        before: { name: current },
+        after: { name: trimmed },
+      }),
+    );
   },
 
   setSpineText: (spineText) => {
     const normalized = spineText.replace(/[\r\n]+/g, " ").slice(0, 80);
-    if (normalized === (get().project.spineText ?? get().project.name)) return;
-    get().pushHistory();
-    set((state) => ({
-      project: { ...state.project, spineText: normalized },
-    }));
+    const current = get().project.spineText ?? get().project.name;
+    if (normalized === current) return;
+    get().executeCommand(
+      createProjectMetaCommand({
+        type: "spine-text",
+        label: "Edit spine text",
+        before: { spineText: get().project.spineText },
+        after: { spineText: normalized },
+      }),
+    );
   },
 
   setPageSize: (pageSize) => {
-    const current = get().project.pageSize;
+    const currentProject = get().project;
+    const current = currentProject.pageSize;
     const next = normalizePageSize({ ...current, ...pageSize });
 
     if (
@@ -122,20 +133,19 @@ export const createProjectSlice: StateCreator<
 
     const rx = next.w / current.w;
     const ry = next.h / current.h;
-
-    get().pushHistory();
-    set((state) => ({
-      project: {
-        ...state.project,
-        pageSize: next,
-        pages: state.project.pages.map((page) => ({
-          ...page,
-          elements: page.elements.map((element) =>
-            scaleElement(element, rx, ry),
-          ),
-        })),
-      },
+    const nextPages = currentProject.pages.map((page) => ({
+      ...page,
+      elements: page.elements.map((element) => scaleElement(element, rx, ry)),
     }));
+
+    get().executeCommand(
+      createProjectMetaCommand({
+        type: "page-size",
+        label: "Change page size",
+        before: { pageSize: current, pages: currentProject.pages },
+        after: { pageSize: next, pages: nextPages },
+      }),
+    );
   },
 
   setPageSetup: (patch) => {
@@ -156,10 +166,14 @@ export const createProjectSlice: StateCreator<
     }
 
     // Bleed and margins are print furniture, not geometry, so nothing rescales.
-    get().pushHistory();
-    set((state) => ({
-      project: { ...state.project, pageSize: next },
-    }));
+    get().executeCommand(
+      createProjectMetaCommand({
+        type: "page-setup",
+        label: "Update page setup",
+        before: { pageSize: current },
+        after: { pageSize: next },
+      }),
+    );
   },
 
   createProject: ({ name, pageSize, spreads }) => {
@@ -179,7 +193,7 @@ export const createProjectSlice: StateCreator<
     }
     pages.push(createEndPaper());
 
-    get().pushHistory();
+    get().clearHistory();
     set((state) => ({
       project: {
         id: createId(),
@@ -197,7 +211,20 @@ export const createProjectSlice: StateCreator<
   },
 
   replaceProject: (project) => {
-    set({ project });
+    get().clearHistory();
+    set((state) => ({
+      project,
+      selection: {
+        pageId: null,
+        elementId: null,
+        elementIds: [],
+        spineSelected: false,
+      },
+      ui: {
+        ...state.ui,
+        spreadIndex: 0,
+      },
+    }));
   },
 
   addMediaAssets: (assets) => {
@@ -228,40 +255,41 @@ export const createProjectSlice: StateCreator<
   removeMediaAssets: (assetIds) => {
     if (assetIds.length === 0) return;
     const idSet = new Set(assetIds);
-    const currentLib = get().project.mediaLibrary ?? [];
+    const current = get().project;
+    const currentLib = current.mediaLibrary ?? [];
     const removedSrcs = new Set<string>();
 
     for (const asset of currentLib) {
       if (idSet.has(asset.id)) {
         removedSrcs.add(asset.src);
-        const blobId = extractAssetId(asset.src) ?? asset.id;
-        void deleteOriginalMediaBlob(blobId);
       }
     }
+    if (removedSrcs.size === 0) return;
 
-    get().pushHistory();
-    set((state) => ({
-      project: {
-        ...state.project,
-        mediaLibrary: (state.project.mediaLibrary ?? []).filter(
-          (item) => !idSet.has(item.id),
-        ),
-        pages: state.project.pages.map((page) => ({
-          ...page,
-          elements: page.elements.map((el) =>
-            el.type === "image" && removedSrcs.has(el.src)
-              ? {
-                  ...el,
-                  src: "",
-                  alt: "",
-                  cropScale: 1,
-                  cropX: 0,
-                  cropY: 0,
-                }
-              : el,
-          ),
-        })),
-      },
+    const nextLib = currentLib.filter((item) => !idSet.has(item.id));
+    const nextPages = current.pages.map((page) => ({
+      ...page,
+      elements: page.elements.map((el) =>
+        el.type === "image" && removedSrcs.has(el.src)
+          ? {
+              ...el,
+              src: "",
+              alt: "",
+              cropScale: 1,
+              cropX: 0,
+              cropY: 0,
+            }
+          : el,
+      ),
     }));
+
+    get().executeCommand(
+      createProjectMetaCommand({
+        type: "remove-media",
+        label: "Remove photos",
+        before: { mediaLibrary: currentLib, pages: current.pages },
+        after: { mediaLibrary: nextLib, pages: nextPages },
+      }),
+    );
   },
 });

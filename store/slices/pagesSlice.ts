@@ -22,6 +22,11 @@ import {
   getLayoutById,
   type ReflowPhoto,
 } from "@/lib/layouts";
+import {
+  createPageBackgroundCommand,
+  createPageElementsCommand,
+  createSpreadCommand,
+} from "@/lib/history/commands";
 import { useToastStore } from "@/store/toasts";
 import {
   clampSpreadIndex,
@@ -49,8 +54,6 @@ export const createPagesSlice: StateCreator<
       return;
     }
 
-    // New content pages go immediately before the final spread so the inside
-    // back end paper stays glued to the end of the book.
     const spreads = getSpreads(pages);
     const lastSpread = spreads[spreads.length - 1];
     const lastContentBoundary =
@@ -61,29 +64,35 @@ export const createPagesSlice: StateCreator<
           : pages.length;
     const insertAt = Math.max(COVER_PAGE_COUNT + 1, lastContentBoundary);
     const newPages: Page[] = [createPage("paper"), createPage("paper")];
-
-    get().pushHistory();
     const nextPages = [
       ...pages.slice(0, insertAt),
       ...newPages,
       ...pages.slice(insertAt),
     ];
-    set((current) => ({
-      project: { ...current.project, pages: nextPages },
-      selection: { pageId: null, elementId: null, elementIds: [], spineSelected: false },
-      ui: {
-        ...current.ui,
-        spreadIndex: getSpreadIndexForPage(insertAt),
-      },
-    }));
+
+    state.executeCommand(
+      createSpreadCommand({
+        type: "add-spread",
+        label: "Add spread",
+        beforePages: pages,
+        afterPages: nextPages,
+        beforeSpreadIndex: state.ui.spreadIndex,
+        afterSpreadIndex: getSpreadIndexForPage(insertAt),
+        beforeSelection: state.selection,
+        afterSelection: {
+          pageId: null,
+          elementId: null,
+          elementIds: [],
+          spineSelected: false,
+        },
+      }),
+    );
   },
 
   duplicateSpread: () => {
     const state = get();
     const spreads = getSpreads(state.project.pages);
     const spread = spreads[state.ui.spreadIndex];
-    // The cover, the first spread (end paper + page 1) and the final spread
-    // (last page + end paper) are structural and cannot be duplicated.
     if (!spread || spread.isCover || spread.isFirstContent || spread.isLast) {
       return;
     }
@@ -109,22 +118,30 @@ export const createPagesSlice: StateCreator<
       })),
     }));
 
-    const insertAt = spread.pageIndices[spread.pageIndices.length - 1] + 1;
+    const insertAt = spread.pageIndices[spread.pageIndices.length - 1]! + 1;
     const nextPages = [
       ...state.project.pages.slice(0, insertAt),
       ...clones,
       ...state.project.pages.slice(insertAt),
     ];
 
-    get().pushHistory();
-    set((current) => ({
-      project: { ...current.project, pages: nextPages },
-      selection: { pageId: null, elementId: null, elementIds: [], spineSelected: false },
-      ui: {
-        ...current.ui,
-        spreadIndex: getSpreadIndexForPage(insertAt),
-      },
-    }));
+    state.executeCommand(
+      createSpreadCommand({
+        type: "duplicate-spread",
+        label: "Duplicate spread",
+        beforePages: state.project.pages,
+        afterPages: nextPages,
+        beforeSpreadIndex: state.ui.spreadIndex,
+        afterSpreadIndex: getSpreadIndexForPage(insertAt),
+        beforeSelection: state.selection,
+        afterSelection: {
+          pageId: null,
+          elementId: null,
+          elementIds: [],
+          spineSelected: false,
+        },
+      }),
+    );
   },
 
   removeSpread: () => {
@@ -143,22 +160,30 @@ export const createPagesSlice: StateCreator<
       return;
     }
 
-    get().pushHistory();
     const removeSet = new Set(spread.pageIndices);
     const nextPages = state.project.pages.filter(
       (_, index) => !removeSet.has(index),
     );
-
-    set((current) => ({
-      project: { ...current.project, pages: nextPages },
-      selection: { pageId: null, elementId: null, elementIds: [], spineSelected: false },
-      ui: {
-        ...current.ui,
-        spreadIndex: clampSpreadIndex(current.ui.spreadIndex, nextPages),
-      },
-    }));
-
     const label = getShortSpreadLabel(spread, state.project.pages);
+
+    state.executeCommand(
+      createSpreadCommand({
+        type: "remove-spread",
+        label: `Remove ${label}`,
+        beforePages: state.project.pages,
+        afterPages: nextPages,
+        beforeSpreadIndex: state.ui.spreadIndex,
+        afterSpreadIndex: clampSpreadIndex(state.ui.spreadIndex, nextPages),
+        beforeSelection: state.selection,
+        afterSelection: {
+          pageId: null,
+          elementId: null,
+          elementIds: [],
+          spineSelected: false,
+        },
+      }),
+    );
+
     useToastStore.getState().pushToast({
       message: `${label} removed`,
       action: { label: "Undo", onAct: () => get().undo() },
@@ -173,7 +198,6 @@ export const createPagesSlice: StateCreator<
     const source = spreads[fromIndex];
     const target = spreads[toIndex];
     if (!source || !target) return;
-    // Structural spreads stay put: cover, first spread and final spread.
     if (
       source.isCover ||
       source.isFirstContent ||
@@ -187,9 +211,10 @@ export const createPagesSlice: StateCreator<
 
     const pages = state.project.pages;
     const moving = source.pageIndices.map((index) => pages[index]!);
-    const withoutMoving = pages.filter((_, index) => !source.pageIndices.includes(index));
+    const withoutMoving = pages.filter(
+      (_, index) => !source.pageIndices.includes(index),
+    );
 
-    // Recompute the insertion point against the reduced array.
     let insertAt: number;
     if (toIndex < fromIndex) {
       insertAt = target.pageIndices[0]!;
@@ -206,15 +231,23 @@ export const createPagesSlice: StateCreator<
       ...withoutMoving.slice(insertAt),
     ];
 
-    get().pushHistory();
-    set((current) => ({
-      project: { ...current.project, pages: nextPages },
-      selection: { pageId: null, elementId: null, elementIds: [], spineSelected: false },
-      ui: {
-        ...current.ui,
-        spreadIndex: getSpreadIndexForPage(insertAt),
-      },
-    }));
+    state.executeCommand(
+      createSpreadCommand({
+        type: "move-spread",
+        label: "Reorder spread",
+        beforePages: pages,
+        afterPages: nextPages,
+        beforeSpreadIndex: state.ui.spreadIndex,
+        afterSpreadIndex: getSpreadIndexForPage(insertAt),
+        beforeSelection: state.selection,
+        afterSelection: {
+          pageId: null,
+          elementId: null,
+          elementIds: [],
+          spineSelected: false,
+        },
+      }),
+    );
   },
 
   goToSpread: (index) => {
@@ -223,7 +256,12 @@ export const createPagesSlice: StateCreator<
     if (next === state.ui.spreadIndex) return;
     set((current) => ({
       ui: { ...current.ui, spreadIndex: next },
-      selection: { pageId: null, elementId: null, elementIds: [], spineSelected: false },
+      selection: {
+        pageId: null,
+        elementId: null,
+        elementIds: [],
+        spineSelected: false,
+      },
     }));
   },
 
@@ -236,7 +274,8 @@ export const createPagesSlice: StateCreator<
   },
 
   setPageBackground: (pageId, backgroundId, options) => {
-    const page = get().project.pages.find((candidate) => candidate.id === pageId);
+    const state = get();
+    const page = state.project.pages.find((candidate) => candidate.id === pageId);
     if (
       !page ||
       page.isEndPaper ||
@@ -245,11 +284,29 @@ export const createPagesSlice: StateCreator<
     ) {
       return;
     }
-    if (options?.commit !== false) get().pushHistory();
-    set((state) => ({
+
+    if (options?.commit !== false) {
+      state.executeCommand(
+        createPageBackgroundCommand({
+          label: "Change background",
+          changes: [
+            {
+              pageId,
+              beforeBackgroundId: page.backgroundId,
+              beforeBackground: page.background,
+              afterBackgroundId: backgroundId,
+              afterBackground: undefined,
+            },
+          ],
+        }),
+      );
+      return;
+    }
+
+    set((current) => ({
       project: {
-        ...state.project,
-        pages: state.project.pages.map((candidate) =>
+        ...current.project,
+        pages: current.project.pages.map((candidate) =>
           candidate.id === pageId
             ? { ...candidate, backgroundId, background: undefined }
             : candidate,
@@ -267,7 +324,23 @@ export const createPagesSlice: StateCreator<
     );
     if (targets.length === 0) return;
 
-    if (options?.commit !== false) get().pushHistory();
+    if (options?.commit !== false) {
+      state.executeCommand(
+        createPageBackgroundCommand({
+          label: targets.length > 1 ? "Update backgrounds" : "Update background",
+          changes: targets.map((p) => ({
+            pageId: p.id,
+            beforeBackgroundId: p.backgroundId,
+            beforeBackground: p.background,
+            afterBackgroundId: patch.backgroundId ?? p.backgroundId,
+            afterBackground:
+              "background" in patch ? patch.background : p.background,
+          })),
+        }),
+      );
+      return;
+    }
+
     const targetIds = new Set(targets.map((t) => t.id));
     set((current) => ({
       project: {
@@ -296,23 +369,35 @@ export const createPagesSlice: StateCreator<
       pageSize: state.project.pageSize,
     });
 
-    get().pushHistory();
-    set((current) => ({
-      project: {
-        ...current.project,
-        pages: current.project.pages.map((candidate) =>
-          candidate.id === pageId
-            ? {
-                ...candidate,
-                backgroundId: template.backgroundId,
-                elements,
-                layoutMeta: undefined,
-              }
-            : candidate,
-        ),
-      },
-      selection: { pageId, elementId: null, elementIds: [], spineSelected: false },
-    }));
+    const nextPages = state.project.pages.map((candidate) =>
+      candidate.id === pageId
+        ? {
+            ...candidate,
+            backgroundId: template.backgroundId,
+            background: undefined,
+            elements,
+            layoutMeta: undefined,
+          }
+        : candidate,
+    );
+
+    state.executeCommand(
+      createSpreadCommand({
+        type: "apply-page-template",
+        label: "Apply page template",
+        beforePages: state.project.pages,
+        afterPages: nextPages,
+        beforeSpreadIndex: state.ui.spreadIndex,
+        afterSpreadIndex: state.ui.spreadIndex,
+        beforeSelection: state.selection,
+        afterSelection: {
+          pageId,
+          elementId: null,
+          elementIds: [],
+          spineSelected: false,
+        },
+      }),
+    );
   },
 
   applyMagazineTemplate: (templateId, mode, options) => {
@@ -326,22 +411,30 @@ export const createPagesSlice: StateCreator<
       const nextPages = template.project.pages.map((p) =>
         instantiateTemplatePage(p, srcSize, targetSize),
       );
-      get().pushHistory();
+      const nextSpine = template.project.spineText ?? template.name;
+
+      state.executeCommand(
+        createSpreadCommand({
+          type: "apply-template-replace",
+          label: `Apply ${template.name}`,
+          beforePages: state.project.pages,
+          afterPages: nextPages,
+          beforeSpreadIndex: state.ui.spreadIndex,
+          afterSpreadIndex: 0,
+          beforeSelection: state.selection,
+          afterSelection: {
+            pageId: null,
+            elementId: null,
+            elementIds: [],
+            spineSelected: false,
+          },
+          beforeSpineText: state.project.spineText,
+          afterSpineText: nextSpine,
+        }),
+      );
       set((current) => ({
-        project: {
-          ...current.project,
-          spineText: template.project.spineText ?? template.name,
-          pages: nextPages,
-        },
-        selection: {
-          pageId: null,
-          elementId: null,
-          elementIds: [],
-          spineSelected: false,
-        },
         ui: {
           ...current.ui,
-          spreadIndex: 0,
           layoutAnimSeq: current.ui.layoutAnimSeq + 1,
           layoutAnimPageIds: nextPages.slice(0, 2).map((p) => p.id),
         },
@@ -390,20 +483,29 @@ export const createPagesSlice: StateCreator<
 
     if (replacements.size === 0) return;
 
-    get().pushHistory();
+    const nextPages = state.project.pages.map(
+      (candidate) => replacements.get(candidate.id) ?? candidate,
+    );
+
+    state.executeCommand(
+      createSpreadCommand({
+        type: "apply-template-spread",
+        label: `Apply ${template.name} to spread`,
+        beforePages: state.project.pages,
+        afterPages: nextPages,
+        beforeSpreadIndex: state.ui.spreadIndex,
+        afterSpreadIndex: state.ui.spreadIndex,
+        beforeSelection: state.selection,
+        afterSelection: {
+          pageId: null,
+          elementId: null,
+          elementIds: [],
+          spineSelected: false,
+        },
+      }),
+    );
+
     set((current) => ({
-      project: {
-        ...current.project,
-        pages: current.project.pages.map(
-          (candidate) => replacements.get(candidate.id) ?? candidate,
-        ),
-      },
-      selection: {
-        pageId: null,
-        elementId: null,
-        elementIds: [],
-        spineSelected: false,
-      },
       ui: {
         ...current.ui,
         layoutAnimSeq: current.ui.layoutAnimSeq + 1,
@@ -469,9 +571,16 @@ export const createPagesSlice: StateCreator<
       const leftPage = pages[leftIdx]!;
       const rightPage = pages[rightIdx]!;
 
-      if (!leftPage.isEndPaper && !leftPage.locked && !rightPage.isEndPaper && !rightPage.locked) {
-        const gapMm = options?.gapMm ?? leftPage.layoutMeta?.gapMm ?? DEFAULT_FRAME_GAP_MM;
-        const marginMm = options?.marginMm ?? leftPage.layoutMeta?.marginMm ?? pageSize.safeMargin;
+      if (
+        !leftPage.isEndPaper &&
+        !leftPage.locked &&
+        !rightPage.isEndPaper &&
+        !rightPage.locked
+      ) {
+        const gapMm =
+          options?.gapMm ?? leftPage.layoutMeta?.gapMm ?? DEFAULT_FRAME_GAP_MM;
+        const marginMm =
+          options?.marginMm ?? leftPage.layoutMeta?.marginMm ?? pageSize.safeMargin;
         const photos = collectPhotos([leftPage, rightPage]);
         const texts = collectTexts([leftPage, rightPage]);
         const { left, right } = buildSpreadLayoutElements(
@@ -483,31 +592,45 @@ export const createPagesSlice: StateCreator<
           texts,
         );
 
-        get().pushHistory();
         const nextMedia = mergeMediaLibrary(state.project.mediaLibrary, photos);
+        const nextPages = pages.map((candidate) => {
+          if (candidate.id === leftPage.id) {
+            return {
+              ...candidate,
+              elements: left,
+              layoutMeta: { layoutId: layout.id, gapMm, marginMm },
+            };
+          }
+          if (candidate.id === rightPage.id) {
+            return {
+              ...candidate,
+              elements: right,
+              layoutMeta: { layoutId: layout.id, gapMm, marginMm },
+            };
+          }
+          return candidate;
+        });
+
+        state.executeCommand(
+          createSpreadCommand({
+            type: "apply-spread-layout",
+            label: `Apply ${layout.name}`,
+            beforePages: pages,
+            afterPages: nextPages,
+            beforeSpreadIndex: state.ui.spreadIndex,
+            afterSpreadIndex: state.ui.spreadIndex,
+            beforeSelection: state.selection,
+            afterSelection: {
+              pageId,
+              elementId: null,
+              elementIds: [],
+              spineSelected: false,
+            },
+            beforeMedia: state.project.mediaLibrary,
+            afterMedia: nextMedia,
+          }),
+        );
         set((current) => ({
-          project: {
-            ...current.project,
-            mediaLibrary: nextMedia,
-            pages: current.project.pages.map((candidate) => {
-              if (candidate.id === leftPage.id) {
-                return {
-                  ...candidate,
-                  elements: left,
-                  layoutMeta: { layoutId: layout.id, gapMm, marginMm },
-                };
-              }
-              if (candidate.id === rightPage.id) {
-                return {
-                  ...candidate,
-                  elements: right,
-                  layoutMeta: { layoutId: layout.id, gapMm, marginMm },
-                };
-              }
-              return candidate;
-            }),
-          },
-          selection: { pageId, elementId: null, elementIds: [], spineSelected: false },
           ui: {
             ...current.ui,
             layoutAnimSeq: current.ui.layoutAnimSeq + 1,
@@ -518,8 +641,10 @@ export const createPagesSlice: StateCreator<
       }
     }
 
-    const gapMm = options?.gapMm ?? targetPage.layoutMeta?.gapMm ?? DEFAULT_FRAME_GAP_MM;
-    const marginMm = options?.marginMm ?? targetPage.layoutMeta?.marginMm ?? pageSize.safeMargin;
+    const gapMm =
+      options?.gapMm ?? targetPage.layoutMeta?.gapMm ?? DEFAULT_FRAME_GAP_MM;
+    const marginMm =
+      options?.marginMm ?? targetPage.layoutMeta?.marginMm ?? pageSize.safeMargin;
     const photos = collectPhotos([targetPage]);
     const texts = collectTexts([targetPage]);
     const nextElements = buildPageLayoutElements(
@@ -531,23 +656,38 @@ export const createPagesSlice: StateCreator<
       texts,
     );
 
-    get().pushHistory();
     const nextMedia = mergeMediaLibrary(state.project.mediaLibrary, photos);
+    const nextPages = pages.map((candidate) =>
+      candidate.id === pageId
+        ? {
+            ...candidate,
+            elements: nextElements,
+            layoutMeta: { layoutId: layout.id, gapMm, marginMm },
+          }
+        : candidate,
+    );
+
+    state.executeCommand(
+      createSpreadCommand({
+        type: "apply-page-layout",
+        label: `Apply ${layout.name}`,
+        beforePages: pages,
+        afterPages: nextPages,
+        beforeSpreadIndex: state.ui.spreadIndex,
+        afterSpreadIndex: state.ui.spreadIndex,
+        beforeSelection: state.selection,
+        afterSelection: {
+          pageId,
+          elementId: null,
+          elementIds: [],
+          spineSelected: false,
+        },
+        beforeMedia: state.project.mediaLibrary,
+        afterMedia: nextMedia,
+      }),
+    );
+
     set((current) => ({
-      project: {
-        ...current.project,
-        mediaLibrary: nextMedia,
-        pages: current.project.pages.map((candidate) =>
-          candidate.id === pageId
-            ? {
-                ...candidate,
-                elements: nextElements,
-                layoutMeta: { layoutId: layout.id, gapMm, marginMm },
-              }
-            : candidate,
-        ),
-      },
-      selection: { pageId, elementId: null, elementIds: [], spineSelected: false },
       ui: {
         ...current.ui,
         layoutAnimSeq: current.ui.layoutAnimSeq + 1,
@@ -573,8 +713,6 @@ export const createPagesSlice: StateCreator<
       return;
     }
 
-    if (options?.commit !== false) get().pushHistory();
-
     const pageSize = state.project.pageSize;
     if (layout.scope === "page") {
       const ordered = [...page.elements].sort((a, b) => a.zIndex - b.zIndex);
@@ -590,27 +728,44 @@ export const createPagesSlice: StateCreator<
         );
         return { ...element, ...rect };
       });
+      const nextMeta = {
+        ...page.layoutMeta,
+        gapMm: nextGap,
+        marginMm: nextMargin,
+      };
+
+      if (options?.commit !== false) {
+        state.executeCommand(
+          createPageElementsCommand({
+            type: "update-layout-spacing",
+            label: "Adjust layout spacing",
+            patches: [
+              {
+                pageId,
+                beforeElements: page.elements,
+                afterElements: nextElements,
+                beforeLayoutMeta: page.layoutMeta,
+                afterLayoutMeta: nextMeta,
+                updateLayoutMeta: true,
+              },
+            ],
+            beforeSelection: state.selection,
+          }),
+        );
+        return;
+      }
 
       set((current) => ({
         project: {
           ...current.project,
           pages: current.project.pages.map((candidate) =>
             candidate.id === pageId
-              ? {
-                  ...candidate,
-                  elements: nextElements,
-                  layoutMeta: {
-                    ...page.layoutMeta!,
-                    gapMm: nextGap,
-                    marginMm: nextMargin,
-                  },
-                }
+              ? { ...candidate, elements: nextElements, layoutMeta: nextMeta }
               : candidate,
           ),
         },
       }));
     } else {
-      // Spread layout: update metadata and reflow keeping existing content.
       const spread = getSpreads(state.project.pages).find((s) =>
         s.pageIndices.some((idx) => state.project.pages[idx]?.id === pageId),
       );
@@ -642,23 +797,46 @@ export const createPagesSlice: StateCreator<
         existingPhotos,
         existingTexts,
       );
+      const nextMeta = { layoutId: layout.id, gapMm: nextGap, marginMm: nextMargin };
+
+      if (options?.commit !== false) {
+        state.executeCommand(
+          createPageElementsCommand({
+            type: "update-layout-spacing",
+            label: "Adjust layout spacing",
+            patches: [
+              {
+                pageId: leftPage.id,
+                beforeElements: leftPage.elements,
+                afterElements: left,
+                beforeLayoutMeta: leftPage.layoutMeta,
+                afterLayoutMeta: nextMeta,
+                updateLayoutMeta: true,
+              },
+              {
+                pageId: rightPage.id,
+                beforeElements: rightPage.elements,
+                afterElements: right,
+                beforeLayoutMeta: rightPage.layoutMeta,
+                afterLayoutMeta: nextMeta,
+                updateLayoutMeta: true,
+              },
+            ],
+            beforeSelection: state.selection,
+          }),
+        );
+        return;
+      }
+
       set((current) => ({
         project: {
           ...current.project,
           pages: current.project.pages.map((candidate) => {
             if (candidate.id === leftPage.id) {
-              return {
-                ...candidate,
-                elements: left,
-                layoutMeta: { layoutId: layout.id, gapMm: nextGap, marginMm: nextMargin },
-              };
+              return { ...candidate, elements: left, layoutMeta: nextMeta };
             }
             if (candidate.id === rightPage.id) {
-              return {
-                ...candidate,
-                elements: right,
-                layoutMeta: { layoutId: layout.id, gapMm: nextGap, marginMm: nextMargin },
-              };
+              return { ...candidate, elements: right, layoutMeta: nextMeta };
             }
             return candidate;
           }),
@@ -687,7 +865,6 @@ export const createPagesSlice: StateCreator<
       return 0;
     }
 
-    // Walk editable pages in spread order, filling empty frames largest-first.
     const emptyTargets: Array<{ pageId: string; elementId: string }> = [];
     const spreads = getSpreads(pages);
     for (const spread of spreads) {
@@ -718,28 +895,35 @@ export const createPagesSlice: StateCreator<
       assignments.set(target.elementId, { src: asset.src, alt: asset.alt });
     }
 
-    get().pushHistory();
-    set((current) => ({
-      project: {
-        ...current.project,
-        pages: current.project.pages.map((page) => ({
-          ...page,
-          elements: page.elements.map((el) => {
-            const photo = assignments.get(el.id);
-            if (!photo || el.type !== "image") return el;
-            return {
-              ...el,
-              src: photo.src,
-              alt: photo.alt,
-              fit: "cover",
-              cropScale: 1,
-              cropX: 0,
-              cropY: 0,
-            };
-          }),
-        })),
-      },
+    const nextPages = pages.map((page) => ({
+      ...page,
+      elements: page.elements.map((el) => {
+        const photo = assignments.get(el.id);
+        if (!photo || el.type !== "image") return el;
+        return {
+          ...el,
+          src: photo.src,
+          alt: photo.alt,
+          fit: "cover" as const,
+          cropScale: 1,
+          cropX: 0,
+          cropY: 0,
+        };
+      }),
     }));
+
+    state.executeCommand(
+      createSpreadCommand({
+        type: "autofill-photos",
+        label: `Autofill ${count} photos`,
+        beforePages: pages,
+        afterPages: nextPages,
+        beforeSpreadIndex: state.ui.spreadIndex,
+        afterSpreadIndex: state.ui.spreadIndex,
+        beforeSelection: state.selection,
+        afterSelection: state.selection,
+      }),
+    );
 
     useToastStore.getState().pushToast({
       message: `Placed ${count} ${count === 1 ? "photo" : "photos"} into empty frames`,

@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { AlertTriangle, Check, Plus, RefreshCw, Ruler } from "lucide-react";
 import type { BindingType, PageSize } from "@/types";
 import { useEditorStore } from "@/store";
+import { flushActiveProjectToIndexedDb } from "@/store/persistence";
 import {
   DEFAULT_BLEED_MM,
   DEFAULT_SAFE_MARGIN_MM,
@@ -224,9 +225,10 @@ export function PageSetupDialog({ open, mode, onClose }: PageSetupDialogProps) {
       binding: "perfect-bound",
     }));
 
-  const commit = () => {
+  const commit = async () => {
     if (hasError) return;
     if (mode === "new") {
+      await flushActiveProjectToIndexedDb();
       createProject({
         name: projectName,
         pageSize: nextPageSize,

@@ -68,7 +68,9 @@ export function PageView({
 
   const elements = isEndPaper
     ? []
-    : [...extraElements, ...page.elements].sort((a, b) => a.zIndex - b.zIndex);
+    : [...extraElements, ...page.elements]
+        .filter((el) => !el.hidden)
+        .sort((a, b) => a.zIndex - b.zIndex);
   const canInteract = interactive && !isLocked;
 
   return (

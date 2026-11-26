@@ -23,6 +23,10 @@ export type ElementType = "image" | "text" | "shape" | "sticker" | "qr";
 export interface ElementBase {
   id: string;
   type: ElementType;
+  /** Optional user-assigned layer name displayed in the Layers panel. */
+  name?: string;
+  /** When true, the element is hidden on canvas, previews, thumbnails, and PDF export. */
+  hidden?: boolean;
   /** Horizontal offset from the page trim edge, in millimetres. */
   x: number;
   /** Vertical offset from the page trim edge, in millimetres. */

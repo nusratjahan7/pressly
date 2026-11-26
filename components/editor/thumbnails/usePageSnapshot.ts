@@ -194,7 +194,7 @@ async function renderPageSnapshot(
 
     const ordered = [...page.elements].sort((a, b) => a.zIndex - b.zIndex);
     for (const element of ordered) {
-      if (element.opacity <= 0) continue;
+      if (element.hidden || element.opacity <= 0) continue;
       const px = element.x * scale;
       const py = element.y * scale;
       const pw = Math.max(0.5, element.width * scale);

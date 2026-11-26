@@ -606,7 +606,7 @@ export async function createProjectPdf(
     );
 
     for (const element of ordered) {
-      if (element.opacity <= 0) continue;
+      if (element.hidden || element.opacity <= 0) continue;
 
       const originX = bleedPt + mmToPt(element.x);
       const topY = mediaHeight - bleedPt - mmToPt(element.y);

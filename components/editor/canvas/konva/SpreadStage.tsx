@@ -110,7 +110,7 @@ export function SpreadStage({
         if (page.isEndPaper || page.locked) continue;
         const offsetX = getPageOffsetX(index, layout);
         for (const el of page.elements) {
-          if (el.id === sourceId || el.type !== "image") continue;
+          if (el.id === sourceId || el.type !== "image" || el.hidden) continue;
           const left = offsetX + el.x;
           const top = el.y;
           if (
@@ -155,7 +155,7 @@ export function SpreadStage({
         if (page.isEndPaper) return [];
         const pageOffsetX = getPageOffsetX(index, layout);
         return page.elements
-          .filter((el) => Boolean(el.spanSpread))
+          .filter((el) => !el.hidden && Boolean(el.spanSpread))
           .sort((a, b) => a.zIndex - b.zIndex)
           .map((element) => ({ element, page, pageOffsetX }));
       }),
@@ -165,7 +165,9 @@ export function SpreadStage({
   const spreadLargestEmptyId = useMemo(
     () =>
       getLargestEmptyFrameId(
-        pages.flatMap((p) => (p.isEndPaper ? [] : p.elements)),
+        pages.flatMap((p) =>
+          p.isEndPaper ? [] : p.elements.filter((el) => !el.hidden),
+        ),
       ),
     [pages],
   );
@@ -185,7 +187,9 @@ export function SpreadStage({
     const idSet = new Set(ids);
     for (let index = 0; index < pages.length; index += 1) {
       const page = pages[index]!;
-      const matched = page.elements.filter((candidate) => idSet.has(candidate.id));
+      const matched = page.elements.filter(
+        (candidate) => !candidate.hidden && idSet.has(candidate.id),
+      );
       if (matched.length > 0) {
         return { elements: matched, pageOffsetX: getPageOffsetX(index, layout) };
       }

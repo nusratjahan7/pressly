@@ -1,8 +1,8 @@
 "use client";
 
-import { Download, Eye, Redo2, Type, Undo2 } from "lucide-react";
+import { Download, Eye, FolderOpen, Redo2, Type, Undo2 } from "lucide-react";
 import { useEditorStore } from "@/store";
-import { useActivePage } from "@/store/selectors";
+import { useActivePage, useCanRedo, useCanUndo } from "@/store/selectors";
 import { createTextElement } from "@/lib/elements";
 import { PresslyMark } from "@/components/editor/PresslyMark";
 import { ProjectNameField } from "@/components/editor/toolbar/ProjectNameField";
@@ -21,8 +21,18 @@ function modKey() {
 export function EditorToolbar() {
   const undo = useEditorStore((state) => state.undo);
   const redo = useEditorStore((state) => state.redo);
-  const canUndo = useEditorStore((state) => state.history.past.length > 0);
-  const canRedo = useEditorStore((state) => state.history.future.length > 0);
+  const canUndo = useCanUndo();
+  const canRedo = useCanRedo();
+  const undoLabel = useEditorStore(
+    (state) =>
+      state.history.pending?.label ??
+      state.history.past[state.history.past.length - 1]?.label ??
+      "",
+  );
+  const redoLabel = useEditorStore(
+    (state) => state.history.future[0]?.label ?? "",
+  );
+  const setDashboardOpen = useEditorStore((state) => state.setDashboardOpen);
   const setPreviewOpen = useEditorStore((state) => state.setPreviewOpen);
   const setExportOpen = useEditorStore((state) => state.setExportOpen);
   const addElement = useEditorStore((state) => state.addElement);
@@ -39,7 +49,7 @@ export function EditorToolbar() {
       createTextElement(
         {
           x: Math.round(((project.pageSize.w - w) / 2) * 10) / 10,
-          y: Math.round((project.pageSize.h * 0.25) * 10) / 10,
+          y: Math.round(project.pageSize.h * 0.25 * 10) / 10,
           width: Math.round(w * 10) / 10,
           height: 16,
         },
@@ -63,6 +73,17 @@ export function EditorToolbar() {
         </span>
       </div>
 
+      <Button
+        variant="secondary"
+        size="sm"
+        className="h-8 gap-1.5 px-2 sm:px-2.5"
+        leadingIcon={FolderOpen}
+        onClick={() => setDashboardOpen(true)}
+        aria-label="Open projects dashboard"
+      >
+        <span className="hidden sm:inline">Projects</span>
+      </Button>
+
       <span
         aria-hidden="true"
         className="hidden h-5 w-px shrink-0 bg-line sm:block"
@@ -75,7 +96,7 @@ export function EditorToolbar() {
         <IconButton
           icon={Undo2}
           label="Undo"
-          tooltip="Undo"
+          tooltip={undoLabel ? `Undo ${undoLabel}` : "Undo"}
           shortcut={`${mod}Z`}
           size="sm"
           onClick={undo}
@@ -85,7 +106,7 @@ export function EditorToolbar() {
         <IconButton
           icon={Redo2}
           label="Redo"
-          tooltip="Redo"
+          tooltip={redoLabel ? `Redo ${redoLabel}` : "Redo"}
           shortcut={`${mod}⇧Z`}
           size="sm"
           onClick={redo}

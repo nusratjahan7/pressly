@@ -21,6 +21,7 @@ export function KeyboardShortcuts() {
       if (
         state.ui.previewOpen ||
         state.ui.exportOpen ||
+        state.ui.dashboardOpen ||
         state.ui.pageSetupOpen ||
         document.querySelector('[role="dialog"][aria-modal="true"]')
       ) {

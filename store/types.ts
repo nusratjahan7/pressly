@@ -8,6 +8,7 @@ import type {
 } from "@/types";
 import type { LayoutDefinition } from "@/lib/layouts";
 import type { PageTemplate } from "@/lib/templates";
+import type { EditorCommand } from "@/lib/history/commands";
 
 export type SidebarTab =
   | "images"
@@ -29,8 +30,10 @@ export interface UiState {
   spreadIndex: number;
   hydrated: boolean;
   saveState: SaveState;
+  lastSavedAt: number | null;
   previewOpen: boolean;
   exportOpen: boolean;
+  dashboardOpen: boolean;
   showSafeMargin: boolean;
   showBleed: boolean;
   pageSetupOpen: boolean;
@@ -48,9 +51,17 @@ export interface SelectionState {
   spineSelected?: boolean;
 }
 
+export interface HistoryPendingTransaction {
+  label: string;
+  project: Project;
+  spreadIndex: number;
+  selection: SelectionState;
+}
+
 export interface HistoryState {
-  past: Project[];
-  future: Project[];
+  past: EditorCommand[];
+  future: EditorCommand[];
+  pending: HistoryPendingTransaction | null;
 }
 
 export interface PageSetupPatch {
@@ -172,6 +183,12 @@ export interface ElementsSlice {
     elementId: string,
     direction: "forward" | "backward" | "front" | "back",
   ) => void;
+  reorderPageLayers: (pageId: string, orderedElementIdsBottomToTop: string[]) => void;
+  moveElementToPage: (
+    elementId: string,
+    targetPageId: string,
+    targetIndexBottomToTop?: number,
+  ) => void;
   fillFramePhoto: (
     elementId: string,
     photo: { src: string; alt: string },
@@ -200,7 +217,10 @@ export interface SelectionSlice {
 
 export interface HistorySlice {
   history: HistoryState;
-  pushHistory: () => void;
+  executeCommand: (command: EditorCommand) => void;
+  pushHistory: (label?: string) => void;
+  commitHistory: () => void;
+  clearHistory: () => void;
   undo: () => void;
   redo: () => void;
 }
@@ -222,8 +242,10 @@ export interface UiSlice {
   resetView: () => void;
   setHydrated: (hydrated: boolean) => void;
   setSaveState: (state: SaveState) => void;
+  setLastSavedAt: (timestamp: number | null) => void;
   setPreviewOpen: (open: boolean) => void;
   setExportOpen: (open: boolean) => void;
+  setDashboardOpen: (open: boolean) => void;
   setShowSafeMargin: (show: boolean) => void;
   setShowBleed: (show: boolean) => void;
   openPageSetup: (mode?: "setup" | "new") => void;
