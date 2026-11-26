@@ -41,7 +41,8 @@ async function renderPageSnapshot(
   width: number,
 ): Promise<string | null> {
   const Konva = (await import("konva")).default;
-  const { getBackground } = await import("@/lib/backgrounds");
+  const { resolvePageBackground } = await import("@/lib/backgrounds");
+  const { getGradientPoints } = await import("@/lib/shapes");
 
   const scale = width / pageSize.w;
   const height = Math.round(pageSize.h * scale);
@@ -86,17 +87,60 @@ async function renderPageSnapshot(
       return stage.toDataURL({ pixelRatio: 2 });
     }
 
-    const background = getBackground(page.backgroundId);
+    const background = resolvePageBackground(page);
     layer.add(
       new Konva.Rect({
         x: 0,
         y: 0,
         width,
         height,
-        fill: background.baseColor,
+        fill: "#FFFFFF",
         listening: false,
       }),
     );
+
+    const bgGroup = new Konva.Group({
+      opacity: background.opacity,
+      listening: false,
+    });
+
+    if (background.gradient) {
+      const { start, end } = getGradientPoints(
+        width,
+        height,
+        background.gradient.angle,
+        false,
+      );
+      bgGroup.add(
+        new Konva.Rect({
+          x: 0,
+          y: 0,
+          width,
+          height,
+          fillPriority: "linear-gradient",
+          fillLinearGradientStartPoint: start,
+          fillLinearGradientEndPoint: end,
+          fillLinearGradientColorStops: [
+            0,
+            background.gradient.from,
+            1,
+            background.gradient.to,
+          ],
+          listening: false,
+        }),
+      );
+    } else {
+      bgGroup.add(
+        new Konva.Rect({
+          x: 0,
+          y: 0,
+          width,
+          height,
+          fill: background.baseColor,
+          listening: false,
+        }),
+      );
+    }
 
     if (background.pdfPattern) {
       const { getPatternTile, getPatternTileScale } = await import(
@@ -104,7 +148,7 @@ async function renderPageSnapshot(
       );
       const tile = getPatternTile(background.pdfPattern, scale, 1);
       if (tile) {
-        layer.add(
+        bgGroup.add(
           new Konva.Rect({
             x: 0,
             y: 0,
@@ -119,6 +163,34 @@ async function renderPageSnapshot(
         );
       }
     }
+
+    if (background.imageSrc) {
+      const bgImg = await loadImage(background.imageSrc).catch(() => null);
+      if (bgImg) {
+        const natW = Math.max(1, bgImg.naturalWidth || 1);
+        const natH = Math.max(1, bgImg.naturalHeight || 1);
+        const r = Math.max(width / natW, height / natH);
+        const viewW = width / r;
+        const viewH = height / r;
+        bgGroup.add(
+          new Konva.Image({
+            image: bgImg,
+            x: 0,
+            y: 0,
+            width,
+            height,
+            crop: {
+              x: (natW - viewW) / 2,
+              y: (natH - viewH) / 2,
+              width: viewW,
+              height: viewH,
+            },
+            listening: false,
+          }),
+        );
+      }
+    }
+    layer.add(bgGroup);
 
     const ordered = [...page.elements].sort((a, b) => a.zIndex - b.zIndex);
     for (const element of ordered) {

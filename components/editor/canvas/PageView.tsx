@@ -1,8 +1,9 @@
 "use client";
 
-import type { CSSProperties } from "react";
+import { useEffect, useState, type CSSProperties } from "react";
 import type { Element, Page, PageSize } from "@/types";
-import { getBackground } from "@/lib/backgrounds";
+import { resolvePageBackground } from "@/lib/backgrounds";
+import { getCachedMediaUrl, resolveMediaUrl } from "@/lib/mediaStorage";
 import { useEditorStore } from "@/store";
 import { ElementView } from "@/components/editor/canvas/ElementView";
 import { cn } from "@/lib/cn";
@@ -29,9 +30,26 @@ export function PageView({
   className,
 }: PageViewProps) {
   const selectPage = useEditorStore((state) => state.selectPage);
-  const background = getBackground(page.backgroundId);
+  const background = resolvePageBackground(page);
   const isEndPaper = Boolean(page.isEndPaper);
   const isLocked = Boolean(page.locked || isEndPaper);
+
+  const [bgImgUrl, setBgImgUrl] = useState<string>(() =>
+    background.imageSrc ? (getCachedMediaUrl(background.imageSrc) ?? "") : "",
+  );
+  useEffect(() => {
+    let alive = true;
+    if (!background.imageSrc) {
+      setBgImgUrl("");
+      return;
+    }
+    void resolveMediaUrl(background.imageSrc).then((url) => {
+      if (alive) setBgImgUrl(url);
+    });
+    return () => {
+      alive = false;
+    };
+  }, [background.imageSrc]);
 
   const width = pageSize.w * scale;
   const height = pageSize.h * scale;
@@ -43,7 +61,7 @@ export function PageView({
         height,
       }
     : {
-        ...background.style,
+        backgroundColor: "#FFFFFF",
         width,
         height,
       };
@@ -79,6 +97,30 @@ export function PageView({
           : undefined
       }
     >
+      {!isEndPaper ? (
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-0 overflow-hidden"
+          style={{
+            ...background.style,
+            opacity: background.opacity,
+            filter:
+              background.blur > 0
+                ? `blur(${Math.max(0.5, background.blur * scale * 0.35)}px)`
+                : undefined,
+            transform: background.blur > 0 ? "scale(1.06)" : undefined,
+          }}
+        >
+          {bgImgUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={bgImgUrl}
+              alt=""
+              className="h-full w-full object-cover"
+            />
+          ) : null}
+        </div>
+      ) : null}
       {elements.map((element) => (
         <ElementView
           key={element.id}

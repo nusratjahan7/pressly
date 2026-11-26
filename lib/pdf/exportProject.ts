@@ -6,7 +6,12 @@ import type {
   StickerElement,
   TextElement,
 } from "@/types";
-import { getBackground, type BackgroundPattern } from "@/lib/backgrounds";
+import {
+  resolvePageBackground,
+  type BackgroundPattern,
+  type ResolvedPageBackground,
+} from "@/lib/backgrounds";
+import { getPatternTile } from "@/lib/konva/patternTiles";
 import { fetchFontBytesForPdf } from "@/lib/fonts";
 import { buildCssFilterString, resolveMediaUrl } from "@/lib/mediaStorage";
 import { getQrMatrix } from "@/lib/qr";
@@ -153,6 +158,72 @@ async function loadImageElement(src: string): Promise<HTMLImageElement> {
     image.onerror = () => reject(new Error("Unable to load image"));
     image.src = resolved;
   });
+}
+
+async function rasterizeRichBackground(
+  background: ResolvedPageBackground,
+  widthMm: number,
+  heightMm: number,
+): Promise<string | null> {
+  try {
+    const wPx = Math.min(MAX_RASTER_EDGE, Math.max(120, Math.round((widthMm / 25.4) * 180)));
+    const hPx = Math.min(MAX_RASTER_EDGE, Math.max(120, Math.round((heightMm / 25.4) * 180)));
+    const scale = wPx / Math.max(1, widthMm);
+
+    const canvas = document.createElement("canvas");
+    canvas.width = wPx;
+    canvas.height = hPx;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return null;
+
+    ctx.fillStyle = "#FFFFFF";
+    ctx.fillRect(0, 0, wPx, hPx);
+
+    ctx.save();
+    ctx.globalAlpha = background.opacity;
+    if (background.blur > 0) {
+      ctx.filter = `blur(${Math.max(0.5, background.blur * (scale * 0.35))}px)`;
+    }
+
+    if (background.gradient) {
+      const { start, end } = getGradientPoints(wPx, hPx, background.gradient.angle, false);
+      const grad = ctx.createLinearGradient(start.x, start.y, end.x, end.y);
+      grad.addColorStop(0, background.gradient.from);
+      grad.addColorStop(1, background.gradient.to);
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, wPx, hPx);
+    } else {
+      ctx.fillStyle = background.baseColor;
+      ctx.fillRect(0, 0, wPx, hPx);
+    }
+
+    if (background.pdfPattern) {
+      const tile = getPatternTile(background.pdfPattern, scale, 1);
+      if (tile) {
+        const pat = ctx.createPattern(tile, "repeat");
+        if (pat) {
+          ctx.fillStyle = pat;
+          ctx.fillRect(0, 0, wPx, hPx);
+        }
+      }
+    }
+
+    if (background.imageSrc) {
+      const img = await loadImageElement(background.imageSrc);
+      const ratio = Math.max(
+        wPx / Math.max(1, img.naturalWidth),
+        hPx / Math.max(1, img.naturalHeight),
+      );
+      const dw = img.naturalWidth * ratio;
+      const dh = img.naturalHeight * ratio;
+      ctx.drawImage(img, (wPx - dw) / 2, (hPx - dh) / 2, dw, dh);
+    }
+
+    ctx.restore();
+    return canvas.toDataURL("image/png");
+  } catch {
+    return null;
+  }
 }
 
 async function rasterizeImage(
@@ -478,24 +549,50 @@ export async function createProjectPdf(
 
   for (const page of exportPages) {
     const pdfPage: PdfPage = document.addPage([mediaWidth, mediaHeight]);
-    const background = getBackground(page.backgroundId);
-    const backgroundRgb = hexToRgb(background.baseColor);
-    if (backgroundRgb) {
-      pdfPage.drawRectangle({
-        x: 0,
-        y: 0,
-        width: mediaWidth,
-        height: mediaHeight,
-        color: backgroundRgb,
-      });
-    }
-    if (background.pdfPattern) {
-      drawPattern(
-        pdfPage,
-        background.pdfPattern,
-        mediaWidth,
-        mediaHeight,
+    const background = resolvePageBackground(page);
+    const needsRichBgRaster =
+      Boolean(background.gradient) ||
+      Boolean(background.imageSrc) ||
+      background.opacity < 1 ||
+      background.blur > 0 ||
+      (background.pdfPattern &&
+        !["dots", "ruled", "grid", "hatch"].includes(background.pdfPattern.kind));
+
+    if (needsRichBgRaster) {
+      const bgUrl = await rasterizeRichBackground(
+        background,
+        project.pageSize.w + bleedMm * 2,
+        project.pageSize.h + bleedMm * 2,
       );
+      const b64 = bgUrl?.split(",")[1];
+      if (b64) {
+        const png = await document.embedPng(b64);
+        pdfPage.drawImage(png, {
+          x: 0,
+          y: 0,
+          width: mediaWidth,
+          height: mediaHeight,
+        });
+      }
+    } else {
+      const backgroundRgb = hexToRgb(background.baseColor);
+      if (backgroundRgb) {
+        pdfPage.drawRectangle({
+          x: 0,
+          y: 0,
+          width: mediaWidth,
+          height: mediaHeight,
+          color: backgroundRgb,
+        });
+      }
+      if (background.pdfPattern) {
+        drawPattern(
+          pdfPage,
+          background.pdfPattern,
+          mediaWidth,
+          mediaHeight,
+        );
+      }
     }
 
     const leftPartner = rightToLeftPartner.get(page.id);

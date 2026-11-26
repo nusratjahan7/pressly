@@ -8,6 +8,9 @@ export function getCacheKey(page: Page, pageSize: PageSize, width: number) {
   return [
     page.id,
     page.backgroundId,
+    page.background
+      ? `${page.background.kind}:${page.background.color}:${page.background.gradient?.from ?? ""}:${page.background.gradient?.to ?? ""}:${page.background.gradient?.angle ?? 0}:${page.background.patternId ?? ""}:${page.background.imageSrc ?? ""}:${page.background.opacity ?? 1}:${page.background.blur ?? 0}`
+      : "",
     page.isEndPaper ? "ep" : "pg",
     page.locked ? "lk" : "ed",
     width,

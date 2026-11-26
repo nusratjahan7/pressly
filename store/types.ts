@@ -1,4 +1,11 @@
-import type { BindingType, Element, MediaAsset, PageSize, Project } from "@/types";
+import type {
+  BindingType,
+  Element,
+  MediaAsset,
+  PageBackground,
+  PageSize,
+  Project,
+} from "@/types";
 import type { LayoutDefinition } from "@/lib/layouts";
 import type { PageTemplate } from "@/lib/templates";
 
@@ -87,6 +94,11 @@ export interface PagesSlice {
   setPageBackground: (
     pageId: string,
     backgroundId: string,
+    options?: { commit?: boolean },
+  ) => void;
+  setPagesBackground: (
+    pageIds: string[],
+    patch: { backgroundId?: string; background?: PageBackground },
     options?: { commit?: boolean },
   ) => void;
   applyPageTemplate: (

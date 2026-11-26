@@ -6,7 +6,7 @@ import type { Page, Project } from "@/types";
 import type { Spread } from "@/lib/spreads";
 import { getEditablePageCount } from "@/lib/spreads";
 import { getSpineWidth } from "@/lib/binding";
-import { getBackground } from "@/lib/backgrounds";
+import { resolvePageBackground } from "@/lib/backgrounds";
 import { PageView } from "@/components/editor/canvas/PageView";
 import { cn } from "@/lib/cn";
 
@@ -90,7 +90,7 @@ export function Book3DPreview({
   const frontCover =
     coverPages.find((page) => page.coverSide === "front") ?? coverPages[1];
   const coverColor = backCover
-    ? getBackground(backCover.backgroundId).baseColor
+    ? resolvePageBackground(backCover).baseColor
     : "#122056";
 
   const leftPage = pages[spread.pageIndices[0] ?? -1];

@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Group, Rect, Text } from "react-konva";
 import type { Element, Page, PageSize } from "@/types";
-import { getBackground } from "@/lib/backgrounds";
+import { resolvePageBackground } from "@/lib/backgrounds";
 import {
   findLayoutGutters,
   getLargestEmptyFrameId,
@@ -78,7 +78,7 @@ export function PageNode({
   onFrameDragMove,
   onFrameDragEndSwap,
 }: PageNodeProps) {
-  const background = getBackground(page.backgroundId);
+  const background = resolvePageBackground(page);
   const inset = getSafeMarginInset(pageSize);
   const isEndPaper = Boolean(page.isEndPaper);
   const isLocked = Boolean(page.locked || isEndPaper);

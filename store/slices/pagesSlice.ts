@@ -1,6 +1,12 @@
 import type { StateCreator } from "zustand";
 import type { EditorStore, PagesSlice } from "@/store/types";
-import type { ImageElement, MediaAsset, Page, TextElement } from "@/types";
+import type {
+  ImageElement,
+  MediaAsset,
+  Page,
+  PageBackground,
+  TextElement,
+} from "@/types";
 import { createPage } from "@/lib/project";
 import { createId } from "@/lib/id";
 import { canAddSpread, getBinding } from "@/lib/binding";
@@ -231,7 +237,12 @@ export const createPagesSlice: StateCreator<
 
   setPageBackground: (pageId, backgroundId, options) => {
     const page = get().project.pages.find((candidate) => candidate.id === pageId);
-    if (!page || page.isEndPaper || page.locked || page.backgroundId === backgroundId) {
+    if (
+      !page ||
+      page.isEndPaper ||
+      page.locked ||
+      (page.backgroundId === backgroundId && !page.background)
+    ) {
       return;
     }
     if (options?.commit !== false) get().pushHistory();
@@ -240,7 +251,35 @@ export const createPagesSlice: StateCreator<
         ...state.project,
         pages: state.project.pages.map((candidate) =>
           candidate.id === pageId
-            ? { ...candidate, backgroundId }
+            ? { ...candidate, backgroundId, background: undefined }
+            : candidate,
+        ),
+      },
+    }));
+  },
+
+  setPagesBackground: (pageIds, patch, options) => {
+    if (pageIds.length === 0) return;
+    const idSet = new Set(pageIds);
+    const state = get();
+    const targets = state.project.pages.filter(
+      (p) => idSet.has(p.id) && !p.isEndPaper && !p.locked,
+    );
+    if (targets.length === 0) return;
+
+    if (options?.commit !== false) get().pushHistory();
+    const targetIds = new Set(targets.map((t) => t.id));
+    set((current) => ({
+      project: {
+        ...current.project,
+        pages: current.project.pages.map((candidate) =>
+          targetIds.has(candidate.id)
+            ? {
+                ...candidate,
+                backgroundId: patch.backgroundId ?? candidate.backgroundId,
+                background:
+                  "background" in patch ? patch.background : candidate.background,
+              }
             : candidate,
         ),
       },

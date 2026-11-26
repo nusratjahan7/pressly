@@ -3,7 +3,7 @@
 import { useCallback, useMemo, useState } from "react";
 import { Group, Layer, Line, Rect, Stage, Text } from "react-konva";
 import type { Element, Page, PageSize } from "@/types";
-import { getBackground } from "@/lib/backgrounds";
+import { resolvePageBackground } from "@/lib/backgrounds";
 import { getLargestEmptyFrameId } from "@/lib/layouts";
 import { getPageOffsetX, getSpreadLayout } from "@/lib/konva/geometry";
 import { useEditorStore } from "@/store";
@@ -197,7 +197,7 @@ export function SpreadStage({
 
   const spine = layout.spineX;
   const hairline = Math.max(0.03, 0.6 / Math.max(scale, 0.0001));
-  const spineBackground = pages[0] ? getBackground(pages[0].backgroundId) : null;
+  const spineBackground = pages[0] ? resolvePageBackground(pages[0]) : null;
   const spineColor = spineBackground?.baseColor ?? "#122056";
   const spineTextColor =
     spineBackground?.tone === "dark"

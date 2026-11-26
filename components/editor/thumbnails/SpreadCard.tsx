@@ -6,7 +6,7 @@ import { CSS } from "@dnd-kit/utilities";
 import { GripVertical, Lock } from "lucide-react";
 import type { Page, PageSize } from "@/types";
 import type { Spread } from "@/lib/spreads";
-import { getBackground } from "@/lib/backgrounds";
+import { resolvePageBackground } from "@/lib/backgrounds";
 import { getShortSpreadLabel } from "@/lib/spreads";
 import { PageThumbnail } from "@/components/editor/thumbnails/PageThumbnail";
 import { cn } from "@/lib/cn";
@@ -60,7 +60,7 @@ export const SpreadCard = forwardRef<HTMLButtonElement, SpreadCardProps>(
 
     const showFadedBlankHalf = !isCover && spreadPages.length === 1;
     const spineColor = spreadPages[0]
-      ? getBackground(spreadPages[0].backgroundId).baseColor
+      ? resolvePageBackground(spreadPages[0]).baseColor
       : "#122056";
     const spineThumbWidth =
       isCover && spineWidth > 0

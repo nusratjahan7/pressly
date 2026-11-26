@@ -203,9 +203,35 @@ export interface PageLayoutMeta {
   marginMm: number;
 }
 
+export type PageBackgroundKind =
+  | "solid"
+  | "gradient"
+  | "pattern"
+  | "paper"
+  | "image";
+
+export interface PageBackground {
+  kind: PageBackgroundKind;
+  color: string;
+  gradient?: {
+    from: string;
+    to: string;
+    angle: number;
+  };
+  patternId?: string;
+  imageSrc?: string;
+  imageAlt?: string;
+  /** 0..1 layer opacity over paper base (default 1). */
+  opacity?: number;
+  /** Gaussian blur in px (default 0). */
+  blur?: number;
+}
+
 export interface Page {
   id: string;
   backgroundId: string;
+  /** Optional rich page background override (custom solid, gradient, paper/pattern, uploaded image, opacity & blur). */
+  background?: PageBackground;
   elements: Element[];
   /**
    * End papers are glued to the inside of the cover. They are part of the

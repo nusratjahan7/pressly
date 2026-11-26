@@ -1,5 +1,5 @@
 import type { Page, PageSize } from "@/types";
-import { getBackground } from "@/lib/backgrounds";
+import { resolvePageBackground } from "@/lib/backgrounds";
 import { PageView } from "@/components/editor/canvas/PageView";
 import { cn } from "@/lib/cn";
 
@@ -43,7 +43,7 @@ export function SpreadView({
   const pageWidth = pageSize.w * scale;
   const pageHeight = pageSize.h * scale;
   const spinePx = isCover && spineWidth > 0 ? Math.max(4, spineWidth * scale) : 0;
-  const spineBg = items[0] ? getBackground(items[0].page.backgroundId) : null;
+  const spineBg = items[0] ? resolvePageBackground(items[0].page) : null;
   const spineColor = spineBg?.baseColor ?? "#122056";
   const spineCreaseClass =
     spineBg?.tone === "dark" ? "border-white/15" : "border-[#122056]/15";
