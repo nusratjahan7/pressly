@@ -46,6 +46,8 @@ export const createUiSlice: StateCreator<EditorStore, [], [], UiSlice> = (
     previewOpen: false,
     exportOpen: false,
     dashboardOpen: false,
+    shortcutsOpen: false,
+    tourOpen: false,
     showSafeMargin: true,
     showBleed: false,
     pageSetupOpen: false,
@@ -142,6 +144,12 @@ export const createUiSlice: StateCreator<EditorStore, [], [], UiSlice> = (
 
   setDashboardOpen: (open) =>
     set((state) => ({ ui: { ...state.ui, dashboardOpen: open } })),
+
+  setShortcutsOpen: (open) =>
+    set((state) => ({ ui: { ...state.ui, shortcutsOpen: open } })),
+
+  setTourOpen: (open) =>
+    set((state) => ({ ui: { ...state.ui, tourOpen: open } })),
 
   setShowSafeMargin: (show) =>
     set((state) => ({ ui: { ...state.ui, showSafeMargin: show } })),

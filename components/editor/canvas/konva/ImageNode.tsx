@@ -190,8 +190,17 @@ export function ImageNode({
   const clipFunc =
     radius > 0
       ? (context: Konva.Context) => {
+          const r = Math.min(radius, width / 2, height / 2);
           context.beginPath();
-          context.roundRect(0, 0, width, height, radius);
+          context.moveTo(r, 0);
+          context.lineTo(width - r, 0);
+          context.quadraticCurveTo(width, 0, width, r);
+          context.lineTo(width, height - r);
+          context.quadraticCurveTo(width, height, width - r, height);
+          context.lineTo(r, height);
+          context.quadraticCurveTo(0, height, 0, height - r);
+          context.lineTo(0, r);
+          context.quadraticCurveTo(0, 0, r, 0);
           context.closePath();
         }
       : undefined;

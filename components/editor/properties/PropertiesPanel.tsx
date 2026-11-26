@@ -1471,7 +1471,10 @@ export function PropertiesPanel() {
 
   if (isCollapsed) {
     return (
-      <div className="pointer-events-none absolute bottom-3 right-3 z-30 flex items-center justify-end">
+      <div
+        data-tour="inspector"
+        className="pointer-events-none absolute bottom-3 right-3 z-30 flex items-center justify-end"
+      >
         <div className="pointer-events-auto flex max-w-[calc(100vw-24px)] items-center gap-1 rounded-full border border-line bg-surface/95 py-1 pl-3 pr-1.5 shadow-panel backdrop-blur">
           <button
             type="button"
@@ -1507,6 +1510,7 @@ export function PropertiesPanel() {
     <AnimatePresence>
       <motion.aside
         key="right-inspector-panel"
+        data-tour="inspector"
         initial={{ opacity: 0, x: 18 }}
         animate={{ opacity: 1, x: 0 }}
         exit={{ opacity: 0, x: 18 }}

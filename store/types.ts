@@ -7,7 +7,6 @@ import type {
   Project,
 } from "@/types";
 import type { LayoutDefinition } from "@/lib/layouts";
-import type { PageTemplate } from "@/lib/templates";
 import type { EditorCommand } from "@/lib/history/commands";
 
 export type SidebarTab =
@@ -34,6 +33,8 @@ export interface UiState {
   previewOpen: boolean;
   exportOpen: boolean;
   dashboardOpen: boolean;
+  shortcutsOpen: boolean;
+  tourOpen: boolean;
   showSafeMargin: boolean;
   showBleed: boolean;
   pageSetupOpen: boolean;
@@ -111,10 +112,6 @@ export interface PagesSlice {
     pageIds: string[],
     patch: { backgroundId?: string; background?: PageBackground },
     options?: { commit?: boolean },
-  ) => void;
-  applyPageTemplate: (
-    pageId: string,
-    template: Pick<PageTemplate, "backgroundId" | "build">,
   ) => void;
   applyMagazineTemplate: (
     templateId: string,
@@ -246,6 +243,8 @@ export interface UiSlice {
   setPreviewOpen: (open: boolean) => void;
   setExportOpen: (open: boolean) => void;
   setDashboardOpen: (open: boolean) => void;
+  setShortcutsOpen: (open: boolean) => void;
+  setTourOpen: (open: boolean) => void;
   setShowSafeMargin: (show: boolean) => void;
   setShowBleed: (show: boolean) => void;
   openPageSetup: (mode?: "setup" | "new") => void;

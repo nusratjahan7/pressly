@@ -48,8 +48,8 @@
   --surface-muted: #f3f4fc;
   --surface-sunken: #eaecf9;
   --ink: #122056;
-  --ink-muted: #565e8e;
-  --ink-subtle: #858cb8;
+  --ink-muted: #4b5486;
+  --ink-subtle: #5d6593;
   --line: #e3e5f5;
   --line-strong: #ccd0ea;
   --accent: #5b65dc;
@@ -75,8 +75,8 @@
   --surface-muted: #1e2450;
   --surface-sunken: #080b1c;
   --ink: #eef0fe;
-  --ink-muted: #a6acd8;
-  --ink-subtle: #7379a8;
+  --ink-muted: #b0b6e0;
+  --ink-subtle: #8e95c2;
   --line: #262c58;
   --line-strong: #363d76;
   --accent: #8b93f0;
@@ -120,6 +120,7 @@
 
   button {
     cursor: pointer;
+    touch-action: manipulation;
   }
 
   button:disabled,

@@ -19,14 +19,38 @@ interface CacheEntry {
  * of URLs lives at module scope so switching spreads or reopening the strip
  * never re-renders unchanged pages.
  */
-const urlCache = new Map<string, string>();
+const urlCache = new Map<string, CacheEntry>();
 
 function storeUrl(pageId: string, entry: CacheEntry) {
   if (urlCache.size >= MAX_CACHE) {
     const oldest = urlCache.keys().next().value;
     if (oldest !== undefined) urlCache.delete(oldest);
   }
-  urlCache.set(pageId, entry.url);
+  urlCache.set(pageId, entry);
+}
+
+const MAX_CONCURRENT_SNAPSHOTS = 2;
+let activeSnapshots = 0;
+const snapshotQueue: Array<() => void> = [];
+
+function runWithSnapshotSlot<T>(task: () => Promise<T>): Promise<T> {
+  return new Promise<T>((resolve, reject) => {
+    const start = () => {
+      activeSnapshots += 1;
+      void task()
+        .then(resolve, reject)
+        .finally(() => {
+          activeSnapshots = Math.max(0, activeSnapshots - 1);
+          const next = snapshotQueue.shift();
+          next?.();
+        });
+    };
+    if (activeSnapshots < MAX_CONCURRENT_SNAPSHOTS) {
+      start();
+    } else {
+      snapshotQueue.push(start);
+    }
+  });
 }
 
 /**
@@ -523,42 +547,48 @@ export function usePageSnapshot(
   page: Page,
   pageSize: PageSize,
   width = SNAPSHOT_WIDTH,
+  enabled = true,
 ): string | null {
   const key = getCacheKey(page, pageSize, width);
   const existing = urlCache.get(page.id);
   const [url, setUrl] = useState<string | null>(
-    existing && existing === key ? existing : null,
+    existing && existing.key === key ? existing.url : null,
   );
 
   useEffect(() => {
     const cached = urlCache.get(page.id);
-    if (cached === key) {
-      setUrl(cached);
+    if (cached && cached.key === key) {
+      setUrl(cached.url);
       return;
     }
+    if (!enabled) return;
 
+    let cancelled = false;
     // Debounce so dragging an element does not rasterise on every frame.
     const timer = setTimeout(() => {
-      void renderPageSnapshot(page, pageSize, width)
+      void runWithSnapshotSlot(() => renderPageSnapshot(page, pageSize, width))
         .then((next) => {
           if (!next) return;
           storeUrl(page.id, { url: next, key });
-          setUrl(next);
+          if (!cancelled) setUrl(next);
         })
         .catch(() => {
           /* a failed thumbnail is not worth interrupting the editor */
         });
-    }, 220);
+    }, 180);
 
-    return () => clearTimeout(timer);
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
     // The key already encodes every input that affects the raster.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [key, page.id]);
+  }, [key, page.id, enabled]);
 
   // Invalidate eagerly when content changes so stale pixels never linger.
   useEffect(() => {
     const cached = urlCache.get(page.id);
-    if (cached && cached !== key) setUrl(null);
+    if (cached && cached.key !== key) setUrl(null);
   }, [key, page.id]);
 
   return url;

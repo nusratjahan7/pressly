@@ -7,9 +7,12 @@ export interface ToastAction {
   onAct: () => void;
 }
 
+export type ToastTone = "default" | "error" | "success";
+
 export interface Toast {
   id: string;
   message: string;
+  tone?: ToastTone;
   action?: ToastAction;
 }
 
@@ -27,14 +30,19 @@ let counter = 0;
 export const useToastStore = create<ToastStore>((set, get) => ({
   toasts: [],
 
-  pushToast: ({ message, action, durationMs = DEFAULT_DURATION_MS }) => {
+  pushToast: ({
+    message,
+    tone = "default",
+    action,
+    durationMs = DEFAULT_DURATION_MS,
+  }) => {
     const id = `toast-${Date.now()}-${counter++}`;
     // Only one toast at a time: a second undo target would be ambiguous.
     for (const [existingId, timer] of timers) {
       clearTimeout(timer);
       timers.delete(existingId);
     }
-    set({ toasts: [{ id, message, action }] });
+    set({ toasts: [{ id, message, tone, action }] });
 
     const timer = setTimeout(() => {
       get().dismissToast(id);

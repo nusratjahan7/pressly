@@ -24,6 +24,7 @@ export function SidebarRail() {
 
   return (
     <aside
+      data-tour="libraries"
       aria-label="Editor libraries"
       className="relative z-30 flex w-[76px] shrink-0 flex-col items-center gap-1 border-r border-line bg-surface py-3"
     >

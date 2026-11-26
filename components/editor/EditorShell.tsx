@@ -13,6 +13,8 @@ import { ThumbnailStrip } from "@/components/editor/thumbnails/ThumbnailStrip";
 import { PreviewDialog } from "@/components/editor/PreviewDialog";
 import { ExportDialog } from "@/components/editor/ExportDialog";
 import { ProjectsDashboardModal } from "@/components/editor/dashboard/ProjectsDashboardModal";
+import { KeyboardShortcutsModal } from "@/components/editor/KeyboardShortcutsModal";
+import { OnboardingTour } from "@/components/editor/OnboardingTour";
 import { PageSetupDialog } from "@/components/editor/setup/PageSetupDialog";
 import { ToastViewport } from "@/components/ui/toast";
 import { KeyboardShortcuts } from "@/components/editor/KeyboardShortcuts";
@@ -50,6 +52,8 @@ export function EditorShell() {
       <PreviewDialog />
       <ExportDialog />
       <ProjectsDashboardModal />
+      <KeyboardShortcutsModal />
+      <OnboardingTour />
       <PageSetupDialog
         open={pageSetupOpen}
         mode={pageSetupMode}

@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import type { ImageElement, MediaAsset } from "@/types";
 import { useEditorStore } from "@/store";
+import { useToastStore } from "@/store/toasts";
 import { useActivePage } from "@/store/selectors";
 import { getPageLabel } from "@/lib/spreads";
 import { createImageElement } from "@/lib/elements";
@@ -275,11 +276,11 @@ export function ImagesPanel() {
 
     if (failed.length > 0) {
       const hasHeic = failed.some((n) => /\.(heic|heif)$/i.test(n));
-      setError(
-        hasHeic
-          ? `This browser cannot decode HEIC natively (${failed[0]}). Try JPG, PNG, or WebP.`
-          : `Could not decode ${failed.join(", ")}.`,
-      );
+      const msg = hasHeic
+        ? `This browser cannot decode HEIC natively (${failed[0]}). Try JPG, PNG, or WebP.`
+        : `Could not decode ${failed.join(", ")}.`;
+      setError(msg);
+      useToastStore.getState().pushToast({ tone: "error", message: msg });
     }
   };
 

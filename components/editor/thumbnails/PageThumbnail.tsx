@@ -1,9 +1,10 @@
 "use client";
 
-import { useMemo } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { Element, Page, PageSize } from "@/types";
 import { usePageSnapshot } from "@/components/editor/thumbnails/usePageSnapshot";
 import { PageView } from "@/components/editor/canvas/PageView";
+import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/cn";
 
 interface PageThumbnailProps {
@@ -15,9 +16,9 @@ interface PageThumbnailProps {
 }
 
 /**
- * Shows a cached canvas snapshot of the page. Until the snapshot exists (or if
- * rasterising fails) it falls back to the live DOM renderer, so the strip is
- * never blank.
+ * Shows a cached canvas snapshot of the page. Rasterisation is gated by
+ * IntersectionObserver so 40+ page issues only render thumbnails near the
+ * viewport without blocking initial startup or scrolling.
  */
 export function PageThumbnail({
   page,
@@ -26,6 +27,30 @@ export function PageThumbnail({
   extraElements = [],
   className,
 }: PageThumbnailProps) {
+  const hostRef = useRef<HTMLDivElement>(null);
+  const [nearViewport, setNearViewport] = useState(
+    () => typeof IntersectionObserver === "undefined",
+  );
+
+  useEffect(() => {
+    const node = hostRef.current;
+    if (!node || typeof IntersectionObserver === "undefined") {
+      setNearViewport(true);
+      return;
+    }
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((entry) => entry.isIntersecting)) {
+          setNearViewport(true);
+          observer.disconnect();
+        }
+      },
+      { rootMargin: "240px" },
+    );
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, []);
+
   const width = Math.round((pageSize.w / pageSize.h) * height);
   const effectivePage = useMemo(
     () =>
@@ -34,18 +59,33 @@ export function PageThumbnail({
         : page,
     [page, extraElements],
   );
-  const url = usePageSnapshot(effectivePage, pageSize, width);
+  const url = usePageSnapshot(effectivePage, pageSize, width, nearViewport);
+
+  if (!nearViewport) {
+    return (
+      <div
+        ref={hostRef}
+        aria-hidden="true"
+        className={cn("overflow-hidden bg-surface-muted", className)}
+        style={{ width, height }}
+      >
+        <Skeleton className="h-full w-full" rounded="sm" />
+      </div>
+    );
+  }
 
   if (!url) {
     return (
-      <PageView
-        page={page}
-        pageSize={pageSize}
-        scale={height / pageSize.h}
-        extraElements={extraElements}
-        decorative
-        className={className}
-      />
+      <div ref={hostRef} className={cn("shrink-0", className)}>
+        <PageView
+          page={page}
+          pageSize={pageSize}
+          scale={height / pageSize.h}
+          extraElements={extraElements}
+          decorative
+          className={className}
+        />
+      </div>
     );
   }
 
@@ -56,6 +96,8 @@ export function PageThumbnail({
       alt=""
       width={width}
       height={height}
+      loading="lazy"
+      decoding="async"
       draggable={false}
       aria-hidden="true"
       className={cn("block select-none object-cover", className)}

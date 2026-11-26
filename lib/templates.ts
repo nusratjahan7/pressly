@@ -29,19 +29,6 @@ export interface MagazineTemplate {
   project: Project;
 }
 
-export interface TemplateContext {
-  projectName: string;
-  pageSize: PageSize;
-}
-
-export interface PageTemplate {
-  id: string;
-  name: string;
-  description: string;
-  backgroundId: string;
-  build: (context: TemplateContext) => Element[];
-}
-
 export const MAGAZINE_TEMPLATES: MagazineTemplate[] =
   templatesData as MagazineTemplate[];
 

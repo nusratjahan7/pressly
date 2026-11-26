@@ -1,6 +1,6 @@
 "use client";
 
-import { Download, Eye, FolderOpen, Redo2, Type, Undo2 } from "lucide-react";
+import { Download, Eye, FolderOpen, HelpCircle, Redo2, Type, Undo2 } from "lucide-react";
 import { useEditorStore } from "@/store";
 import { useActivePage, useCanRedo, useCanUndo } from "@/store/selectors";
 import { createTextElement } from "@/lib/elements";
@@ -33,6 +33,7 @@ export function EditorToolbar() {
     (state) => state.history.future[0]?.label ?? "",
   );
   const setDashboardOpen = useEditorStore((state) => state.setDashboardOpen);
+  const setShortcutsOpen = useEditorStore((state) => state.setShortcutsOpen);
   const setPreviewOpen = useEditorStore((state) => state.setPreviewOpen);
   const setExportOpen = useEditorStore((state) => state.setExportOpen);
   const addElement = useEditorStore((state) => state.addElement);
@@ -139,6 +140,15 @@ export function EditorToolbar() {
         >
           <span className="hidden xl:inline">A+ Text</span>
         </Button>
+        <IconButton
+          icon={HelpCircle}
+          label="Keyboard shortcuts"
+          tooltip="Shortcuts & tour"
+          shortcut="?"
+          size="sm"
+          onClick={() => setShortcutsOpen(true)}
+          tooltipSide="bottom"
+        />
         <ThemeToggle />
         <Button
           variant="secondary"
@@ -155,6 +165,7 @@ export function EditorToolbar() {
           size="sm"
           className="h-8 shrink-0 gap-1.5 whitespace-nowrap px-2.5 sm:px-3"
           leadingIcon={Download}
+          data-tour="export"
           onClick={() => setExportOpen(true)}
           aria-label="Download PDF"
         >

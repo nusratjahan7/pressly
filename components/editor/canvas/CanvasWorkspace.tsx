@@ -26,6 +26,7 @@ import {
   saveOriginalMediaBlob,
 } from "@/lib/mediaStorage";
 import { ensureGoogleFontLoaded } from "@/lib/fonts";
+import { useToastStore } from "@/store/toasts";
 import { createId } from "@/lib/id";
 import {
   getFitScale,
@@ -544,7 +545,10 @@ export function CanvasWorkspace() {
         ]);
         placePhoto({ src, alt });
       } catch {
-        /* ignore undecodable file */
+        useToastStore.getState().pushToast({
+          tone: "error",
+          message: `Could not decode "${imageFile.name}". Try JPG, PNG, or WebP.`,
+        });
       }
     }
   };
@@ -607,8 +611,9 @@ export function CanvasWorkspace() {
   return (
     <section
       ref={ref}
+      data-tour="canvas"
       aria-label="Canvas workspace"
-      className="dotted-canvas relative min-h-0 flex-1 overflow-hidden overscroll-contain"
+      className="dotted-canvas relative min-h-0 flex-1 touch-none overflow-hidden overscroll-contain"
       style={{ cursor }}
       onDragOver={handleWorkspaceDragOver}
       onDragLeave={() => setDropHighlightPageId(null)}

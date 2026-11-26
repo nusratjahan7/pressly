@@ -482,8 +482,18 @@ async function rasterizeImage(
       context.fillRect(0, 0, targetWidth, targetHeight);
     }
     if (radiusPx > 0) {
+      const r = Math.min(radiusPx, targetWidth / 2, targetHeight / 2);
       context.beginPath();
-      context.roundRect(0, 0, targetWidth, targetHeight, radiusPx);
+      context.moveTo(r, 0);
+      context.lineTo(targetWidth - r, 0);
+      context.quadraticCurveTo(targetWidth, 0, targetWidth, r);
+      context.lineTo(targetWidth, targetHeight - r);
+      context.quadraticCurveTo(targetWidth, targetHeight, targetWidth - r, targetHeight);
+      context.lineTo(r, targetHeight);
+      context.quadraticCurveTo(0, targetHeight, 0, targetHeight - r);
+      context.lineTo(0, r);
+      context.quadraticCurveTo(0, 0, r, 0);
+      context.closePath();
       context.clip();
     }
 
@@ -507,14 +517,22 @@ async function rasterizeImage(
       context.strokeStyle = element.borderColor;
       context.lineWidth = bw;
       if (radiusPx > 0) {
+        const bx = bw / 2;
+        const by = bw / 2;
+        const bW = targetWidth - bw;
+        const bH = targetHeight - bw;
+        const r = Math.min(radiusPx, bW / 2, bH / 2);
         context.beginPath();
-        context.roundRect(
-          bw / 2,
-          bw / 2,
-          targetWidth - bw,
-          targetHeight - bw,
-          radiusPx,
-        );
+        context.moveTo(bx + r, by);
+        context.lineTo(bx + bW - r, by);
+        context.quadraticCurveTo(bx + bW, by, bx + bW, by + r);
+        context.lineTo(bx + bW, by + bH - r);
+        context.quadraticCurveTo(bx + bW, by + bH, bx + bW - r, by + bH);
+        context.lineTo(bx + r, by + bH);
+        context.quadraticCurveTo(bx, by + bH, bx, by + bH - r);
+        context.lineTo(bx, by + r);
+        context.quadraticCurveTo(bx, by, bx + r, by);
+        context.closePath();
         context.stroke();
       } else {
         context.strokeRect(bw / 2, bw / 2, targetWidth - bw, targetHeight - bw);
@@ -528,24 +546,131 @@ async function rasterizeImage(
   }
 }
 
+async function tryFetchRawPngBytes(src: string): Promise<Uint8Array | null> {
+  try {
+    const resolved = await resolveMediaUrl(src);
+    if (!resolved) return null;
+    const response = await fetch(resolved);
+    if (!response.ok) return null;
+    const buf = new Uint8Array(await response.arrayBuffer());
+    // Verify PNG magic signature: 89 50 4E 47 0D 0A 1A 0A
+    if (
+      buf.length >= 8 &&
+      buf[0] === 0x89 &&
+      buf[1] === 0x50 &&
+      buf[2] === 0x4e &&
+      buf[3] === 0x47
+    ) {
+      return buf;
+    }
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+function readPngHeaderSize(
+  bytes: Uint8Array,
+): { width: number; height: number } | null {
+  if (bytes.length < 24) return null;
+  const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+  return {
+    width: view.getUint32(16, false),
+    height: view.getUint32(20, false),
+  };
+}
+
+function sharpenUpscaledStickerCanvas(
+  canvas: HTMLCanvasElement,
+  upscaleRatio: number,
+) {
+  if (upscaleRatio <= 1.15) return;
+  const width = canvas.width;
+  const height = canvas.height;
+  const ctx = canvas.getContext("2d");
+  if (!ctx || !("filter" in ctx)) return;
+
+  const blurCanvas = document.createElement("canvas");
+  blurCanvas.width = width;
+  blurCanvas.height = height;
+  const blurCtx = blurCanvas.getContext("2d");
+  if (!blurCtx) return;
+
+  const radiusPx = Math.min(2.4, Math.max(1.1, upscaleRatio * 0.42));
+  blurCtx.filter = `blur(${radiusPx.toFixed(2)}px)`;
+  blurCtx.drawImage(canvas, 0, 0);
+
+  const imgData = ctx.getImageData(0, 0, width, height);
+  const orig = imgData.data;
+  const blurred = blurCtx.getImageData(0, 0, width, height).data;
+
+  const rgbGain = Math.min(1.65, 0.85 + (upscaleRatio - 1) * 0.25);
+  const alphaGain = Math.min(1.9, 1.0 + (upscaleRatio - 1) * 0.3);
+
+  for (let i = 0; i < orig.length; i += 4) {
+    const a = orig[i + 3]!;
+    const ba = blurred[i + 3]!;
+    if (a === 0 && ba === 0) continue;
+
+    // Sharpen interior RGB away from transparent edge to prevent haloing.
+    if (a > 240 && ba > 220) {
+      for (let c = 0; c < 3; c += 1) {
+        const diff = orig[i + c]! - blurred[i + c]!;
+        if (Math.abs(diff) > 2) {
+          orig[i + c] = Math.min(
+            255,
+            Math.max(0, Math.round(orig[i + c]! + rgbGain * diff)),
+          );
+        }
+      }
+    }
+
+    // Tighten alpha silhouette edge so scaled borders stay crisp without jagged steps.
+    const nextA = Math.min(255, Math.max(0, a + alphaGain * (a - ba)));
+    const norm = nextA / 255;
+    const curved =
+      norm <= 0
+        ? 0
+        : norm >= 1
+          ? 1
+          : norm < 0.5
+            ? 0.5 * Math.pow(2 * norm, 1.9)
+            : 1 - 0.5 * Math.pow(2 * (1 - norm), 1.9);
+    orig[i + 3] = Math.round(curved * 255);
+  }
+
+  ctx.putImageData(imgData, 0, 0);
+}
+
 async function rasterizeSticker(
   element: StickerElement,
   dpi: number,
 ): Promise<Uint8Array | null> {
   try {
-    const wPx = Math.min(
-      MAX_RASTER_EDGE,
-      Math.max(64, Math.round((element.width / 25.4) * dpi)),
-    );
-    const hPx = Math.min(
-      MAX_RASTER_EDGE,
-      Math.max(64, Math.round((element.height / 25.4) * dpi)),
-    );
     const definition = getSticker(element.stickerId);
+    const customAsset = element.src
+      ? null
+      : loadCustomStickers().find((c) => c.id === element.stickerId) ?? null;
     const customSrc =
       element.src ??
-      loadCustomStickers().find((c) => c.id === element.stickerId)?.src ??
+      customAsset?.src ??
       (definition.format === "png" ? definition.src : undefined);
+
+    const isSvg =
+      !customSrc ||
+      element.kind === "svg" ||
+      customAsset?.format === "svg" ||
+      /\.svg(?:$|\?)/i.test(customSrc) ||
+      /^data:image\/svg\+xml/i.test(customSrc);
+
+    const effectiveDpi = Math.max(dpi, 300);
+    const desiredW = Math.round((element.width / 25.4) * effectiveDpi);
+    const desiredH = Math.round((element.height / 25.4) * effectiveDpi);
+    const minEdge = isSvg ? 1024 : 900;
+    const boost = Math.max(1, minEdge / Math.max(1, desiredW, desiredH));
+    const maxStickerEdge = Math.min(MAX_RASTER_EDGE, 2200);
+    const wPx = Math.min(maxStickerEdge, Math.max(64, Math.round(desiredW * boost)));
+    const hPx = Math.min(maxStickerEdge, Math.max(64, Math.round(desiredH * boost)));
 
     const image = customSrc
       ? await loadImageElement(customSrc)
@@ -555,40 +680,78 @@ async function rasterizeSticker(
           )}`,
         );
 
-    const canvas = document.createElement("canvas");
-    canvas.width = wPx;
-    canvas.height = hPx;
-    const context = canvas.getContext("2d");
-    if (!context) return null;
-
     const natW = Math.max(1, image.naturalWidth || wPx);
     const natH = Math.max(1, image.naturalHeight || hPx);
-    const scale = Math.min(wPx / natW, hPx / natH);
-    const drawW = natW * scale;
-    const drawH = natH * scale;
+    const finalW = Math.min(maxStickerEdge, Math.max(wPx, natW));
+    const finalH = Math.min(maxStickerEdge, Math.max(hPx, natH));
 
-    context.save();
+    // Step 1: draw aspect-fitted artwork onto clean intermediate surface (step-up 2x if > 2x upscale).
+    const scale = Math.min(finalW / natW, finalH / natH);
+    const drawW = Math.max(1, Math.round(natW * scale));
+    const drawH = Math.max(1, Math.round(natH * scale));
+
+    const artCanvas = document.createElement("canvas");
+    artCanvas.width = finalW;
+    artCanvas.height = finalH;
+    const artCtx = artCanvas.getContext("2d");
+    if (!artCtx) return null;
+
+    artCtx.imageSmoothingEnabled = true;
+    artCtx.imageSmoothingQuality = "high";
+
+    const drawOffsetX = (finalW - drawW) / 2;
+    const drawOffsetY = (finalH - drawH) / 2;
+
+    if (!isSvg && scale > 2.2) {
+      const midW = Math.min(maxStickerEdge, Math.round(natW * 2));
+      const midH = Math.min(maxStickerEdge, Math.round(natH * 2));
+      const midCanvas = document.createElement("canvas");
+      midCanvas.width = midW;
+      midCanvas.height = midH;
+      const midCtx = midCanvas.getContext("2d");
+      if (midCtx) {
+        midCtx.imageSmoothingEnabled = true;
+        midCtx.imageSmoothingQuality = "high";
+        midCtx.drawImage(image, 0, 0, midW, midH);
+        artCtx.drawImage(midCanvas, drawOffsetX, drawOffsetY, drawW, drawH);
+      } else {
+        artCtx.drawImage(image, drawOffsetX, drawOffsetY, drawW, drawH);
+      }
+    } else {
+      artCtx.drawImage(image, drawOffsetX, drawOffsetY, drawW, drawH);
+    }
+
+    // Step 2: sharpen & edge-tighten upscaled raster stickers before shadow/flip.
+    if (!isSvg && scale > 1.15) {
+      sharpenUpscaledStickerCanvas(artCanvas, scale);
+    }
+
+    if (!element.flipX && !element.flipY && !element.shadow) {
+      const res = await canvasToEncodedBytes(artCanvas, "image/png", 1);
+      return res?.bytes ?? null;
+    }
+
+    const outCanvas = document.createElement("canvas");
+    outCanvas.width = finalW;
+    outCanvas.height = finalH;
+    const outCtx = outCanvas.getContext("2d");
+    if (!outCtx) return null;
+
+    outCtx.save();
     if (element.flipX || element.flipY) {
-      context.translate(element.flipX ? wPx : 0, element.flipY ? hPx : 0);
-      context.scale(element.flipX ? -1 : 1, element.flipY ? -1 : 1);
+      outCtx.translate(element.flipX ? finalW : 0, element.flipY ? finalH : 0);
+      outCtx.scale(element.flipX ? -1 : 1, element.flipY ? -1 : 1);
     }
     if (element.shadow) {
-      context.shadowColor = "rgba(18,32,86,0.34)";
-      context.shadowBlur = Math.max(6, Math.min(wPx, hPx) * 0.04);
-      context.shadowOffsetX = 3;
-      context.shadowOffsetY = 5;
+      outCtx.shadowColor = "rgba(18,32,86,0.34)";
+      outCtx.shadowBlur = Math.max(6, Math.min(finalW, finalH) * 0.04);
+      outCtx.shadowOffsetX = Math.max(2, finalW * 0.015);
+      outCtx.shadowOffsetY = Math.max(3, finalH * 0.025);
     }
-    context.imageSmoothingEnabled = true;
-    context.imageSmoothingQuality = "high";
-    context.drawImage(
-      image,
-      (wPx - drawW) / 2,
-      (hPx - drawH) / 2,
-      drawW,
-      drawH,
-    );
-    context.restore();
-    const res = await canvasToEncodedBytes(canvas, "image/png", 1);
+    outCtx.drawImage(artCanvas, 0, 0);
+    outCtx.restore();
+
+    const res = await canvasToEncodedBytes(outCanvas, "image/png", 1);
     return res?.bytes ?? null;
   } catch {
     return null;
@@ -784,7 +947,9 @@ export async function createProjectPdf(
     label: "Loading PDF engine & font subsets…",
   });
 
-  const { PDFDocument, StandardFonts, degrees } = await import("pdf-lib");
+  const { PDFDocument, StandardFonts, LineCapStyle, degrees } = await import(
+    "pdf-lib"
+  );
   const fontkit = (await import("@pdf-lib/fontkit")).default;
   throwIfAborted(signal);
 
@@ -1334,6 +1499,116 @@ export async function createProjectPdf(
 
         if (element.type === "sticker") {
           const sticker = element as StickerElement;
+          const definition = getSticker(sticker.stickerId);
+          const customAsset = sticker.src
+            ? null
+            : loadCustomStickers().find((c) => c.id === sticker.stickerId) ?? null;
+          const customSrc =
+            sticker.src ??
+            customAsset?.src ??
+            (definition.format === "png" ? definition.src : undefined);
+
+          // 1. Built-in SVG stickers without shadow/flip render as sharp vector PDF paths.
+          if (
+            !customSrc &&
+            definition.format === "svg" &&
+            !sticker.shadow &&
+            !sticker.flipX &&
+            !sticker.flipY
+          ) {
+            const vbParts = definition.viewBox.trim().split(/\s+/).map(Number);
+            const vbW =
+              vbParts.length === 4 && Number.isFinite(vbParts[2])
+                ? Math.max(1, vbParts[2]!)
+                : 24;
+            const vbH =
+              vbParts.length === 4 && Number.isFinite(vbParts[3])
+                ? Math.max(1, vbParts[3]!)
+                : 24;
+            const svgScale = Math.min(widthPt / vbW, heightPt / vbH);
+            const boxW = vbW * svgScale;
+            const boxH = vbH * svgScale;
+            const centerX = originX + widthPt / 2;
+            const centerY = topY - heightPt / 2;
+            const theta = (-sticker.rotation * Math.PI) / 180;
+            const cos = Math.cos(theta);
+            const sin = Math.sin(theta);
+            const topLeftX =
+              centerX + (-boxW / 2) * cos - (boxH / 2) * sin;
+            const topLeftY =
+              centerY + (-boxW / 2) * sin + (boxH / 2) * cos;
+
+            for (const p of definition.paths) {
+              const fillColor =
+                p.fill === "currentColor"
+                  ? hexToRgb(sticker.color)
+                  : p.fill && p.fill !== "none"
+                    ? hexToRgb(p.fill)
+                    : null;
+              const strokeColor =
+                p.stroke === "currentColor"
+                  ? hexToRgb(sticker.color)
+                  : p.stroke && p.stroke !== "none"
+                    ? hexToRgb(p.stroke)
+                    : null;
+              const pathOpacity = sticker.opacity * (p.opacity ?? 1);
+              pdfPage.drawSvgPath(p.d, {
+                x: topLeftX,
+                y: topLeftY,
+                scale: svgScale,
+                rotate: rotation,
+                color: fillColor ?? undefined,
+                borderColor: strokeColor ?? undefined,
+                borderWidth: strokeColor ? p.strokeWidth ?? 0 : 0,
+                borderLineCap: LineCapStyle.Round,
+                opacity: pathOpacity,
+                borderOpacity: pathOpacity,
+              });
+            }
+            continue;
+          }
+
+          // 2. Embed raw PNG bytes directly ONLY when source PNG already meets target print resolution.
+          if (customSrc && !sticker.shadow && !sticker.flipX && !sticker.flipY) {
+            const rawPng = await tryFetchRawPngBytes(customSrc);
+            const rawSize = rawPng ? readPngHeaderSize(rawPng) : null;
+            const reqPxW = (sticker.width / 25.4) * Math.max(dpi, 220);
+            const reqPxH = (sticker.height / 25.4) * Math.max(dpi, 220);
+            if (
+              rawPng &&
+              rawSize &&
+              rawSize.width >= reqPxW * 0.85 &&
+              rawSize.height >= reqPxH * 0.85
+            ) {
+              const png = await document.embedPng(rawPng);
+              const fitScale = Math.min(
+                widthPt / Math.max(1, png.width),
+                heightPt / Math.max(1, png.height),
+              );
+              const drawW = png.width * fitScale;
+              const drawH = png.height * fitScale;
+              const x = originX + (widthPt - drawW) / 2;
+              const y = topY - heightPt + (heightPt - drawH) / 2;
+              const origin = rotatedOrigin(
+                x,
+                y,
+                drawW,
+                drawH,
+                sticker.rotation,
+              );
+              pdfPage.drawImage(png, {
+                x: origin.x,
+                y: origin.y,
+                width: drawW,
+                height: drawH,
+                opacity: sticker.opacity,
+                rotate: rotation,
+              });
+              continue;
+            }
+          }
+
+          // 3. Fallback: supersampled off-screen PNG rasterization (for shadows, flips, custom SVGs).
           const bytes = await rasterizeSticker(sticker, dpi);
           if (!bytes) continue;
           const png = await document.embedPng(bytes);

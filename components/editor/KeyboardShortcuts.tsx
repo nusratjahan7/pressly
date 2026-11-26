@@ -18,10 +18,18 @@ export function KeyboardShortcuts() {
       }
 
       const state = useEditorStore.getState();
+
+      if (event.key === "?" && !event.metaKey && !event.ctrlKey && !event.altKey) {
+        event.preventDefault();
+        state.setShortcutsOpen(!state.ui.shortcutsOpen);
+        return;
+      }
+
       if (
         state.ui.previewOpen ||
         state.ui.exportOpen ||
         state.ui.dashboardOpen ||
+        state.ui.shortcutsOpen ||
         state.ui.pageSetupOpen ||
         document.querySelector('[role="dialog"][aria-modal="true"]')
       ) {

@@ -359,47 +359,6 @@ export const createPagesSlice: StateCreator<
     }));
   },
 
-  applyPageTemplate: (pageId, template) => {
-    const state = get();
-    const page = state.project.pages.find((candidate) => candidate.id === pageId);
-    if (!page || page.isEndPaper || page.locked) return;
-
-    const elements = template.build({
-      projectName: state.project.name,
-      pageSize: state.project.pageSize,
-    });
-
-    const nextPages = state.project.pages.map((candidate) =>
-      candidate.id === pageId
-        ? {
-            ...candidate,
-            backgroundId: template.backgroundId,
-            background: undefined,
-            elements,
-            layoutMeta: undefined,
-          }
-        : candidate,
-    );
-
-    state.executeCommand(
-      createSpreadCommand({
-        type: "apply-page-template",
-        label: "Apply page template",
-        beforePages: state.project.pages,
-        afterPages: nextPages,
-        beforeSpreadIndex: state.ui.spreadIndex,
-        afterSpreadIndex: state.ui.spreadIndex,
-        beforeSelection: state.selection,
-        afterSelection: {
-          pageId,
-          elementId: null,
-          elementIds: [],
-          spineSelected: false,
-        },
-      }),
-    );
-  },
-
   applyMagazineTemplate: (templateId, mode, options) => {
     const template = getMagazineTemplate(templateId);
     if (!template) return;
