@@ -23,7 +23,7 @@ export interface ResolutionReport {
 
 const dimensionCache = new Map<string, { w: number; h: number } | null>();
 
-async function loadDimensions(
+export async function loadImageDimensions(
   src: string,
 ): Promise<{ w: number; h: number } | null> {
   const cached = dimensionCache.get(src);
@@ -82,8 +82,9 @@ export async function analyzePrintResolution(
 ): Promise<ResolutionReport> {
   const targets: { element: ImageElement; pageId: string }[] = [];
   for (const page of project.pages) {
+    if (page.isEndPaper) continue;
     for (const element of page.elements) {
-      if (element.type === "image" && element.src) {
+      if (element.type === "image" && element.src && !element.hidden) {
         targets.push({ element, pageId: page.id });
       }
     }
@@ -91,7 +92,7 @@ export async function analyzePrintResolution(
 
   const measured = await Promise.all(
     targets.map(async ({ element, pageId }) => {
-      const size = await loadDimensions(element.src);
+      const size = await loadImageDimensions(element.src);
       if (!size) return { element, pageId, dpi: null as number | null };
       return {
         element,

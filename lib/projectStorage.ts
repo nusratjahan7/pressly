@@ -5,6 +5,7 @@ import type { Page, Project } from "@/types";
 import { createId } from "@/lib/id";
 import {
   extractAssetId,
+  getOriginalMediaBlob,
   isMediaRef,
   saveOriginalMediaBlob,
 } from "@/lib/mediaStorage";
@@ -18,7 +19,6 @@ import { getEditablePageCount } from "@/lib/spreads";
 import { slugify } from "@/lib/cn";
 
 export const documentStore = createStore("pressly", "documents");
-const mediaOriginalsStore = createStore("pressly", "media-originals");
 
 const LEGACY_PROJECT_KEY = "pressly.project.v1";
 const INDEX_KEY = "pressly.projects.index.v1";
@@ -384,7 +384,7 @@ export async function exportProjectToJsonFile(project: Project): Promise<void> {
     const assetId = extractAssetId(ref);
     if (!assetId) continue;
     try {
-      const blob = await get<Blob>(assetId, mediaOriginalsStore);
+      const blob = await getOriginalMediaBlob(assetId);
       if (blob) {
         embeddedMedia[ref] = await blobToDataUrl(blob);
       }

@@ -36,7 +36,7 @@ type SortOrder = "earliest" | "latest" | "name";
 
 function isSupportedImageFile(file: File): boolean {
   if (file.type.startsWith("image/")) return true;
-  return /\.(jpe?g|png|webp|gif|heic|heif)$/i.test(file.name);
+  return /\.(jpe?g|png|webp|gif|heic|heif|avif|bmp|svg)$/i.test(file.name);
 }
 
 function AssetThumbnail({
@@ -377,7 +377,7 @@ export function ImagesPanel() {
       <input
         ref={inputRef}
         type="file"
-        accept="image/png,image/jpeg,image/webp,image/gif,image/heic,image/heif,.heic,.heif"
+        accept="image/*,.heic,.heif"
         multiple
         className="sr-only"
         aria-label="Choose images"

@@ -2,7 +2,7 @@
 
 import { createStore, del, get, set } from "idb-keyval";
 
-const mediaStore = createStore("pressly", "media-originals");
+const mediaStore = createStore("pressly-media", "media-originals");
 const IDB_PREFIX = "idb:";
 
 /** In-memory cache of resolved Object URLs for `idb:<id>` references. */
@@ -19,6 +19,13 @@ export function isMediaRef(src: string | undefined | null): boolean {
 
 export function extractAssetId(src: string): string | null {
   return isMediaRef(src) ? src.slice(IDB_PREFIX.length) : null;
+}
+
+/** Reads an original media Blob from IndexedDB. */
+export async function getOriginalMediaBlob(
+  assetId: string,
+): Promise<Blob | undefined> {
+  return get<Blob>(assetId, mediaStore);
 }
 
 /** Saves a full-resolution original image Blob in IndexedDB. */
@@ -94,7 +101,9 @@ export async function resolveMediaUrl(src: string): Promise<string> {
 export function loadDecodedImage(src: string): Promise<HTMLImageElement> {
   return new Promise((resolve, reject) => {
     const img = new window.Image();
-    img.crossOrigin = "anonymous";
+    if (/^https?:\/\//i.test(src)) {
+      img.crossOrigin = "anonymous";
+    }
     img.onload = () => resolve(img);
     img.onerror = () => reject(new Error("Unable to decode image"));
     img.src = src;
