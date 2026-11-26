@@ -14,10 +14,10 @@ export interface PageTemplate {
   build: (context: TemplateContext) => Element[];
 }
 
-const INK = "#1C1B19";
-const PAPER = "#F6F1E7";
-const MUTED = "#6B675F";
-const ACCENT = "#C2542D";
+const INK = "#122056";
+const PAPER = "#FFFFFF";
+const MUTED = "#565E8E";
+const ACCENT = "#5B65DC";
 
 export const PAGE_TEMPLATES: PageTemplate[] = [
   {
@@ -143,7 +143,7 @@ export const PAGE_TEMPLATES: PageTemplate[] = [
     id: "chapter-opener",
     name: "Chapter opener",
     description: "A dark chapter divider with a numeral.",
-    backgroundId: "black",
+    backgroundId: "ink",
     build: ({ projectName, pageSize }) => {
       const { w, h } = pageSize;
       const m = Math.round(Math.min(w, h) * 0.095);
@@ -213,7 +213,7 @@ export const PAGE_TEMPLATES: PageTemplate[] = [
     id: "statement",
     name: "Statement",
     description: "A full-colour page built around one idea.",
-    backgroundId: "clay",
+    backgroundId: "indigo",
     build: ({ projectName, pageSize }) => {
       const { w, h } = pageSize;
       const m = Math.round(Math.min(w, h) * 0.095);

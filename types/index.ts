@@ -26,6 +26,12 @@ export interface ElementBase {
   opacity: number;
   locked: boolean;
   zIndex: number;
+  /**
+   * When true the element is rendered across both pages of its spread instead
+   * of being clipped to its own page. Opt-in only, so elements never cross the
+   * spine by accident.
+   */
+  spanSpread?: boolean;
 }
 
 export interface ImageElement extends ElementBase {

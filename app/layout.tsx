@@ -20,8 +20,8 @@ export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#f2f0eb" },
-    { media: "(prefers-color-scheme: dark)", color: "#111110" },
+    { media: "(prefers-color-scheme: light)", color: "#fafafd" },
+    { media: "(prefers-color-scheme: dark)", color: "#0b0f24" },
   ],
 };
 
@@ -39,7 +39,9 @@ export default function RootLayout({
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
       </head>
-      <body className="font-sans antialiased">{children}</body>
+      <body className="font-sans antialiased" suppressHydrationWarning>
+        {children}
+      </body>
     </html>
   );
 }

@@ -315,7 +315,7 @@ export async function createProjectPdf(
             rotate: rotation,
           });
         } else if (shape.shape === "line") {
-          const lineColor = stroke ?? fill ?? hexToRgb("#1C1B19");
+          const lineColor = stroke ?? fill ?? hexToRgb("#122056");
           if (lineColor) {
             const centerX = x + widthPt / 2;
             const centerY = y + heightPt / 2;
@@ -366,7 +366,7 @@ export async function createProjectPdf(
         const lineHeight = fontSize * Math.max(0.8, text.lineHeight);
         const maxWidth = widthPt;
         const lines = wrapTextLines(text.text, font, fontSize, maxWidth);
-        const color = hexToRgb(text.color) ?? hexToRgb("#1C1B19")!;
+        const color = hexToRgb(text.color) ?? hexToRgb("#122056")!;
         const centerX = originX + widthPt / 2;
         const centerY = topY - heightPt / 2;
         const theta = (-text.rotation * Math.PI) / 180;

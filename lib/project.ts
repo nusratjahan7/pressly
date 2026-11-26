@@ -30,7 +30,7 @@ export function createSeedProject(): Project {
         fontSize: 8,
         fontWeight: 600,
         letterSpacing: 2.2,
-        color: "#6B675F",
+        color: "#565E8E",
         lineHeight: 1,
       },
     ),
@@ -56,7 +56,7 @@ export function createSeedProject(): Project {
         fontSize: 9,
         fontWeight: 500,
         letterSpacing: 1.6,
-        color: "#6B675F",
+        color: "#565E8E",
         lineHeight: 1,
       },
     ),
@@ -76,7 +76,7 @@ export function createSeedProject(): Project {
         fontSize: 8,
         fontWeight: 600,
         letterSpacing: 3,
-        color: "#6B675F",
+        color: "#565E8E",
         lineHeight: 1,
       },
     ),
@@ -91,7 +91,7 @@ export function createSeedProject(): Project {
         fontSize: 8,
         fontWeight: 500,
         letterSpacing: 2.4,
-        color: "#6B675F",
+        color: "#565E8E",
         align: "center",
         lineHeight: 1,
       },
@@ -119,7 +119,7 @@ export function createSeedProject(): Project {
         fontSize: 9,
         fontWeight: 500,
         letterSpacing: 3,
-        color: "#6B675F",
+        color: "#565E8E",
         align: "center",
         lineHeight: 1,
       },
@@ -135,7 +135,7 @@ export function createSeedProject(): Project {
     pages.push(createPage("paper"));
   }
 
-  const backCover = createPage("black");
+  const backCover = createPage("ink");
   backCover.elements = [
     createTextElement(
       { x: 20, y: 244, width: 170, height: 10, zIndex: 0 },
@@ -144,7 +144,7 @@ export function createSeedProject(): Project {
         fontSize: 20,
         fontWeight: 500,
         letterSpacing: -0.4,
-        color: "#F6F1E7",
+        color: "#FFFFFF",
         lineHeight: 1,
       },
     ),
@@ -155,7 +155,7 @@ export function createSeedProject(): Project {
         fontSize: 8,
         fontWeight: 400,
         letterSpacing: 1.2,
-        color: "#A7A198",
+        color: "#A6ACD8",
         lineHeight: 1,
       },
     ),

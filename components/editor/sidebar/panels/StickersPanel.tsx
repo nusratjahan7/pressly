@@ -63,7 +63,7 @@ export function StickersPanel() {
                   aria-label={`Add ${sticker.name} sticker to ${pageLabel}`}
                   className="group flex aspect-square flex-col items-center justify-center gap-1.5 rounded-field border border-line bg-surface transition-[border-color,box-shadow,background-color] duration-150 hover:border-line-strong hover:bg-surface-muted hover:shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-surface"
                 >
-                  <span className="flex size-10 items-center justify-center rounded-[7px] border border-line/70 bg-[#F6F1E7] shadow-[inset_0_1px_2px_rgba(28,27,25,0.06)]">
+                  <span className="flex size-10 items-center justify-center rounded-[7px] border border-line/70 bg-[#FAFAFD] shadow-[inset_0_1px_2px_rgba(18,32,86,0.06)]">
                     <span
                       className="block size-6 transition-transform duration-200 ease-out-soft group-hover:-rotate-6 group-hover:scale-110"
                       style={{ color }}
@@ -94,14 +94,14 @@ export function StickersPanel() {
                 <button
                   type="button"
                   onClick={() => setColor(DEFAULT_TEXT_COLOR)}
-                  aria-label="Use charcoal"
-                  className="size-4 rounded-full border border-line-strong bg-[#1C1B19]"
+                  aria-label="Use ink"
+                  className="size-4 rounded-full border border-line-strong bg-[#122056]"
                 />
                 <button
                   type="button"
                   onClick={() => setColor(DEFAULT_ACCENT)}
                   aria-label="Use accent"
-                  className="size-4 rounded-full border border-line-strong bg-[#C2542D]"
+                  className="size-4 rounded-full border border-line-strong bg-[#5B65DC]"
                 />
               </div>
             </div>

@@ -2,11 +2,12 @@
 
 import { Minus, Plus } from "lucide-react";
 import { useEditorStore } from "@/store";
+import { ZOOM_LIMITS } from "@/store/slices/uiSlice";
 import { Dropdown, type DropdownItem } from "@/components/ui/dropdown";
 import { IconButton } from "@/components/ui/icon-button";
 import { Button } from "@/components/ui/button";
 
-const ZOOM_PRESETS = [50, 75, 100, 125, 150, 200];
+const ZOOM_PRESETS = [25, 50, 75, 100, 125, 150, 200, 300];
 
 export function ZoomControl() {
   const zoom = useEditorStore((state) => state.ui.zoom);
@@ -26,12 +27,11 @@ export function ZoomControl() {
       shortcut: "100%",
       onSelect: resetZoom,
     },
-    ...
-    ZOOM_PRESETS.map((value) => ({
+    ...ZOOM_PRESETS.map((value) => ({
       id: `zoom-${value}`,
       label: `${value}%`,
       checked: percent === value,
-      separatorBefore: value === 50,
+      separatorBefore: value === 25,
       onSelect: () => setZoom(value / 100),
     })),
   ];
@@ -48,7 +48,7 @@ export function ZoomControl() {
         size="sm"
         variant="ghost"
         onClick={zoomOut}
-        disabled={zoom <= 0.4}
+        disabled={zoom <= ZOOM_LIMITS.min}
         className="size-7 rounded-[6px]"
       />
       <Dropdown
@@ -73,7 +73,7 @@ export function ZoomControl() {
         size="sm"
         variant="ghost"
         onClick={zoomIn}
-        disabled={zoom >= 2.5}
+        disabled={zoom >= ZOOM_LIMITS.max}
         className="size-7 rounded-[6px]"
       />
     </div>

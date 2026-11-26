@@ -1,66 +1,97 @@
 "use client";
 
-import { useMemo } from "react";
+import { useEffect, useMemo, useRef } from "react";
+import dynamic from "next/dynamic";
 import { useEditorStore } from "@/store";
 import { useCurrentSpread, useSpreads } from "@/store/selectors";
 import { useElementSize } from "@/lib/useElementSize";
 import { formatDimensions, formatNumber } from "@/lib/units";
-import { getPageLabel, getSpreadLabel } from "@/lib/spreads";
-import { SpreadView } from "@/components/editor/canvas/SpreadView";
+import { getSpreadLabel } from "@/lib/spreads";
+import { getFitScale, getSpreadLayout } from "@/lib/konva/geometry";
+import { useStagePanZoom } from "@/components/editor/canvas/konva/useStagePanZoom";
 import { EmptyState } from "@/components/editor/EmptyState";
 import { Button } from "@/components/ui/button";
 
+// Konva touches `window` at import time, so the stage must never run on the server.
+const SpreadStage = dynamic(
+  () =>
+    import("@/components/editor/canvas/konva/SpreadStage").then(
+      (module) => module.SpreadStage,
+    ),
+  { ssr: false },
+);
+
 export function CanvasWorkspace() {
   const project = useEditorStore((state) => state.project);
-  const zoom = useEditorStore((state) => state.ui.zoom);
   const spreadIndex = useEditorStore((state) => state.ui.spreadIndex);
-  const selectedElementId = useEditorStore(
-    (state) => state.selection.elementId,
-  );
+  const showSafeMargin = useEditorStore((state) => state.ui.showSafeMargin);
+  const showBleed = useEditorStore((state) => state.ui.showBleed);
+  const setViewCenter = useEditorStore((state) => state.setViewCenter);
   const addSpread = useEditorStore((state) => state.addSpread);
   const { spread } = useCurrentSpread();
   const spreads = useSpreads();
-  const { ref, size } = useElementSize<HTMLDivElement>();
+  const { ref, size, element } = useElementSize<HTMLDivElement>();
 
-  const items = useMemo(() => {
-    if (!spread) return [];
-    return spread.pageIndices
-      .map((pageIndex) => {
-        const page = project.pages[pageIndex];
-        if (!page) return null;
-        return {
-          page,
-          pageIndex,
-          label: getPageLabel(pageIndex, project.pages),
-        };
-      })
-      .filter((item): item is NonNullable<typeof item> => Boolean(item));
-  }, [spread, project.pages]);
+  const pages = useMemo(
+    () =>
+      spread?.pageIndices
+        .map((pageIndex) => project.pages[pageIndex])
+        .filter((page): page is NonNullable<typeof page> => Boolean(page)) ?? [],
+    [spread, project.pages],
+  );
+
+  const layout = useMemo(
+    () => getSpreadLayout(project.pageSize, pages.length),
+    [project.pageSize, pages.length],
+  );
+
+  const fitScale = useMemo(
+    () => getFitScale(layout, size.width, size.height),
+    [layout, size.width, size.height],
+  );
+
+  // Recentre only when the spread itself changes, not on every container resize
+  // (which would fight a pan the user just made).
+  const centredFor = useRef<string | null>(null);
+  useEffect(() => {
+    if (size.width === 0 || size.height === 0) return;
+    const key = `${spreadIndex}:${layout.spreadWidth}x${layout.spreadHeight}`;
+    if (centredFor.current === key) return;
+    centredFor.current = key;
+    setViewCenter({
+      x: layout.spreadWidth / 2,
+      y: layout.spreadHeight / 2,
+    });
+  }, [
+    size.width,
+    size.height,
+    spreadIndex,
+    layout.spreadWidth,
+    layout.spreadHeight,
+    setViewCenter,
+  ]);
+
+  const { transform, cursor, handlers } = useStagePanZoom({
+    container: element,
+    layout,
+    fitScale,
+    containerWidth: size.width,
+    containerHeight: size.height,
+  });
 
   const spreadLabel = spread
     ? getSpreadLabel(spread, project.pages)
     : "No spread";
 
-  const fitScale = useMemo(() => {
-    if (size.width === 0 || size.height === 0) return 0;
-    const horizontalPadding = size.width < 640 ? 48 : 128;
-    const verticalPadding = size.height < 560 ? 48 : 112;
-    const availableWidth = Math.max(80, size.width - horizontalPadding);
-    const availableHeight = Math.max(80, size.height - verticalPadding - 30);
-    const spreadWidth = project.pageSize.w * Math.max(1, items.length);
-    return Math.min(
-      availableWidth / spreadWidth,
-      availableHeight / project.pageSize.h,
-    );
-  }, [size, items.length, project.pageSize]);
-
-  const scale = Math.max(0.01, fitScale * zoom);
+  const ready = pages.length > 0 && size.width > 0 && size.height > 0;
 
   return (
     <section
       ref={ref}
       aria-label="Canvas workspace"
-      className="dotted-canvas relative min-h-0 flex-1 overflow-auto overscroll-contain"
+      className="dotted-canvas relative min-h-0 flex-1 overflow-hidden overscroll-contain"
+      style={{ cursor }}
+      {...handlers}
     >
       <div className="pointer-events-none absolute left-4 top-4 z-10 flex max-w-[calc(100%-2rem)] items-center gap-2 rounded-full border border-line bg-surface/85 px-3 py-1.5 text-[11px] shadow-sm backdrop-blur">
         <span className="truncate font-semibold text-ink">{spreadLabel}</span>
@@ -77,24 +108,20 @@ export function CanvasWorkspace() {
         </span>
       </div>
 
-      <div className="flex min-h-full w-max min-w-full items-center justify-center p-6 sm:p-10">
-        {items.length > 0 ? (
-          <div
-            className="transition-opacity duration-200"
-            style={{
-              opacity: size.width > 0 ? 1 : 0,
-            }}
-          >
-            <SpreadView
-              items={items}
-              pageSize={project.pageSize}
-              scale={scale}
-              variant="edit"
-              selectedElementId={selectedElementId}
-              showLabels
-            />
-          </div>
-        ) : (
+      {ready ? (
+        <SpreadStage
+          width={size.width}
+          height={size.height}
+          panX={transform.panX}
+          panY={transform.panY}
+          scale={transform.scale}
+          pageSize={project.pageSize}
+          pages={pages}
+          showSafeMargin={showSafeMargin}
+          showBleed={showBleed}
+        />
+      ) : pages.length === 0 ? (
+        <div className="flex h-full items-center justify-center">
           <EmptyState
             title="A blank issue"
             description="Add a spread to begin composing your publication."
@@ -104,8 +131,8 @@ export function CanvasWorkspace() {
               </Button>
             }
           />
-        )}
-      </div>
+        </div>
+      ) : null}
 
       <div
         aria-hidden="true"

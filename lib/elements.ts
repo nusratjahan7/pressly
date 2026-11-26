@@ -27,8 +27,8 @@ const geometryDefaults = {
   locked: false,
 } satisfies Pick<Element, "zIndex" | "rotation" | "opacity" | "locked">;
 
-export const DEFAULT_TEXT_COLOR = "#1C1B19";
-export const DEFAULT_ACCENT = "#C2542D";
+export const DEFAULT_TEXT_COLOR = "#122056";
+export const DEFAULT_ACCENT = "#5B65DC";
 export const FONT_FAMILY = "Inter";
 
 export function createTextElement(
@@ -89,7 +89,7 @@ export function createShapeElement(
     zIndex: geometry.zIndex ?? 0,
     shape: "rectangle",
     fill: "transparent",
-    stroke: "#C2542D",
+    stroke: "#5B65DC",
     strokeWidth: 0.5,
     radius: 0,
     ...patch,

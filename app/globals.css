@@ -42,57 +42,57 @@
 }
 
 :root {
-  --canvas: #f2f0eb;
+  --canvas: #e9ebf7;
   --surface: #ffffff;
   --surface-raised: #ffffff;
-  --surface-muted: #f8f6f2;
-  --surface-sunken: #eae6de;
-  --ink: #1c1b19;
-  --ink-muted: #6b675f;
-  --ink-subtle: #9a948a;
-  --line: #e6e1d7;
-  --line-strong: #d1cabe;
-  --accent: #c2542d;
-  --accent-strong: #a84524;
-  --accent-soft: #f8e9e2;
-  --accent-ink: #fffaf7;
-  --danger: #b23a2d;
-  --danger-soft: #f8e7e4;
+  --surface-muted: #f3f4fc;
+  --surface-sunken: #eaecf9;
+  --ink: #122056;
+  --ink-muted: #565e8e;
+  --ink-subtle: #858cb8;
+  --line: #e3e5f5;
+  --line-strong: #ccd0ea;
+  --accent: #5b65dc;
+  --accent-strong: #4650c4;
+  --accent-soft: #eeeffd;
+  --accent-ink: #ffffff;
+  --danger: #c0392b;
+  --danger-soft: #fbeceb;
   --paper: #ffffff;
-  --workspace-dot: #d9d3c8;
+  --workspace-dot: #c9cee9;
 
-  --elevation-sm: 0 1px 2px rgb(28 27 25 / 0.06);
-  --elevation-panel: 0 24px 64px -30px rgb(28 27 25 / 0.3), 0 2px 8px -2px rgb(28 27 25 / 0.05);
-  --elevation-paper: 0 20px 44px -22px rgb(28 27 25 / 0.3), 0 2px 6px rgb(28 27 25 / 0.05);
-  --elevation-floating: 0 12px 32px -14px rgb(28 27 25 / 0.26), 0 1px 3px rgb(28 27 25 / 0.06);
-  --scrollbar: #cec7ba;
+  --elevation-sm: 0 1px 2px rgb(18 32 86 / 0.07);
+  --elevation-panel: 0 24px 64px -30px rgb(18 32 86 / 0.28), 0 2px 8px -2px rgb(18 32 86 / 0.06);
+  --elevation-paper: 0 20px 44px -22px rgb(18 32 86 / 0.26), 0 2px 6px rgb(18 32 86 / 0.06);
+  --elevation-floating: 0 12px 32px -14px rgb(18 32 86 / 0.24), 0 1px 3px rgb(18 32 86 / 0.07);
+  --scrollbar: #c7cbe4;
 }
 
 .dark {
-  --canvas: #111110;
-  --surface: #191918;
-  --surface-raised: #1f1f1d;
-  --surface-muted: #222220;
-  --surface-sunken: #0c0c0b;
-  --ink: #f3efe7;
-  --ink-muted: #a7a198;
-  --ink-subtle: #777168;
-  --line: #2b2a26;
-  --line-strong: #3c3a33;
-  --accent: #e2764d;
-  --accent-strong: #ee8a63;
-  --accent-soft: #35221a;
-  --accent-ink: #1d100b;
-  --danger: #ef7b6e;
-  --danger-soft: #33201d;
-  --paper: #fbfaf7;
-  --workspace-dot: #2b2a26;
+  --canvas: #0b0f24;
+  --surface: #131834;
+  --surface-raised: #1a2044;
+  --surface-muted: #1e2450;
+  --surface-sunken: #080b1c;
+  --ink: #eef0fe;
+  --ink-muted: #a6acd8;
+  --ink-subtle: #7379a8;
+  --line: #262c58;
+  --line-strong: #363d76;
+  --accent: #8b93f0;
+  --accent-strong: #a3aaf6;
+  --accent-soft: #1e2450;
+  --accent-ink: #0b0f24;
+  --danger: #f07d7d;
+  --danger-soft: #331e2e;
+  --paper: #fafafd;
+  --workspace-dot: #262c58;
 
-  --elevation-sm: 0 1px 2px rgb(0 0 0 / 0.35);
-  --elevation-panel: 0 28px 70px -30px rgb(0 0 0 / 0.75), 0 2px 8px -2px rgb(0 0 0 / 0.4);
-  --elevation-paper: 0 22px 48px -24px rgb(0 0 0 / 0.8), 0 2px 8px rgb(0 0 0 / 0.35);
-  --elevation-floating: 0 16px 40px -16px rgb(0 0 0 / 0.7), 0 1px 3px rgb(0 0 0 / 0.4);
-  --scrollbar: #45423b;
+  --elevation-sm: 0 1px 2px rgb(0 0 0 / 0.4);
+  --elevation-panel: 0 28px 70px -30px rgb(0 0 0 / 0.8), 0 2px 8px -2px rgb(0 0 0 / 0.45);
+  --elevation-paper: 0 22px 48px -24px rgb(0 0 0 / 0.85), 0 2px 8px rgb(0 0 0 / 0.4);
+  --elevation-floating: 0 16px 40px -16px rgb(0 0 0 / 0.75), 0 1px 3px rgb(0 0 0 / 0.45);
+  --scrollbar: #3a4180;
 }
 
 @layer base {
@@ -173,11 +173,12 @@
 @layer utilities {
   .dotted-canvas {
     background-color: var(--canvas);
-    background-image:
-      radial-gradient(circle at 1px 1px, var(--workspace-dot) 1px, transparent 1.4px),
-      radial-gradient(ellipse 80% 70% at 50% 40%, color-mix(in oklab, var(--surface) 65%, transparent), transparent 75%);
-    background-size: 24px 24px, 100% 100%;
-    background-position: 0 0, center;
+    background-image: radial-gradient(
+      circle at 1px 1px,
+      var(--workspace-dot) 1px,
+      transparent 1.4px
+    );
+    background-size: 24px 24px;
   }
 
   .no-scrollbar {

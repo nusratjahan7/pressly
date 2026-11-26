@@ -55,60 +55,59 @@ const pattern = (
 
 export const BACKGROUNDS: BackgroundDefinition[] = [
   solid("paper", "Paper", "#FFFFFF", "light"),
-  solid("ivory", "Ivory", "#F6F1E7", "light"),
-  solid("sand", "Sand", "#E8DFCF", "light"),
-  solid("fog", "Fog", "#DDD8CE", "light"),
-  solid("sage", "Sage", "#CAD2C2", "light"),
-  solid("blush", "Blush", "#EAD5CD", "light"),
-  solid("clay", "Clay", "#BF6444", "dark"),
-  solid("black", "Ink", "#1F1E1B", "dark"),
-  solid("graphite", "Graphite", "#45433D", "dark"),
-  solid("midnight", "Midnight", "#26313B", "dark"),
+  solid("ivory", "Ivory", "#FAFAFD", "light"),
+  solid("lilac", "Lilac", "#EEEFFD", "light"),
+  solid("mist", "Mist", "#DDE0F7", "light"),
+  solid("periwinkle", "Periwinkle", "#C3C8F2", "light"),
+  solid("indigo", "Indigo", "#5B65DC", "dark"),
+  solid("ink", "Ink", "#122056", "dark"),
+  solid("navy", "Navy", "#1A2A6B", "dark"),
+  solid("slate", "Slate", "#4A5183", "dark"),
   pattern(
     "dotted",
     "Dotted ivory",
-    "#FAF7F0",
+    "#FAFAFD",
     "light",
     {
       backgroundImage:
-        "radial-gradient(circle at 1px 1px, rgba(28,27,25,0.16) 1px, transparent 1.2px)",
+        "radial-gradient(circle at 1px 1px, rgba(18,32,86,0.16) 1px, transparent 1.2px)",
       backgroundSize: "8px 8px",
     },
-    { kind: "dots", color: "#1C1B19", opacity: 0.16, spacingMm: 2.4 },
+    { kind: "dots", color: "#122056", opacity: 0.16, spacingMm: 2.4 },
   ),
   pattern(
     "ruled",
     "Ruled",
-    "#FBF8F1",
+    "#FCFCFE",
     "light",
     {
       backgroundImage:
-        "repeating-linear-gradient(to bottom, transparent 0, transparent 9px, rgba(28,27,25,0.09) 9px, rgba(28,27,25,0.09) 10px)",
+        "repeating-linear-gradient(to bottom, transparent 0, transparent 9px, rgba(18,32,86,0.09) 9px, rgba(18,32,86,0.09) 10px)",
     },
-    { kind: "ruled", color: "#1C1B19", opacity: 0.09, spacingMm: 3 },
+    { kind: "ruled", color: "#122056", opacity: 0.09, spacingMm: 3 },
   ),
   pattern(
     "grid",
     "Grid",
-    "#F8F6F0",
+    "#F9F9FD",
     "light",
     {
       backgroundImage:
-        "linear-gradient(to right, rgba(28,27,25,0.06) 1px, transparent 1px), linear-gradient(to bottom, rgba(28,27,25,0.06) 1px, transparent 1px)",
+        "linear-gradient(to right, rgba(18,32,86,0.06) 1px, transparent 1px), linear-gradient(to bottom, rgba(18,32,86,0.06) 1px, transparent 1px)",
       backgroundSize: "10px 10px",
     },
-    { kind: "grid", color: "#1C1B19", opacity: 0.06, spacingMm: 3 },
+    { kind: "grid", color: "#122056", opacity: 0.06, spacingMm: 3 },
   ),
   pattern(
     "hatch",
     "Hatch",
-    "#F2EEE5",
+    "#F4F5FC",
     "light",
     {
       backgroundImage:
-        "repeating-linear-gradient(45deg, rgba(28,27,25,0.05) 0, rgba(28,27,25,0.05) 1px, transparent 1px, transparent 7px)",
+        "repeating-linear-gradient(45deg, rgba(18,32,86,0.05) 0, rgba(18,32,86,0.05) 1px, transparent 1px, transparent 7px)",
     },
-    { kind: "hatch", color: "#1C1B19", opacity: 0.05, spacingMm: 2.5 },
+    { kind: "hatch", color: "#122056", opacity: 0.05, spacingMm: 2.5 },
   ),
 ];
 
@@ -120,4 +119,4 @@ export function getBackground(id: string | null | undefined): BackgroundDefiniti
   return backgroundMap.get(id ?? "") ?? backgroundMap.get(DEFAULT_BACKGROUND_ID)!;
 }
 
-export const LIGHT_TEXT_ON_BACKGROUND = "#F6F1E7";
+export const LIGHT_TEXT_ON_BACKGROUND = "#FFFFFF";

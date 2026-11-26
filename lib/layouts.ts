@@ -12,7 +12,7 @@ export interface LayoutPreset {
   build: (context: LayoutContext) => ShapeElement[];
 }
 
-const FRAME_STROKE = "#B9B2A6";
+const FRAME_STROKE = "#C3C8F2";
 
 function frame(
   x: number,

@@ -13,21 +13,34 @@ import { Check, ChevronDown } from "lucide-react";
 import { cn } from "@/lib/cn";
 
 const PALETTE = [
-  { value: "#1C1B19", name: "Charcoal" },
-  { value: "#6B675F", name: "Graphite" },
-  { value: "#9A948A", name: "Stone" },
+  { value: "#122056", name: "Ink" },
+  { value: "#1A2A6B", name: "Navy" },
+  { value: "#4A5183", name: "Slate" },
+  { value: "#565E8E", name: "Graphite" },
+  { value: "#858CB8", name: "Stone" },
+  { value: "#5B65DC", name: "Accent" },
+  { value: "#C3C8F2", name: "Periwinkle" },
+  { value: "#EEEFFD", name: "Lilac" },
+  { value: "#FAFAFD", name: "Mist" },
   { value: "#FFFFFF", name: "White" },
-  { value: "#F6F1E7", name: "Ivory" },
-  { value: "#E8DFCF", name: "Sand" },
-  { value: "#CAD2C2", name: "Sage" },
-  { value: "#EAD5CD", name: "Blush" },
-  { value: "#BF6444", name: "Clay" },
-  { value: "#C2542D", name: "Accent" },
-  { value: "#26313B", name: "Midnight" },
-  { value: "#45433D", name: "Umber" },
 ];
 
 const HEX_PATTERN = /^#?([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/;
+
+function isLightColor(hex: string) {
+  const raw = hex.replace("#", "");
+  const full =
+    raw.length === 3
+      ? raw
+          .split("")
+          .map((char) => char + char)
+          .join("")
+      : raw;
+  const r = parseInt(full.slice(0, 2), 16);
+  const g = parseInt(full.slice(2, 4), 16);
+  const b = parseInt(full.slice(4, 6), 16);
+  return (r * 299 + g * 587 + b * 114) / 1000 > 150;
+}
 
 function normalizeHex(value: string) {
   const raw = value.replace("#", "").trim();
@@ -270,11 +283,7 @@ export function ColorPicker({
                             <Check
                               className={cn(
                                 "size-3.5",
-                                color.value === "#FFFFFF" ||
-                                  color.value === "#F6F1E7" ||
-                                  color.value === "#E8DFCF" ||
-                                  color.value === "#CAD2C2" ||
-                                  color.value === "#EAD5CD"
+                                isLightColor(color.value)
                                   ? "text-ink"
                                   : "text-white",
                               )}
@@ -316,7 +325,7 @@ export function ColorPicker({
                             }
                           }}
                           onBlur={applyHex}
-                          placeholder="C2542D"
+                          placeholder="5B65DC"
                           spellCheck={false}
                           autoComplete="off"
                           aria-invalid={hexError ? true : undefined}

@@ -15,11 +15,15 @@ export interface UiState {
   sidebarOpen: boolean;
   thumbnailsOpen: boolean;
   zoom: number;
+  /** View centre in spread millimetres. */
+  viewCenter: { x: number; y: number };
   spreadIndex: number;
   hydrated: boolean;
   saveState: SaveState;
   previewOpen: boolean;
   exportOpen: boolean;
+  showSafeMargin: boolean;
+  showBleed: boolean;
 }
 
 export interface SelectionState {
@@ -96,11 +100,17 @@ export interface UiSlice {
   setZoom: (zoom: number) => void;
   zoomIn: () => void;
   zoomOut: () => void;
+  zoomTo: (zoom: number, center?: { x: number; y: number }) => void;
   resetZoom: () => void;
+  panBy: (dx: number, dy: number) => void;
+  setViewCenter: (center: { x: number; y: number }) => void;
+  resetView: () => void;
   setHydrated: (hydrated: boolean) => void;
   setSaveState: (state: SaveState) => void;
   setPreviewOpen: (open: boolean) => void;
   setExportOpen: (open: boolean) => void;
+  setShowSafeMargin: (show: boolean) => void;
+  setShowBleed: (show: boolean) => void;
 }
 
 export type EditorStore = ProjectSlice &

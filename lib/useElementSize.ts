@@ -26,5 +26,5 @@ export function useElementSize<T extends HTMLElement>() {
     return () => observer.disconnect();
   }, [element]);
 
-  return { ref, size };
+  return { ref, size, element };
 }
