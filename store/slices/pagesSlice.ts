@@ -1,9 +1,17 @@
 import type { StateCreator } from "zustand";
 import type { EditorStore, PagesSlice } from "@/store/types";
-import type { Page } from "@/types";
+import type { ImageElement, MediaAsset, Page, TextElement } from "@/types";
 import { createPage } from "@/lib/project";
 import { createId } from "@/lib/id";
 import { canAddSpread, getBinding } from "@/lib/binding";
+import {
+  buildPageLayoutElements,
+  buildSpreadLayoutElements,
+  computeFrameRectMm,
+  DEFAULT_FRAME_GAP_MM,
+  getLayoutById,
+  type ReflowPhoto,
+} from "@/lib/layouts";
 import { useToastStore } from "@/store/toasts";
 import {
   clampSpreadIndex,
@@ -255,11 +263,267 @@ export const createPagesSlice: StateCreator<
                 ...candidate,
                 backgroundId: template.backgroundId,
                 elements,
+                layoutMeta: undefined,
               }
             : candidate,
         ),
       },
-      selection: { pageId, elementId: null },
+      selection: { pageId, elementId: null, spineSelected: false },
     }));
+  },
+
+  applyLayout: (pageId, layout, options) => {
+    const state = get();
+    const pages = state.project.pages;
+    const pageIndex = pages.findIndex((candidate) => candidate.id === pageId);
+    if (pageIndex < 0) return;
+    const targetPage = pages[pageIndex]!;
+    if (targetPage.isEndPaper || targetPage.locked) return;
+
+    const spreads = getSpreads(pages);
+    const spread = spreads.find((s) => s.pageIndices.includes(pageIndex));
+    const pageSize = state.project.pageSize;
+
+    const mergeMediaLibrary = (
+      existingLib: MediaAsset[] | undefined,
+      photos: ReflowPhoto[],
+    ): MediaAsset[] => {
+      const lib = [...(existingLib ?? [])];
+      const seen = new Set(lib.map((item) => item.src));
+      for (const p of photos) {
+        if (!p.src || seen.has(p.src)) continue;
+        seen.add(p.src);
+        lib.push({ id: createId(), src: p.src, alt: p.alt });
+      }
+      return lib;
+    };
+
+    const collectPhotos = (pageList: Page[]): ReflowPhoto[] =>
+      pageList
+        .flatMap((p) => p.elements)
+        .filter((el): el is ImageElement => el.type === "image" && Boolean(el.src))
+        .sort((a, b) => b.width * b.height - a.width * a.height)
+        .map((el) => ({
+          src: el.src,
+          alt: el.alt,
+          fit: el.fit,
+          cropScale: el.cropScale,
+          cropX: el.cropX,
+          cropY: el.cropY,
+        }));
+
+    const collectTexts = (pageList: Page[]): string[] =>
+      pageList
+        .flatMap((p) => p.elements)
+        .filter(
+          (el): el is TextElement =>
+            el.type === "text" &&
+            !el.isPlaceholder &&
+            el.text.trim().length > 0,
+        )
+        .map((el) => el.text);
+
+    if (layout.scope === "spread" && spread && spread.pageIndices.length === 2) {
+      const leftIdx = spread.pageIndices[0]!;
+      const rightIdx = spread.pageIndices[1]!;
+      const leftPage = pages[leftIdx]!;
+      const rightPage = pages[rightIdx]!;
+
+      if (!leftPage.isEndPaper && !leftPage.locked && !rightPage.isEndPaper && !rightPage.locked) {
+        const gapMm = options?.gapMm ?? leftPage.layoutMeta?.gapMm ?? DEFAULT_FRAME_GAP_MM;
+        const marginMm = options?.marginMm ?? leftPage.layoutMeta?.marginMm ?? pageSize.safeMargin;
+        const photos = collectPhotos([leftPage, rightPage]);
+        const texts = collectTexts([leftPage, rightPage]);
+        const { left, right } = buildSpreadLayoutElements(
+          layout,
+          pageSize,
+          gapMm,
+          marginMm,
+          photos,
+          texts,
+        );
+
+        get().pushHistory();
+        const nextMedia = mergeMediaLibrary(state.project.mediaLibrary, photos);
+        set((current) => ({
+          project: {
+            ...current.project,
+            mediaLibrary: nextMedia,
+            pages: current.project.pages.map((candidate) => {
+              if (candidate.id === leftPage.id) {
+                return {
+                  ...candidate,
+                  elements: left,
+                  layoutMeta: { layoutId: layout.id, gapMm, marginMm },
+                };
+              }
+              if (candidate.id === rightPage.id) {
+                return {
+                  ...candidate,
+                  elements: right,
+                  layoutMeta: { layoutId: layout.id, gapMm, marginMm },
+                };
+              }
+              return candidate;
+            }),
+          },
+          selection: { pageId, elementId: null, spineSelected: false },
+          ui: {
+            ...current.ui,
+            layoutAnimSeq: current.ui.layoutAnimSeq + 1,
+            layoutAnimPageIds: [leftPage.id, rightPage.id],
+          },
+        }));
+        return;
+      }
+    }
+
+    const gapMm = options?.gapMm ?? targetPage.layoutMeta?.gapMm ?? DEFAULT_FRAME_GAP_MM;
+    const marginMm = options?.marginMm ?? targetPage.layoutMeta?.marginMm ?? pageSize.safeMargin;
+    const photos = collectPhotos([targetPage]);
+    const texts = collectTexts([targetPage]);
+    const nextElements = buildPageLayoutElements(
+      layout,
+      pageSize,
+      gapMm,
+      marginMm,
+      photos,
+      texts,
+    );
+
+    get().pushHistory();
+    const nextMedia = mergeMediaLibrary(state.project.mediaLibrary, photos);
+    set((current) => ({
+      project: {
+        ...current.project,
+        mediaLibrary: nextMedia,
+        pages: current.project.pages.map((candidate) =>
+          candidate.id === pageId
+            ? {
+                ...candidate,
+                elements: nextElements,
+                layoutMeta: { layoutId: layout.id, gapMm, marginMm },
+              }
+            : candidate,
+        ),
+      },
+      selection: { pageId, elementId: null, spineSelected: false },
+      ui: {
+        ...current.ui,
+        layoutAnimSeq: current.ui.layoutAnimSeq + 1,
+        layoutAnimPageIds: [pageId],
+      },
+    }));
+  },
+
+  updatePageLayoutSpacing: (pageId, patch, options) => {
+    const state = get();
+    const page = state.project.pages.find((candidate) => candidate.id === pageId);
+    if (!page || page.isEndPaper || page.locked || !page.layoutMeta) return;
+
+    const layout = getLayoutById(page.layoutMeta.layoutId);
+    if (!layout) return;
+
+    const nextGap = patch.gapMm ?? page.layoutMeta.gapMm;
+    const nextMargin = patch.marginMm ?? page.layoutMeta.marginMm;
+    if (
+      Math.abs(nextGap - page.layoutMeta.gapMm) < 0.01 &&
+      Math.abs(nextMargin - page.layoutMeta.marginMm) < 0.01
+    ) {
+      return;
+    }
+
+    if (options?.commit !== false) get().pushHistory();
+
+    const pageSize = state.project.pageSize;
+    if (layout.scope === "page") {
+      const ordered = [...page.elements].sort((a, b) => a.zIndex - b.zIndex);
+      const nextElements = ordered.map((element, index) => {
+        const frame = layout.frames[index];
+        if (!frame) return element;
+        const rect = computeFrameRectMm(
+          frame,
+          pageSize.w,
+          pageSize.h,
+          nextGap,
+          nextMargin,
+        );
+        return { ...element, ...rect };
+      });
+
+      set((current) => ({
+        project: {
+          ...current.project,
+          pages: current.project.pages.map((candidate) =>
+            candidate.id === pageId
+              ? {
+                  ...candidate,
+                  elements: nextElements,
+                  layoutMeta: {
+                    ...page.layoutMeta!,
+                    gapMm: nextGap,
+                    marginMm: nextMargin,
+                  },
+                }
+              : candidate,
+          ),
+        },
+      }));
+    } else {
+      // Spread layout: update metadata and reflow keeping existing content.
+      const spread = getSpreads(state.project.pages).find((s) =>
+        s.pageIndices.some((idx) => state.project.pages[idx]?.id === pageId),
+      );
+      if (!spread || spread.pageIndices.length < 2) return;
+      const leftPage = state.project.pages[spread.pageIndices[0]!]!;
+      const rightPage = state.project.pages[spread.pageIndices[1]!]!;
+      const existingPhotos: ReflowPhoto[] = [...leftPage.elements, ...rightPage.elements]
+        .filter((el): el is ImageElement => el.type === "image" && Boolean(el.src))
+        .sort((a, b) => b.width * b.height - a.width * a.height)
+        .map((el) => ({
+          src: el.src,
+          alt: el.alt,
+          fit: el.fit,
+          cropScale: el.cropScale,
+          cropX: el.cropX,
+          cropY: el.cropY,
+        }));
+      const existingTexts = [...leftPage.elements, ...rightPage.elements]
+        .filter(
+          (el): el is TextElement =>
+            el.type === "text" && !el.isPlaceholder && el.text.trim().length > 0,
+        )
+        .map((el) => el.text);
+      const { left, right } = buildSpreadLayoutElements(
+        layout,
+        pageSize,
+        nextGap,
+        nextMargin,
+        existingPhotos,
+        existingTexts,
+      );
+      set((current) => ({
+        project: {
+          ...current.project,
+          pages: current.project.pages.map((candidate) => {
+            if (candidate.id === leftPage.id) {
+              return {
+                ...candidate,
+                elements: left,
+                layoutMeta: { layoutId: layout.id, gapMm: nextGap, marginMm: nextMargin },
+              };
+            }
+            if (candidate.id === rightPage.id) {
+              return {
+                ...candidate,
+                elements: right,
+                layoutMeta: { layoutId: layout.id, gapMm: nextGap, marginMm: nextMargin },
+              };
+            }
+            return candidate;
+          }),
+        },
+      }));
+    }
   },
 });

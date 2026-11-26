@@ -1,4 +1,5 @@
-import type { BindingType, Element, PageSize, Project } from "@/types";
+import type { BindingType, Element, MediaAsset, PageSize, Project } from "@/types";
+import type { LayoutDefinition } from "@/lib/layouts";
 import type { PageTemplate } from "@/lib/templates";
 
 export type SidebarTab =
@@ -28,6 +29,9 @@ export interface UiState {
   pageSetupOpen: boolean;
   pageSetupMode: "setup" | "new";
   thumbnailView: "strip" | "grid";
+  favoriteLayoutIds: string[];
+  layoutAnimSeq: number;
+  layoutAnimPageIds: string[];
 }
 
 export interface SelectionState {
@@ -65,6 +69,8 @@ export interface ProjectSlice {
   /** Replaces the document with a blank project using these settings. */
   createProject: (options: CreateProjectOptions) => void;
   replaceProject: (project: Project) => void;
+  addMediaAssets: (assets: MediaAsset[]) => void;
+  removeMediaAsset: (assetId: string) => void;
 }
 
 export interface PagesSlice {
@@ -85,6 +91,16 @@ export interface PagesSlice {
     pageId: string,
     template: Pick<PageTemplate, "backgroundId" | "build">,
   ) => void;
+  applyLayout: (
+    pageId: string,
+    layout: LayoutDefinition,
+    options?: { gapMm?: number; marginMm?: number },
+  ) => void;
+  updatePageLayoutSpacing: (
+    pageId: string,
+    patch: { gapMm?: number; marginMm?: number },
+    options?: { commit?: boolean },
+  ) => void;
 }
 
 export interface ElementsSlice {
@@ -99,6 +115,17 @@ export interface ElementsSlice {
   moveElementLayer: (
     elementId: string,
     direction: "forward" | "backward" | "front" | "back",
+  ) => void;
+  fillFramePhoto: (
+    elementId: string,
+    photo: { src: string; alt: string },
+  ) => void;
+  clearFramePhoto: (elementId: string) => void;
+  swapFramePhotos: (sourceElementId: string, targetElementId: string) => void;
+  resizeGutterFrames: (
+    pageId: string,
+    updates: Array<{ id: string; x?: number; y?: number; width?: number; height?: number }>,
+    options?: { commit?: boolean },
   ) => void;
 }
 
@@ -141,6 +168,8 @@ export interface UiSlice {
   openPageSetup: (mode?: "setup" | "new") => void;
   closePageSetup: () => void;
   setThumbnailView: (view: "strip" | "grid") => void;
+  toggleFavoriteLayout: (layoutId: string) => void;
+  setFavoriteLayouts: (ids: string[]) => void;
 }
 
 export type EditorStore = ProjectSlice &

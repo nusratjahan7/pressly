@@ -75,7 +75,7 @@ async function renderPageSnapshot(
           width: width * 0.84,
           text: "This page can not be edited",
           fontSize: Math.max(5, Math.round(width * 0.055)),
-          fontFamily: "Inter, sans-serif",
+          fontFamily: "Montserrat, sans-serif",
           fill: "rgba(238, 240, 254, 0.62)",
           align: "center",
           wrap: "word",
@@ -203,10 +203,24 @@ async function renderPageSnapshot(
         continue;
       }
 
-      if (element.type === "image" && element.src) {
+      if (element.type === "image") {
+        if (!element.src) {
+          layer.add(
+            new Konva.Rect({
+              x: px,
+              y: py,
+              width: pw,
+              height: ph,
+              fill: "#B5B7BF",
+              cornerRadius: element.radius * scale,
+              listening: false,
+              perfectDrawEnabled: false,
+            }),
+          );
+          continue;
+        }
         const image = await loadImage(element.src).catch(() => null);
         if (image) {
-          // Approximation of object-fit for the miniature: fill the frame.
           layer.add(
             new Konva.Image({
               image,

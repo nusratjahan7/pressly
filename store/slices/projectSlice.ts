@@ -1,5 +1,5 @@
 import type { StateCreator } from "zustand";
-import type { Element, Page, PageSize, Project } from "@/types";
+import type { Element, MediaAsset, Page, PageSize, Project } from "@/types";
 import type { EditorStore, ProjectSlice } from "@/store/types";
 import { createSeedProject } from "@/lib/project";
 import { createId } from "@/lib/id";
@@ -197,5 +197,37 @@ export const createProjectSlice: StateCreator<
 
   replaceProject: (project) => {
     set({ project });
+  },
+
+  addMediaAssets: (assets) => {
+    if (assets.length === 0) return;
+    set((state) => {
+      const existing = state.project.mediaLibrary ?? [];
+      const seenSrc = new Set(existing.map((item) => item.src));
+      const added: MediaAsset[] = [];
+      for (const asset of assets) {
+        if (!asset.src || seenSrc.has(asset.src)) continue;
+        seenSrc.add(asset.src);
+        added.push(asset);
+      }
+      if (added.length === 0) return state;
+      return {
+        project: {
+          ...state.project,
+          mediaLibrary: [...existing, ...added],
+        },
+      };
+    });
+  },
+
+  removeMediaAsset: (assetId) => {
+    set((state) => ({
+      project: {
+        ...state.project,
+        mediaLibrary: (state.project.mediaLibrary ?? []).filter(
+          (item) => item.id !== assetId,
+        ),
+      },
+    }));
   },
 });

@@ -1,10 +1,11 @@
 "use client";
 
-import { useMemo } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { Group, Layer, Line, Rect, Stage, Text } from "react-konva";
 import type { Element, Page, PageSize } from "@/types";
 import { getBackground } from "@/lib/backgrounds";
 import { getPageOffsetX, getSpreadLayout } from "@/lib/konva/geometry";
+import { useEditorStore } from "@/store";
 import { ptToMm } from "@/lib/units";
 import { PageNode } from "@/components/editor/canvas/konva/PageNode";
 import { SelectionTransformer } from "@/components/editor/canvas/konva/SelectionTransformer";
@@ -27,10 +28,22 @@ export interface SpreadStageProps {
   showSafeMargin: boolean;
   showBleed: boolean;
   selectedElementId: string | null;
+  croppingElementId?: string | null;
+  dropHighlightPageId?: string | null;
+  animSeq?: number;
+  animPageIds?: string[];
   onSelectPage?: (pageId: string) => void;
   onSelectSpine?: () => void;
   onEditSpine?: () => void;
   onClearSelection: () => void;
+  onOpenPhotoPicker?: (elementId: string, pageId: string) => void;
+  onDoubleClickFrame?: (element: Element, pageId: string) => void;
+  onContextMenuFrame?: (
+    element: Element,
+    pageId: string,
+    clientX: number,
+    clientY: number,
+  ) => void;
 }
 
 /**
@@ -53,11 +66,21 @@ export function SpreadStage({
   showSafeMargin,
   showBleed,
   selectedElementId,
+  croppingElementId = null,
+  dropHighlightPageId = null,
+  animSeq = 0,
+  animPageIds = [],
   onSelectPage,
   onSelectSpine,
   onEditSpine,
   onClearSelection,
+  onOpenPhotoPicker,
+  onDoubleClickFrame,
+  onContextMenuFrame,
 }: SpreadStageProps) {
+  const swapFramePhotos = useEditorStore((state) => state.swapFramePhotos);
+  const [swapTargetId, setSwapTargetId] = useState<string | null>(null);
+
   const displayPageCount = isCover ? pages.length : Math.max(2, pages.length);
   const effectiveSpine = isCover ? spineWidth : 0;
 
@@ -70,6 +93,55 @@ export function SpreadStage({
     typeof window === "undefined"
       ? 1
       : Math.min(2, window.devicePixelRatio || 1);
+
+  const findImageTargetAtPointer = useCallback(
+    (sourceId: string, stageX: number, stageY: number): string | null => {
+      const mmX = (stageX - panX) / Math.max(scale, 0.0001);
+      const mmY = (stageY - panY) / Math.max(scale, 0.0001);
+
+      for (let index = 0; index < pages.length; index += 1) {
+        const page = pages[index]!;
+        if (page.isEndPaper || page.locked) continue;
+        const offsetX = getPageOffsetX(index, layout);
+        for (const el of page.elements) {
+          if (el.id === sourceId || el.type !== "image") continue;
+          const left = offsetX + el.x;
+          const top = el.y;
+          if (
+            mmX >= left &&
+            mmX <= left + el.width &&
+            mmY >= top &&
+            mmY <= top + el.height
+          ) {
+            return el.id;
+          }
+        }
+      }
+      return null;
+    },
+    [pages, layout, panX, panY, scale],
+  );
+
+  const handleFrameDragMove = useCallback(
+    (sourceId: string, pointerX: number, pointerY: number) => {
+      const hit = findImageTargetAtPointer(sourceId, pointerX, pointerY);
+      setSwapTargetId((prev) => (prev === hit ? prev : hit));
+    },
+    [findImageTargetAtPointer],
+  );
+
+  const handleFrameDragEndSwap = useCallback(
+    (sourceId: string, pointerX: number, pointerY: number) => {
+      const hit = findImageTargetAtPointer(sourceId, pointerX, pointerY);
+      setSwapTargetId(null);
+      if (hit) {
+        swapFramePhotos(sourceId, hit);
+        return true;
+      }
+      return false;
+    },
+    [findImageTargetAtPointer, swapFramePhotos],
+  );
 
   // Locate the selected element so the transformer can attach by id.
   const selected = useMemo((): {
@@ -114,7 +186,6 @@ export function SpreadStage({
       pixelRatio={dpr}
       listening
       onPointerDown={(event) => {
-        // A press on empty canvas deselects.
         const stage = event.target.getStage();
         if (stage && event.target === stage) onClearSelection();
       }}
@@ -142,7 +213,16 @@ export function SpreadStage({
               showSafeMargin={showSafeMargin}
               showBleed={isCover ? false : showBleed}
               selectedElementId={selectedElementId}
+              swapTargetElementId={swapTargetId}
+              croppingElementId={croppingElementId}
+              dropHighlight={dropHighlightPageId === page.id}
+              animSeq={animPageIds.includes(page.id) ? animSeq : 0}
               onSelectPage={onSelectPage}
+              onOpenPhotoPicker={onOpenPhotoPicker}
+              onDoubleClickFrame={onDoubleClickFrame}
+              onContextMenuFrame={onContextMenuFrame}
+              onFrameDragMove={handleFrameDragMove}
+              onFrameDragEndSwap={handleFrameDragEndSwap}
             />
           ))}
 
@@ -248,7 +328,7 @@ export function SpreadStage({
                       rotation={-90}
                       text={resolvedSpineText}
                       fontSize={spineFontSize}
-                      fontFamily="Inter, sans-serif"
+                      fontFamily="Montserrat, sans-serif"
                       fontStyle="600"
                       letterSpacing={0.5}
                       fill={spineTextColor}
@@ -326,7 +406,7 @@ export function SpreadStage({
               width={layout.pageWidth}
               text={label}
               fontSize={captionFontSize}
-              fontFamily="Inter, sans-serif"
+              fontFamily="Montserrat, sans-serif"
               fill="#565E8E"
               opacity={0.78}
               align="center"
@@ -341,7 +421,9 @@ export function SpreadStage({
       <Layer>
         <Group x={panX} y={panY} scaleX={scale} scaleY={scale}>
           <SelectionTransformer
-            element={selected?.element ?? null}
+            element={
+              croppingElementId ? null : (selected?.element ?? null)
+            }
             pageOffsetX={selected?.pageOffsetX ?? 0}
             pageWidth={layout.pageWidth}
             pageHeight={layout.pageHeight}

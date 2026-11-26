@@ -1,0 +1,6527 @@
+[
+  {
+    "id": "p1-full",
+    "name": "Full Page",
+    "scope": "page",
+    "photoCount": 1,
+    "hasText": false,
+    "frames": [
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0,
+        "w": 1,
+        "h": 1
+      }
+    ]
+  },
+  {
+    "id": "p1-inset",
+    "name": "Framed Center",
+    "scope": "page",
+    "photoCount": 1,
+    "hasText": false,
+    "frames": [
+      {
+        "type": "photo",
+        "x": 0.08,
+        "y": 0.08,
+        "w": 0.84,
+        "h": 0.84
+      }
+    ]
+  },
+  {
+    "id": "p1-top-banner",
+    "name": "Top Panorama",
+    "scope": "page",
+    "photoCount": 1,
+    "hasText": false,
+    "frames": [
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0,
+        "w": 1,
+        "h": 0.55
+      }
+    ]
+  },
+  {
+    "id": "p1-bottom-banner",
+    "name": "Bottom Panorama",
+    "scope": "page",
+    "photoCount": 1,
+    "hasText": false,
+    "frames": [
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0.45,
+        "w": 1,
+        "h": 0.55
+      }
+    ]
+  },
+  {
+    "id": "p1-center-band",
+    "name": "Center Strip",
+    "scope": "page",
+    "photoCount": 1,
+    "hasText": false,
+    "frames": [
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0.25,
+        "w": 1,
+        "h": 0.5
+      }
+    ]
+  },
+  {
+    "id": "p1-left-band",
+    "name": "Left Pillar",
+    "scope": "page",
+    "photoCount": 1,
+    "hasText": false,
+    "frames": [
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0,
+        "w": 0.6,
+        "h": 1
+      }
+    ]
+  },
+  {
+    "id": "p1-right-band",
+    "name": "Right Pillar",
+    "scope": "page",
+    "photoCount": 1,
+    "hasText": false,
+    "frames": [
+      {
+        "type": "photo",
+        "x": 0.4,
+        "y": 0,
+        "w": 0.6,
+        "h": 1
+      }
+    ]
+  },
+  {
+    "id": "p1-text-bottom",
+    "name": "Hero + Caption",
+    "scope": "page",
+    "photoCount": 1,
+    "hasText": true,
+    "frames": [
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0,
+        "w": 1,
+        "h": 0.78
+      },
+      {
+        "type": "text",
+        "x": 0,
+        "y": 0.78,
+        "w": 1,
+        "h": 0.22
+      }
+    ]
+  },
+  {
+    "id": "p1-text-top",
+    "name": "Title + Hero",
+    "scope": "page",
+    "photoCount": 1,
+    "hasText": true,
+    "frames": [
+      {
+        "type": "text",
+        "x": 0,
+        "y": 0,
+        "w": 1,
+        "h": 0.2
+      },
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0.2,
+        "w": 1,
+        "h": 0.8
+      }
+    ]
+  },
+  {
+    "id": "p1-text-split",
+    "name": "Editorial Split",
+    "scope": "page",
+    "photoCount": 1,
+    "hasText": true,
+    "frames": [
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0,
+        "w": 0.65,
+        "h": 1
+      },
+      {
+        "type": "text",
+        "x": 0.65,
+        "y": 0.3,
+        "w": 0.35,
+        "h": 0.4
+      }
+    ]
+  },
+  {
+    "id": "p2-vsplit",
+    "name": "Two Vertical",
+    "scope": "page",
+    "photoCount": 2,
+    "hasText": false,
+    "frames": [
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0,
+        "w": 1,
+        "h": 0.5
+      },
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0.5,
+        "w": 1,
+        "h": 0.5
+      }
+    ]
+  },
+  {
+    "id": "p2-hsplit",
+    "name": "Two Columns",
+    "scope": "page",
+    "photoCount": 2,
+    "hasText": false,
+    "frames": [
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0,
+        "w": 0.5,
+        "h": 1
+      },
+      {
+        "type": "photo",
+        "x": 0.5,
+        "y": 0,
+        "w": 0.5,
+        "h": 1
+      }
+    ]
+  },
+  {
+    "id": "p2-top-hero",
+    "name": "Large Top + Bottom",
+    "scope": "page",
+    "photoCount": 2,
+    "hasText": false,
+    "frames": [
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0,
+        "w": 1,
+        "h": 0.66
+      },
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0.66,
+        "w": 1,
+        "h": 0.34
+      }
+    ]
+  },
+  {
+    "id": "p2-bottom-hero",
+    "name": "Top + Large Bottom",
+    "scope": "page",
+    "photoCount": 2,
+    "hasText": false,
+    "frames": [
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0,
+        "w": 1,
+        "h": 0.34
+      },
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0.34,
+        "w": 1,
+        "h": 0.66
+      }
+    ]
+  },
+  {
+    "id": "p2-left-hero",
+    "name": "Wide Left + Right",
+    "scope": "page",
+    "photoCount": 2,
+    "hasText": false,
+    "frames": [
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0,
+        "w": 0.66,
+        "h": 1
+      },
+      {
+        "type": "photo",
+        "x": 0.66,
+        "y": 0,
+        "w": 0.34,
+        "h": 1
+      }
+    ]
+  },
+  {
+    "id": "p2-right-hero",
+    "name": "Left + Wide Right",
+    "scope": "page",
+    "photoCount": 2,
+    "hasText": false,
+    "frames": [
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0,
+        "w": 0.34,
+        "h": 1
+      },
+      {
+        "type": "photo",
+        "x": 0.34,
+        "y": 0,
+        "w": 0.66,
+        "h": 1
+      }
+    ]
+  },
+  {
+    "id": "p2-center-stack",
+    "name": "Centered Stack",
+    "scope": "page",
+    "photoCount": 2,
+    "hasText": false,
+    "frames": [
+      {
+        "type": "photo",
+        "x": 0.1,
+        "y": 0.05,
+        "w": 0.8,
+        "h": 0.45
+      },
+      {
+        "type": "photo",
+        "x": 0.1,
+        "y": 0.5,
+        "w": 0.8,
+        "h": 0.45
+      }
+    ]
+  },
+  {
+    "id": "p2-diag-a",
+    "name": "Staggered Pair",
+    "scope": "page",
+    "photoCount": 2,
+    "hasText": false,
+    "frames": [
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0,
+        "w": 0.58,
+        "h": 0.58
+      },
+      {
+        "type": "photo",
+        "x": 0.42,
+        "y": 0.58,
+        "w": 0.58,
+        "h": 0.42
+      }
+    ]
+  },
+  {
+    "id": "p2-diag-b",
+    "name": "Offset Pair",
+    "scope": "page",
+    "photoCount": 2,
+    "hasText": false,
+    "frames": [
+      {
+        "type": "photo",
+        "x": 0.42,
+        "y": 0,
+        "w": 0.58,
+        "h": 0.52
+      },
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0.52,
+        "w": 0.62,
+        "h": 0.48
+      }
+    ]
+  },
+  {
+    "id": "p2-bands",
+    "name": "Dual Banners",
+    "scope": "page",
+    "photoCount": 2,
+    "hasText": false,
+    "frames": [
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0.12,
+        "w": 1,
+        "h": 0.38
+      },
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0.5,
+        "w": 1,
+        "h": 0.38
+      }
+    ]
+  },
+  {
+    "id": "p2-text-bottom",
+    "name": "Pair + Footer Text",
+    "scope": "page",
+    "photoCount": 2,
+    "hasText": true,
+    "frames": [
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0,
+        "w": 0.5,
+        "h": 0.78
+      },
+      {
+        "type": "photo",
+        "x": 0.5,
+        "y": 0,
+        "w": 0.5,
+        "h": 0.78
+      },
+      {
+        "type": "text",
+        "x": 0,
+        "y": 0.78,
+        "w": 1,
+        "h": 0.22
+      }
+    ]
+  },
+  {
+    "id": "p2-text-top",
+    "name": "Header Text + Pair",
+    "scope": "page",
+    "photoCount": 2,
+    "hasText": true,
+    "frames": [
+      {
+        "type": "text",
+        "x": 0,
+        "y": 0,
+        "w": 1,
+        "h": 0.2
+      },
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0.2,
+        "w": 1,
+        "h": 0.4
+      },
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0.6,
+        "w": 1,
+        "h": 0.4
+      }
+    ]
+  },
+  {
+    "id": "p2-text-mid",
+    "name": "Pair + Mid Title",
+    "scope": "page",
+    "photoCount": 2,
+    "hasText": true,
+    "frames": [
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0,
+        "w": 1,
+        "h": 0.4
+      },
+      {
+        "type": "text",
+        "x": 0,
+        "y": 0.4,
+        "w": 1,
+        "h": 0.18
+      },
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0.58,
+        "w": 1,
+        "h": 0.42
+      }
+    ]
+  },
+  {
+    "id": "p2-text-side",
+    "name": "Sidebar Text + Pair",
+    "scope": "page",
+    "photoCount": 2,
+    "hasText": true,
+    "frames": [
+      {
+        "type": "text",
+        "x": 0,
+        "y": 0,
+        "w": 0.32,
+        "h": 1
+      },
+      {
+        "type": "photo",
+        "x": 0.32,
+        "y": 0,
+        "w": 0.68,
+        "h": 0.5
+      },
+      {
+        "type": "photo",
+        "x": 0.32,
+        "y": 0.5,
+        "w": 0.68,
+        "h": 0.5
+      }
+    ]
+  },
+  {
+    "id": "p3-rows",
+    "name": "Three Rows",
+    "scope": "page",
+    "photoCount": 3,
+    "hasText": false,
+    "frames": [
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0,
+        "w": 1,
+        "h": 0.3333
+      },
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0.3333,
+        "w": 1,
+        "h": 0.3333
+      },
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0.6667,
+        "w": 1,
+        "h": 0.3333
+      }
+    ]
+  },
+  {
+    "id": "p3-cols",
+    "name": "Three Columns",
+    "scope": "page",
+    "photoCount": 3,
+    "hasText": false,
+    "frames": [
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0,
+        "w": 0.3333,
+        "h": 1
+      },
+      {
+        "type": "photo",
+        "x": 0.3333,
+        "y": 0,
+        "w": 0.3333,
+        "h": 1
+      },
+      {
+        "type": "photo",
+        "x": 0.6667,
+        "y": 0,
+        "w": 0.3333,
+        "h": 1
+      }
+    ]
+  },
+  {
+    "id": "p3-top1-bot2",
+    "name": "Hero Top + 2",
+    "scope": "page",
+    "photoCount": 3,
+    "hasText": false,
+    "frames": [
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0,
+        "w": 1,
+        "h": 0.6
+      },
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0.6,
+        "w": 0.5,
+        "h": 0.4
+      },
+      {
+        "type": "photo",
+        "x": 0.5,
+        "y": 0.6,
+        "w": 0.5,
+        "h": 0.4
+      }
+    ]
+  },
+  {
+    "id": "p3-top2-bot1",
+    "name": "2 Top + Hero Bottom",
+    "scope": "page",
+    "photoCount": 3,
+    "hasText": false,
+    "frames": [
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0,
+        "w": 0.5,
+        "h": 0.4
+      },
+      {
+        "type": "photo",
+        "x": 0.5,
+        "y": 0,
+        "w": 0.5,
+        "h": 0.4
+      },
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0.4,
+        "w": 1,
+        "h": 0.6
+      }
+    ]
+  },
+  {
+    "id": "p3-left1-right2",
+    "name": "Hero Left + 2",
+    "scope": "page",
+    "photoCount": 3,
+    "hasText": false,
+    "frames": [
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0,
+        "w": 0.6,
+        "h": 1
+      },
+      {
+        "type": "photo",
+        "x": 0.6,
+        "y": 0,
+        "w": 0.4,
+        "h": 0.5
+      },
+      {
+        "type": "photo",
+        "x": 0.6,
+        "y": 0.5,
+        "w": 0.4,
+        "h": 0.5
+      }
+    ]
+  },
+  {
+    "id": "p3-left2-right1",
+    "name": "2 Left + Hero Right",
+    "scope": "page",
+    "photoCount": 3,
+    "hasText": false,
+    "frames": [
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0,
+        "w": 0.4,
+        "h": 0.5
+      },
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0.5,
+        "w": 0.4,
+        "h": 0.5
+      },
+      {
+        "type": "photo",
+        "x": 0.4,
+        "y": 0,
+        "w": 0.6,
+        "h": 1
+      }
+    ]
+  },
+  {
+    "id": "p3-top-asym",
+    "name": "Top Hero + Uneven 2",
+    "scope": "page",
+    "photoCount": 3,
+    "hasText": false,
+    "frames": [
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0,
+        "w": 1,
+        "h": 0.55
+      },
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0.55,
+        "w": 0.65,
+        "h": 0.45
+      },
+      {
+        "type": "photo",
+        "x": 0.65,
+        "y": 0.55,
+        "w": 0.35,
+        "h": 0.45
+      }
+    ]
+  },
+  {
+    "id": "p3-bot-asym",
+    "name": "Uneven 2 + Bottom Hero",
+    "scope": "page",
+    "photoCount": 3,
+    "hasText": false,
+    "frames": [
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0,
+        "w": 0.35,
+        "h": 0.45
+      },
+      {
+        "type": "photo",
+        "x": 0.35,
+        "y": 0,
+        "w": 0.65,
+        "h": 0.45
+      },
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0.45,
+        "w": 1,
+        "h": 0.55
+      }
+    ]
+  },
+  {
+    "id": "p3-left-asym",
+    "name": "Left Hero + 2 Tall",
+    "scope": "page",
+    "photoCount": 3,
+    "hasText": false,
+    "frames": [
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0,
+        "w": 0.55,
+        "h": 1
+      },
+      {
+        "type": "photo",
+        "x": 0.55,
+        "y": 0,
+        "w": 0.45,
+        "h": 0.65
+      },
+      {
+        "type": "photo",
+        "x": 0.55,
+        "y": 0.65,
+        "w": 0.45,
+        "h": 0.35
+      }
+    ]
+  },
+  {
+    "id": "p3-right-asym",
+    "name": "2 Tall + Right Hero",
+    "scope": "page",
+    "photoCount": 3,
+    "hasText": false,
+    "frames": [
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0,
+        "w": 0.45,
+        "h": 0.35
+      },
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0.35,
+        "w": 0.45,
+        "h": 0.65
+      },
+      {
+        "type": "photo",
+        "x": 0.45,
+        "y": 0,
+        "w": 0.55,
+        "h": 1
+      }
+    ]
+  },
+  {
+    "id": "p3-triptych-center",
+    "name": "Wide Center Triptych",
+    "scope": "page",
+    "photoCount": 3,
+    "hasText": false,
+    "frames": [
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0,
+        "w": 0.25,
+        "h": 1
+      },
+      {
+        "type": "photo",
+        "x": 0.25,
+        "y": 0,
+        "w": 0.5,
+        "h": 1
+      },
+      {
+        "type": "photo",
+        "x": 0.75,
+        "y": 0,
+        "w": 0.25,
+        "h": 1
+      }
+    ]
+  },
+  {
+    "id": "p3-stepped",
+    "name": "Stepped Trio",
+    "scope": "page",
+    "photoCount": 3,
+    "hasText": false,
+    "frames": [
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0,
+        "w": 0.5,
+        "h": 0.5
+      },
+      {
+        "type": "photo",
+        "x": 0.5,
+        "y": 0,
+        "w": 0.5,
+        "h": 0.32
+      },
+      {
+        "type": "photo",
+        "x": 0.5,
+        "y": 0.32,
+        "w": 0.5,
+        "h": 0.68
+      }
+    ]
+  },
+  {
+    "id": "p3-cover-classic",
+    "name": "Cover: Hero + 2 + Text",
+    "scope": "page",
+    "photoCount": 3,
+    "hasText": true,
+    "frames": [
+      {
+        "type": "photo",
+        "x": 0.08,
+        "y": 0.05,
+        "w": 0.84,
+        "h": 0.48
+      },
+      {
+        "type": "photo",
+        "x": 0.08,
+        "y": 0.53,
+        "w": 0.42,
+        "h": 0.24
+      },
+      {
+        "type": "photo",
+        "x": 0.5,
+        "y": 0.53,
+        "w": 0.42,
+        "h": 0.24
+      },
+      {
+        "type": "text",
+        "x": 0.08,
+        "y": 0.77,
+        "w": 0.84,
+        "h": 0.2
+      }
+    ]
+  },
+  {
+    "id": "p3-text-top",
+    "name": "Title + 3 Grid",
+    "scope": "page",
+    "photoCount": 3,
+    "hasText": true,
+    "frames": [
+      {
+        "type": "text",
+        "x": 0,
+        "y": 0,
+        "w": 1,
+        "h": 0.2
+      },
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0.2,
+        "w": 1,
+        "h": 0.45
+      },
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0.65,
+        "w": 0.5,
+        "h": 0.35
+      },
+      {
+        "type": "photo",
+        "x": 0.5,
+        "y": 0.65,
+        "w": 0.5,
+        "h": 0.35
+      }
+    ]
+  },
+  {
+    "id": "p3-text-corner",
+    "name": "3 Collage + Corner Text",
+    "scope": "page",
+    "photoCount": 3,
+    "hasText": true,
+    "frames": [
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0,
+        "w": 0.55,
+        "h": 0.6
+      },
+      {
+        "type": "photo",
+        "x": 0.55,
+        "y": 0,
+        "w": 0.45,
+        "h": 0.6
+      },
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0.6,
+        "w": 0.55,
+        "h": 0.4
+      },
+      {
+        "type": "text",
+        "x": 0.55,
+        "y": 0.6,
+        "w": 0.45,
+        "h": 0.4
+      }
+    ]
+  },
+  {
+    "id": "p3-text-left",
+    "name": "Left Note + 3 Stack",
+    "scope": "page",
+    "photoCount": 3,
+    "hasText": true,
+    "frames": [
+      {
+        "type": "text",
+        "x": 0,
+        "y": 0,
+        "w": 0.34,
+        "h": 0.5
+      },
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0.5,
+        "w": 0.34,
+        "h": 0.5
+      },
+      {
+        "type": "photo",
+        "x": 0.34,
+        "y": 0,
+        "w": 0.66,
+        "h": 0.5
+      },
+      {
+        "type": "photo",
+        "x": 0.34,
+        "y": 0.5,
+        "w": 0.66,
+        "h": 0.5
+      }
+    ]
+  },
+  {
+    "id": "p3-text-mid",
+    "name": "Top + Text + Pair",
+    "scope": "page",
+    "photoCount": 3,
+    "hasText": true,
+    "frames": [
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0,
+        "w": 1,
+        "h": 0.42
+      },
+      {
+        "type": "text",
+        "x": 0,
+        "y": 0.42,
+        "w": 1,
+        "h": 0.16
+      },
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0.58,
+        "w": 0.5,
+        "h": 0.42
+      },
+      {
+        "type": "photo",
+        "x": 0.5,
+        "y": 0.58,
+        "w": 0.5,
+        "h": 0.42
+      }
+    ]
+  },
+  {
+    "id": "p3-text-strip",
+    "name": "3 Columns + Caption",
+    "scope": "page",
+    "photoCount": 3,
+    "hasText": true,
+    "frames": [
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0,
+        "w": 0.3333,
+        "h": 0.8
+      },
+      {
+        "type": "photo",
+        "x": 0.3333,
+        "y": 0,
+        "w": 0.3333,
+        "h": 0.8
+      },
+      {
+        "type": "photo",
+        "x": 0.6667,
+        "y": 0,
+        "w": 0.3333,
+        "h": 0.8
+      },
+      {
+        "type": "text",
+        "x": 0,
+        "y": 0.8,
+        "w": 1,
+        "h": 0.2
+      }
+    ]
+  },
+  {
+    "id": "p4-grid2x2",
+    "name": "2×2 Grid",
+    "scope": "page",
+    "photoCount": 4,
+    "hasText": false,
+    "frames": [
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0,
+        "w": 0.5,
+        "h": 0.5
+      },
+      {
+        "type": "photo",
+        "x": 0.5,
+        "y": 0,
+        "w": 0.5,
+        "h": 0.5
+      },
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0.5,
+        "w": 0.5,
+        "h": 0.5
+      },
+      {
+        "type": "photo",
+        "x": 0.5,
+        "y": 0.5,
+        "w": 0.5,
+        "h": 0.5
+      }
+    ]
+  },
+  {
+    "id": "p4-cols",
+    "name": "Four Columns",
+    "scope": "page",
+    "photoCount": 4,
+    "hasText": false,
+    "frames": [
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0,
+        "w": 0.25,
+        "h": 1
+      },
+      {
+        "type": "photo",
+        "x": 0.25,
+        "y": 0,
+        "w": 0.25,
+        "h": 1
+      },
+      {
+        "type": "photo",
+        "x": 0.5,
+        "y": 0,
+        "w": 0.25,
+        "h": 1
+      },
+      {
+        "type": "photo",
+        "x": 0.75,
+        "y": 0,
+        "w": 0.25,
+        "h": 1
+      }
+    ]
+  },
+  {
+    "id": "p4-rows",
+    "name": "Four Rows",
+    "scope": "page",
+    "photoCount": 4,
+    "hasText": false,
+    "frames": [
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0,
+        "w": 1,
+        "h": 0.25
+      },
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0.25,
+        "w": 1,
+        "h": 0.25
+      },
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0.5,
+        "w": 1,
+        "h": 0.25
+      },
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0.75,
+        "w": 1,
+        "h": 0.25
+      }
+    ]
+  },
+  {
+    "id": "p4-hero-left-3",
+    "name": "Hero Left + 3 Strip",
+    "scope": "page",
+    "photoCount": 4,
+    "hasText": false,
+    "frames": [
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0,
+        "w": 0.66,
+        "h": 1
+      },
+      {
+        "type": "photo",
+        "x": 0.66,
+        "y": 0,
+        "w": 0.34,
+        "h": 0.3333
+      },
+      {
+        "type": "photo",
+        "x": 0.66,
+        "y": 0.3333,
+        "w": 0.34,
+        "h": 0.3333
+      },
+      {
+        "type": "photo",
+        "x": 0.66,
+        "y": 0.6667,
+        "w": 0.34,
+        "h": 0.3333
+      }
+    ]
+  },
+  {
+    "id": "p4-hero-right-3",
+    "name": "3 Strip + Hero Right",
+    "scope": "page",
+    "photoCount": 4,
+    "hasText": false,
+    "frames": [
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0,
+        "w": 0.34,
+        "h": 0.3333
+      },
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0.3333,
+        "w": 0.34,
+        "h": 0.3333
+      },
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0.6667,
+        "w": 0.34,
+        "h": 0.3333
+      },
+      {
+        "type": "photo",
+        "x": 0.34,
+        "y": 0,
+        "w": 0.66,
+        "h": 1
+      }
+    ]
+  },
+  {
+    "id": "p4-hero-top-3",
+    "name": "Hero Top + 3 Strip",
+    "scope": "page",
+    "photoCount": 4,
+    "hasText": false,
+    "frames": [
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0,
+        "w": 1,
+        "h": 0.65
+      },
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0.65,
+        "w": 0.3333,
+        "h": 0.35
+      },
+      {
+        "type": "photo",
+        "x": 0.3333,
+        "y": 0.65,
+        "w": 0.3333,
+        "h": 0.35
+      },
+      {
+        "type": "photo",
+        "x": 0.6667,
+        "y": 0.65,
+        "w": 0.3333,
+        "h": 0.35
+      }
+    ]
+  },
+  {
+    "id": "p4-hero-bot-3",
+    "name": "3 Strip + Hero Bottom",
+    "scope": "page",
+    "photoCount": 4,
+    "hasText": false,
+    "frames": [
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0,
+        "w": 0.3333,
+        "h": 0.35
+      },
+      {
+        "type": "photo",
+        "x": 0.3333,
+        "y": 0,
+        "w": 0.3333,
+        "h": 0.35
+      },
+      {
+        "type": "photo",
+        "x": 0.6667,
+        "y": 0,
+        "w": 0.3333,
+        "h": 0.35
+      },
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0.35,
+        "w": 1,
+        "h": 0.65
+      }
+    ]
+  },
+  {
+    "id": "p4-stagger-cols",
+    "name": "Staggered 2×2 A",
+    "scope": "page",
+    "photoCount": 4,
+    "hasText": false,
+    "frames": [
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0,
+        "w": 0.5,
+        "h": 0.62
+      },
+      {
+        "type": "photo",
+        "x": 0.5,
+        "y": 0,
+        "w": 0.5,
+        "h": 0.38
+      },
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0.62,
+        "w": 0.5,
+        "h": 0.38
+      },
+      {
+        "type": "photo",
+        "x": 0.5,
+        "y": 0.38,
+        "w": 0.5,
+        "h": 0.62
+      }
+    ]
+  },
+  {
+    "id": "p4-stagger-rows",
+    "name": "Staggered 2×2 B",
+    "scope": "page",
+    "photoCount": 4,
+    "hasText": false,
+    "frames": [
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0,
+        "w": 0.62,
+        "h": 0.5
+      },
+      {
+        "type": "photo",
+        "x": 0.62,
+        "y": 0,
+        "w": 0.38,
+        "h": 0.5
+      },
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0.5,
+        "w": 0.38,
+        "h": 0.5
+      },
+      {
+        "type": "photo",
+        "x": 0.38,
+        "y": 0.5,
+        "w": 0.62,
+        "h": 0.5
+      }
+    ]
+  },
+  {
+    "id": "p4-tl-hero",
+    "name": "Top-Left Hero + 3",
+    "scope": "page",
+    "photoCount": 4,
+    "hasText": false,
+    "frames": [
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0,
+        "w": 0.62,
+        "h": 0.62
+      },
+      {
+        "type": "photo",
+        "x": 0.62,
+        "y": 0,
+        "w": 0.38,
+        "h": 0.62
+      },
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0.62,
+        "w": 0.5,
+        "h": 0.38
+      },
+      {
+        "type": "photo",
+        "x": 0.5,
+        "y": 0.62,
+        "w": 0.5,
+        "h": 0.38
+      }
+    ]
+  },
+  {
+    "id": "p4-tr-hero",
+    "name": "Top-Right Hero + 3",
+    "scope": "page",
+    "photoCount": 4,
+    "hasText": false,
+    "frames": [
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0,
+        "w": 0.38,
+        "h": 0.62
+      },
+      {
+        "type": "photo",
+        "x": 0.38,
+        "y": 0,
+        "w": 0.62,
+        "h": 0.62
+      },
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0.62,
+        "w": 0.5,
+        "h": 0.38
+      },
+      {
+        "type": "photo",
+        "x": 0.5,
+        "y": 0.62,
+        "w": 0.5,
+        "h": 0.38
+      }
+    ]
+  },
+  {
+    "id": "p4-bl-hero",
+    "name": "Bottom-Left Hero + 3",
+    "scope": "page",
+    "photoCount": 4,
+    "hasText": false,
+    "frames": [
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0,
+        "w": 0.5,
+        "h": 0.38
+      },
+      {
+        "type": "photo",
+        "x": 0.5,
+        "y": 0,
+        "w": 0.5,
+        "h": 0.38
+      },
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0.38,
+        "w": 0.62,
+        "h": 0.62
+      },
+      {
+        "type": "photo",
+        "x": 0.62,
+        "y": 0.38,
+        "w": 0.38,
+        "h": 0.62
+      }
+    ]
+  },
+  {
+    "id": "p4-br-hero",
+    "name": "Bottom-Right Hero + 3",
+    "scope": "page",
+    "photoCount": 4,
+    "hasText": false,
+    "frames": [
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0,
+        "w": 0.5,
+        "h": 0.38
+      },
+      {
+        "type": "photo",
+        "x": 0.5,
+        "y": 0,
+        "w": 0.5,
+        "h": 0.38
+      },
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0.38,
+        "w": 0.38,
+        "h": 0.62
+      },
+      {
+        "type": "photo",
+        "x": 0.38,
+        "y": 0.38,
+        "w": 0.62,
+        "h": 0.62
+      }
+    ]
+  },
+  {
+    "id": "p4-l-strip-2",
+    "name": "2 Left + 2 Wide",
+    "scope": "page",
+    "photoCount": 4,
+    "hasText": false,
+    "frames": [
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0,
+        "w": 0.4,
+        "h": 0.5
+      },
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0.5,
+        "w": 0.4,
+        "h": 0.5
+      },
+      {
+        "type": "photo",
+        "x": 0.4,
+        "y": 0,
+        "w": 0.6,
+        "h": 0.35
+      },
+      {
+        "type": "photo",
+        "x": 0.4,
+        "y": 0.35,
+        "w": 0.6,
+        "h": 0.65
+      }
+    ]
+  },
+  {
+    "id": "p4-mosaic-mid",
+    "name": "Split Mosaic",
+    "scope": "page",
+    "photoCount": 4,
+    "hasText": false,
+    "frames": [
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0,
+        "w": 0.5,
+        "h": 0.32
+      },
+      {
+        "type": "photo",
+        "x": 0.5,
+        "y": 0,
+        "w": 0.5,
+        "h": 0.68
+      },
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0.32,
+        "w": 0.5,
+        "h": 0.68
+      },
+      {
+        "type": "photo",
+        "x": 0.5,
+        "y": 0.68,
+        "w": 0.5,
+        "h": 0.32
+      }
+    ]
+  },
+  {
+    "id": "p4-text-bot",
+    "name": "2×2 + Footer Text",
+    "scope": "page",
+    "photoCount": 4,
+    "hasText": true,
+    "frames": [
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0,
+        "w": 0.5,
+        "h": 0.4
+      },
+      {
+        "type": "photo",
+        "x": 0.5,
+        "y": 0,
+        "w": 0.5,
+        "h": 0.4
+      },
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0.4,
+        "w": 0.5,
+        "h": 0.4
+      },
+      {
+        "type": "photo",
+        "x": 0.5,
+        "y": 0.4,
+        "w": 0.5,
+        "h": 0.4
+      },
+      {
+        "type": "text",
+        "x": 0,
+        "y": 0.8,
+        "w": 1,
+        "h": 0.2
+      }
+    ]
+  },
+  {
+    "id": "p4-text-top",
+    "name": "Title + 2×2",
+    "scope": "page",
+    "photoCount": 4,
+    "hasText": true,
+    "frames": [
+      {
+        "type": "text",
+        "x": 0,
+        "y": 0,
+        "w": 1,
+        "h": 0.18
+      },
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0.18,
+        "w": 0.5,
+        "h": 0.41
+      },
+      {
+        "type": "photo",
+        "x": 0.5,
+        "y": 0.18,
+        "w": 0.5,
+        "h": 0.41
+      },
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0.59,
+        "w": 0.5,
+        "h": 0.41
+      },
+      {
+        "type": "photo",
+        "x": 0.5,
+        "y": 0.59,
+        "w": 0.5,
+        "h": 0.41
+      }
+    ]
+  },
+  {
+    "id": "p4-text-center",
+    "name": "2×2 + Center Text",
+    "scope": "page",
+    "photoCount": 4,
+    "hasText": true,
+    "frames": [
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0,
+        "w": 0.5,
+        "h": 0.4
+      },
+      {
+        "type": "photo",
+        "x": 0.5,
+        "y": 0,
+        "w": 0.5,
+        "h": 0.4
+      },
+      {
+        "type": "text",
+        "x": 0,
+        "y": 0.4,
+        "w": 1,
+        "h": 0.2
+      },
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0.6,
+        "w": 0.5,
+        "h": 0.4
+      },
+      {
+        "type": "photo",
+        "x": 0.5,
+        "y": 0.6,
+        "w": 0.5,
+        "h": 0.4
+      }
+    ]
+  },
+  {
+    "id": "p4-text-hero",
+    "name": "Hero + 3 + Text",
+    "scope": "page",
+    "photoCount": 4,
+    "hasText": true,
+    "frames": [
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0,
+        "w": 0.64,
+        "h": 0.55
+      },
+      {
+        "type": "photo",
+        "x": 0.64,
+        "y": 0,
+        "w": 0.36,
+        "h": 0.275
+      },
+      {
+        "type": "photo",
+        "x": 0.64,
+        "y": 0.275,
+        "w": 0.36,
+        "h": 0.275
+      },
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0.55,
+        "w": 0.5,
+        "h": 0.25
+      },
+      {
+        "type": "text",
+        "x": 0.5,
+        "y": 0.55,
+        "w": 0.5,
+        "h": 0.45
+      }
+    ]
+  },
+  {
+    "id": "p4-cover-paris",
+    "name": "Cover: 4 Grid + Footer",
+    "scope": "page",
+    "photoCount": 4,
+    "hasText": true,
+    "frames": [
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0,
+        "w": 0.5,
+        "h": 0.38
+      },
+      {
+        "type": "photo",
+        "x": 0.5,
+        "y": 0,
+        "w": 0.5,
+        "h": 0.38
+      },
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0.38,
+        "w": 0.5,
+        "h": 0.38
+      },
+      {
+        "type": "photo",
+        "x": 0.5,
+        "y": 0.38,
+        "w": 0.5,
+        "h": 0.38
+      },
+      {
+        "type": "text",
+        "x": 0.1,
+        "y": 0.76,
+        "w": 0.8,
+        "h": 0.24
+      }
+    ]
+  },
+  {
+    "id": "p5-hero-right4",
+    "name": "Hero Left + 4 Strip",
+    "scope": "page",
+    "photoCount": 5,
+    "hasText": false,
+    "frames": [
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0,
+        "w": 0.72,
+        "h": 1
+      },
+      {
+        "type": "photo",
+        "x": 0.72,
+        "y": 0,
+        "w": 0.28,
+        "h": 0.25
+      },
+      {
+        "type": "photo",
+        "x": 0.72,
+        "y": 0.25,
+        "w": 0.28,
+        "h": 0.25
+      },
+      {
+        "type": "photo",
+        "x": 0.72,
+        "y": 0.5,
+        "w": 0.28,
+        "h": 0.25
+      },
+      {
+        "type": "photo",
+        "x": 0.72,
+        "y": 0.75,
+        "w": 0.28,
+        "h": 0.25
+      }
+    ]
+  },
+  {
+    "id": "p5-hero-left4",
+    "name": "4 Strip + Hero Right",
+    "scope": "page",
+    "photoCount": 5,
+    "hasText": false,
+    "frames": [
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0,
+        "w": 0.28,
+        "h": 0.25
+      },
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0.25,
+        "w": 0.28,
+        "h": 0.25
+      },
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0.5,
+        "w": 0.28,
+        "h": 0.25
+      },
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0.75,
+        "w": 0.28,
+        "h": 0.25
+      },
+      {
+        "type": "photo",
+        "x": 0.28,
+        "y": 0,
+        "w": 0.72,
+        "h": 1
+      }
+    ]
+  },
+  {
+    "id": "p5-hero-top4",
+    "name": "Hero Top + 4 Strip",
+    "scope": "page",
+    "photoCount": 5,
+    "hasText": false,
+    "frames": [
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0,
+        "w": 1,
+        "h": 0.7
+      },
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0.7,
+        "w": 0.25,
+        "h": 0.3
+      },
+      {
+        "type": "photo",
+        "x": 0.25,
+        "y": 0.7,
+        "w": 0.25,
+        "h": 0.3
+      },
+      {
+        "type": "photo",
+        "x": 0.5,
+        "y": 0.7,
+        "w": 0.25,
+        "h": 0.3
+      },
+      {
+        "type": "photo",
+        "x": 0.75,
+        "y": 0.7,
+        "w": 0.25,
+        "h": 0.3
+      }
+    ]
+  },
+  {
+    "id": "p5-hero-bot4",
+    "name": "4 Strip + Hero Bottom",
+    "scope": "page",
+    "photoCount": 5,
+    "hasText": false,
+    "frames": [
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0,
+        "w": 0.25,
+        "h": 0.3
+      },
+      {
+        "type": "photo",
+        "x": 0.25,
+        "y": 0,
+        "w": 0.25,
+        "h": 0.3
+      },
+      {
+        "type": "photo",
+        "x": 0.5,
+        "y": 0,
+        "w": 0.25,
+        "h": 0.3
+      },
+      {
+        "type": "photo",
+        "x": 0.75,
+        "y": 0,
+        "w": 0.25,
+        "h": 0.3
+      },
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0.3,
+        "w": 1,
+        "h": 0.7
+      }
+    ]
+  },
+  {
+    "id": "p5-2plus3",
+    "name": "2 Top + 3 Bottom",
+    "scope": "page",
+    "photoCount": 5,
+    "hasText": false,
+    "frames": [
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0,
+        "w": 0.5,
+        "h": 0.55
+      },
+      {
+        "type": "photo",
+        "x": 0.5,
+        "y": 0,
+        "w": 0.5,
+        "h": 0.55
+      },
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0.55,
+        "w": 0.3333,
+        "h": 0.45
+      },
+      {
+        "type": "photo",
+        "x": 0.3333,
+        "y": 0.55,
+        "w": 0.3333,
+        "h": 0.45
+      },
+      {
+        "type": "photo",
+        "x": 0.6667,
+        "y": 0.55,
+        "w": 0.3333,
+        "h": 0.45
+      }
+    ]
+  },
+  {
+    "id": "p5-3plus2",
+    "name": "3 Top + 2 Bottom",
+    "scope": "page",
+    "photoCount": 5,
+    "hasText": false,
+    "frames": [
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0,
+        "w": 0.3333,
+        "h": 0.45
+      },
+      {
+        "type": "photo",
+        "x": 0.3333,
+        "y": 0,
+        "w": 0.3333,
+        "h": 0.45
+      },
+      {
+        "type": "photo",
+        "x": 0.6667,
+        "y": 0,
+        "w": 0.3333,
+        "h": 0.45
+      },
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0.45,
+        "w": 0.5,
+        "h": 0.55
+      },
+      {
+        "type": "photo",
+        "x": 0.5,
+        "y": 0.45,
+        "w": 0.5,
+        "h": 0.55
+      }
+    ]
+  },
+  {
+    "id": "p5-left2-col3",
+    "name": "2 Left + 3 Right",
+    "scope": "page",
+    "photoCount": 5,
+    "hasText": false,
+    "frames": [
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0,
+        "w": 0.55,
+        "h": 0.5
+      },
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0.5,
+        "w": 0.55,
+        "h": 0.5
+      },
+      {
+        "type": "photo",
+        "x": 0.55,
+        "y": 0,
+        "w": 0.45,
+        "h": 0.3333
+      },
+      {
+        "type": "photo",
+        "x": 0.55,
+        "y": 0.3333,
+        "w": 0.45,
+        "h": 0.3333
+      },
+      {
+        "type": "photo",
+        "x": 0.55,
+        "y": 0.6667,
+        "w": 0.45,
+        "h": 0.3333
+      }
+    ]
+  },
+  {
+    "id": "p5-left3-col2",
+    "name": "3 Left + 2 Right",
+    "scope": "page",
+    "photoCount": 5,
+    "hasText": false,
+    "frames": [
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0,
+        "w": 0.45,
+        "h": 0.3333
+      },
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0.3333,
+        "w": 0.45,
+        "h": 0.3333
+      },
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0.6667,
+        "w": 0.45,
+        "h": 0.3333
+      },
+      {
+        "type": "photo",
+        "x": 0.45,
+        "y": 0,
+        "w": 0.55,
+        "h": 0.5
+      },
+      {
+        "type": "photo",
+        "x": 0.45,
+        "y": 0.5,
+        "w": 0.55,
+        "h": 0.5
+      }
+    ]
+  },
+  {
+    "id": "p5-l-corner-3",
+    "name": "Left 2 + Hero + Bottom 2",
+    "scope": "page",
+    "photoCount": 5,
+    "hasText": false,
+    "frames": [
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0,
+        "w": 0.36,
+        "h": 0.35
+      },
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0.35,
+        "w": 0.36,
+        "h": 0.35
+      },
+      {
+        "type": "photo",
+        "x": 0.36,
+        "y": 0,
+        "w": 0.64,
+        "h": 0.7
+      },
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0.7,
+        "w": 0.6,
+        "h": 0.3
+      },
+      {
+        "type": "photo",
+        "x": 0.6,
+        "y": 0.7,
+        "w": 0.4,
+        "h": 0.3
+      }
+    ]
+  },
+  {
+    "id": "p5-r-corner-3",
+    "name": "Hero + Right 2 + Bottom 2",
+    "scope": "page",
+    "photoCount": 5,
+    "hasText": false,
+    "frames": [
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0,
+        "w": 0.64,
+        "h": 0.7
+      },
+      {
+        "type": "photo",
+        "x": 0.64,
+        "y": 0,
+        "w": 0.36,
+        "h": 0.35
+      },
+      {
+        "type": "photo",
+        "x": 0.64,
+        "y": 0.35,
+        "w": 0.36,
+        "h": 0.35
+      },
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0.7,
+        "w": 0.4,
+        "h": 0.3
+      },
+      {
+        "type": "photo",
+        "x": 0.4,
+        "y": 0.7,
+        "w": 0.6,
+        "h": 0.3
+      }
+    ]
+  },
+  {
+    "id": "p5-top-l2-r2",
+    "name": "Top Banner + 2×2",
+    "scope": "page",
+    "photoCount": 5,
+    "hasText": false,
+    "frames": [
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0,
+        "w": 1,
+        "h": 0.42
+      },
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0.42,
+        "w": 0.5,
+        "h": 0.29
+      },
+      {
+        "type": "photo",
+        "x": 0.5,
+        "y": 0.42,
+        "w": 0.5,
+        "h": 0.29
+      },
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0.71,
+        "w": 0.5,
+        "h": 0.29
+      },
+      {
+        "type": "photo",
+        "x": 0.5,
+        "y": 0.71,
+        "w": 0.5,
+        "h": 0.29
+      }
+    ]
+  },
+  {
+    "id": "p5-bot-l2-r2",
+    "name": "2×2 + Bottom Banner",
+    "scope": "page",
+    "photoCount": 5,
+    "hasText": false,
+    "frames": [
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0,
+        "w": 0.5,
+        "h": 0.29
+      },
+      {
+        "type": "photo",
+        "x": 0.5,
+        "y": 0,
+        "w": 0.5,
+        "h": 0.29
+      },
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0.29,
+        "w": 0.5,
+        "h": 0.29
+      },
+      {
+        "type": "photo",
+        "x": 0.5,
+        "y": 0.29,
+        "w": 0.5,
+        "h": 0.29
+      },
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0.58,
+        "w": 1,
+        "h": 0.42
+      }
+    ]
+  },
+  {
+    "id": "p5-pinwheel",
+    "name": "Pinwheel Collage",
+    "scope": "page",
+    "photoCount": 5,
+    "hasText": false,
+    "frames": [
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0,
+        "w": 0.6,
+        "h": 0.36
+      },
+      {
+        "type": "photo",
+        "x": 0.6,
+        "y": 0,
+        "w": 0.4,
+        "h": 0.6
+      },
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0.36,
+        "w": 0.36,
+        "h": 0.64
+      },
+      {
+        "type": "photo",
+        "x": 0.36,
+        "y": 0.36,
+        "w": 0.24,
+        "h": 0.24
+      },
+      {
+        "type": "photo",
+        "x": 0.36,
+        "y": 0.6,
+        "w": 0.64,
+        "h": 0.4
+      }
+    ]
+  },
+  {
+    "id": "p5-center-band",
+    "name": "2 Top + Banner + 2 Bot",
+    "scope": "page",
+    "photoCount": 5,
+    "hasText": false,
+    "frames": [
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0,
+        "w": 0.5,
+        "h": 0.3
+      },
+      {
+        "type": "photo",
+        "x": 0.5,
+        "y": 0,
+        "w": 0.5,
+        "h": 0.3
+      },
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0.3,
+        "w": 1,
+        "h": 0.4
+      },
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0.7,
+        "w": 0.5,
+        "h": 0.3
+      },
+      {
+        "type": "photo",
+        "x": 0.5,
+        "y": 0.7,
+        "w": 0.5,
+        "h": 0.3
+      }
+    ]
+  },
+  {
+    "id": "p5-1plus2plus2",
+    "name": "2-1-2 Editorial",
+    "scope": "page",
+    "photoCount": 5,
+    "hasText": false,
+    "frames": [
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0,
+        "w": 0.5,
+        "h": 0.35
+      },
+      {
+        "type": "photo",
+        "x": 0.5,
+        "y": 0,
+        "w": 0.5,
+        "h": 0.35
+      },
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0.35,
+        "w": 1,
+        "h": 0.3
+      },
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0.65,
+        "w": 0.4,
+        "h": 0.35
+      },
+      {
+        "type": "photo",
+        "x": 0.4,
+        "y": 0.65,
+        "w": 0.6,
+        "h": 0.35
+      }
+    ]
+  },
+  {
+    "id": "p5-text-bot",
+    "name": "5 Mosaic + Footer Text",
+    "scope": "page",
+    "photoCount": 5,
+    "hasText": true,
+    "frames": [
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0,
+        "w": 0.6,
+        "h": 0.45
+      },
+      {
+        "type": "photo",
+        "x": 0.6,
+        "y": 0,
+        "w": 0.4,
+        "h": 0.225
+      },
+      {
+        "type": "photo",
+        "x": 0.6,
+        "y": 0.225,
+        "w": 0.4,
+        "h": 0.225
+      },
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0.45,
+        "w": 0.5,
+        "h": 0.35
+      },
+      {
+        "type": "photo",
+        "x": 0.5,
+        "y": 0.45,
+        "w": 0.5,
+        "h": 0.35
+      },
+      {
+        "type": "text",
+        "x": 0,
+        "y": 0.8,
+        "w": 1,
+        "h": 0.2
+      }
+    ]
+  },
+  {
+    "id": "p5-text-top",
+    "name": "Title + 5 Grid",
+    "scope": "page",
+    "photoCount": 5,
+    "hasText": true,
+    "frames": [
+      {
+        "type": "text",
+        "x": 0,
+        "y": 0,
+        "w": 1,
+        "h": 0.16
+      },
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0.16,
+        "w": 0.5,
+        "h": 0.42
+      },
+      {
+        "type": "photo",
+        "x": 0.5,
+        "y": 0.16,
+        "w": 0.5,
+        "h": 0.42
+      },
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0.58,
+        "w": 0.3333,
+        "h": 0.42
+      },
+      {
+        "type": "photo",
+        "x": 0.3333,
+        "y": 0.58,
+        "w": 0.3333,
+        "h": 0.42
+      },
+      {
+        "type": "photo",
+        "x": 0.6667,
+        "y": 0.58,
+        "w": 0.3333,
+        "h": 0.42
+      }
+    ]
+  },
+  {
+    "id": "p5-text-cell",
+    "name": "3×2 with Text Slot",
+    "scope": "page",
+    "photoCount": 5,
+    "hasText": true,
+    "frames": [
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0,
+        "w": 0.5,
+        "h": 0.3333
+      },
+      {
+        "type": "photo",
+        "x": 0.5,
+        "y": 0,
+        "w": 0.5,
+        "h": 0.3333
+      },
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0.3333,
+        "w": 0.5,
+        "h": 0.3333
+      },
+      {
+        "type": "photo",
+        "x": 0.5,
+        "y": 0.3333,
+        "w": 0.5,
+        "h": 0.3333
+      },
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0.6667,
+        "w": 0.5,
+        "h": 0.3333
+      },
+      {
+        "type": "text",
+        "x": 0.5,
+        "y": 0.6667,
+        "w": 0.5,
+        "h": 0.3333
+      }
+    ]
+  },
+  {
+    "id": "p5-text-mid",
+    "name": "5 Grid + Center Note",
+    "scope": "page",
+    "photoCount": 5,
+    "hasText": true,
+    "frames": [
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0,
+        "w": 0.3333,
+        "h": 0.4
+      },
+      {
+        "type": "photo",
+        "x": 0.3333,
+        "y": 0,
+        "w": 0.3333,
+        "h": 0.4
+      },
+      {
+        "type": "photo",
+        "x": 0.6667,
+        "y": 0,
+        "w": 0.3333,
+        "h": 0.4
+      },
+      {
+        "type": "text",
+        "x": 0,
+        "y": 0.4,
+        "w": 1,
+        "h": 0.18
+      },
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0.58,
+        "w": 0.5,
+        "h": 0.42
+      },
+      {
+        "type": "photo",
+        "x": 0.5,
+        "y": 0.58,
+        "w": 0.5,
+        "h": 0.42
+      }
+    ]
+  },
+  {
+    "id": "p5-text-hero",
+    "name": "Hero + 4 + Text",
+    "scope": "page",
+    "photoCount": 5,
+    "hasText": true,
+    "frames": [
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0,
+        "w": 0.65,
+        "h": 0.62
+      },
+      {
+        "type": "photo",
+        "x": 0.65,
+        "y": 0,
+        "w": 0.35,
+        "h": 0.31
+      },
+      {
+        "type": "photo",
+        "x": 0.65,
+        "y": 0.31,
+        "w": 0.35,
+        "h": 0.31
+      },
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0.62,
+        "w": 0.325,
+        "h": 0.38
+      },
+      {
+        "type": "photo",
+        "x": 0.325,
+        "y": 0.62,
+        "w": 0.325,
+        "h": 0.38
+      },
+      {
+        "type": "text",
+        "x": 0.65,
+        "y": 0.62,
+        "w": 0.35,
+        "h": 0.38
+      }
+    ]
+  },
+  {
+    "id": "p6-grid2x3",
+    "name": "2×3 Grid",
+    "scope": "page",
+    "photoCount": 6,
+    "hasText": false,
+    "frames": [
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0,
+        "w": 0.5,
+        "h": 0.3333
+      },
+      {
+        "type": "photo",
+        "x": 0.5,
+        "y": 0,
+        "w": 0.5,
+        "h": 0.3333
+      },
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0.3333,
+        "w": 0.5,
+        "h": 0.3333
+      },
+      {
+        "type": "photo",
+        "x": 0.5,
+        "y": 0.3333,
+        "w": 0.5,
+        "h": 0.3333
+      },
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0.6667,
+        "w": 0.5,
+        "h": 0.3333
+      },
+      {
+        "type": "photo",
+        "x": 0.5,
+        "y": 0.6667,
+        "w": 0.5,
+        "h": 0.3333
+      }
+    ]
+  },
+  {
+    "id": "p6-grid3x2",
+    "name": "3×2 Grid",
+    "scope": "page",
+    "photoCount": 6,
+    "hasText": false,
+    "frames": [
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0,
+        "w": 0.3333,
+        "h": 0.5
+      },
+      {
+        "type": "photo",
+        "x": 0.3333,
+        "y": 0,
+        "w": 0.3333,
+        "h": 0.5
+      },
+      {
+        "type": "photo",
+        "x": 0.6667,
+        "y": 0,
+        "w": 0.3333,
+        "h": 0.5
+      },
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0.5,
+        "w": 0.3333,
+        "h": 0.5
+      },
+      {
+        "type": "photo",
+        "x": 0.3333,
+        "y": 0.5,
+        "w": 0.3333,
+        "h": 0.5
+      },
+      {
+        "type": "photo",
+        "x": 0.6667,
+        "y": 0.5,
+        "w": 0.3333,
+        "h": 0.5
+      }
+    ]
+  },
+  {
+    "id": "p6-hero-tl-5",
+    "name": "Hero + 2×2 + Bottom",
+    "scope": "page",
+    "photoCount": 6,
+    "hasText": false,
+    "frames": [
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0,
+        "w": 0.5,
+        "h": 0.55
+      },
+      {
+        "type": "photo",
+        "x": 0.5,
+        "y": 0,
+        "w": 0.25,
+        "h": 0.275
+      },
+      {
+        "type": "photo",
+        "x": 0.75,
+        "y": 0,
+        "w": 0.25,
+        "h": 0.275
+      },
+      {
+        "type": "photo",
+        "x": 0.5,
+        "y": 0.275,
+        "w": 0.25,
+        "h": 0.275
+      },
+      {
+        "type": "photo",
+        "x": 0.75,
+        "y": 0.275,
+        "w": 0.25,
+        "h": 0.275
+      },
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0.55,
+        "w": 1,
+        "h": 0.45
+      }
+    ]
+  },
+  {
+    "id": "p6-top-bot-quad",
+    "name": "Top Hero + 4 + Bottom",
+    "scope": "page",
+    "photoCount": 6,
+    "hasText": false,
+    "frames": [
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0,
+        "w": 1,
+        "h": 0.45
+      },
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0.45,
+        "w": 0.25,
+        "h": 0.275
+      },
+      {
+        "type": "photo",
+        "x": 0.25,
+        "y": 0.45,
+        "w": 0.25,
+        "h": 0.275
+      },
+      {
+        "type": "photo",
+        "x": 0.5,
+        "y": 0.45,
+        "w": 0.25,
+        "h": 0.275
+      },
+      {
+        "type": "photo",
+        "x": 0.75,
+        "y": 0.45,
+        "w": 0.25,
+        "h": 0.275
+      },
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0.725,
+        "w": 1,
+        "h": 0.275
+      }
+    ]
+  },
+  {
+    "id": "p6-1plus2plus3",
+    "name": "1 + 2 + 3 Pyramid",
+    "scope": "page",
+    "photoCount": 6,
+    "hasText": false,
+    "frames": [
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0,
+        "w": 1,
+        "h": 0.38
+      },
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0.38,
+        "w": 0.5,
+        "h": 0.31
+      },
+      {
+        "type": "photo",
+        "x": 0.5,
+        "y": 0.38,
+        "w": 0.5,
+        "h": 0.31
+      },
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0.69,
+        "w": 0.3333,
+        "h": 0.31
+      },
+      {
+        "type": "photo",
+        "x": 0.3333,
+        "y": 0.69,
+        "w": 0.3333,
+        "h": 0.31
+      },
+      {
+        "type": "photo",
+        "x": 0.6667,
+        "y": 0.69,
+        "w": 0.3333,
+        "h": 0.31
+      }
+    ]
+  },
+  {
+    "id": "p6-3plus2plus1",
+    "name": "3 + 2 + 1 Inverted",
+    "scope": "page",
+    "photoCount": 6,
+    "hasText": false,
+    "frames": [
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0,
+        "w": 0.3333,
+        "h": 0.31
+      },
+      {
+        "type": "photo",
+        "x": 0.3333,
+        "y": 0,
+        "w": 0.3333,
+        "h": 0.31
+      },
+      {
+        "type": "photo",
+        "x": 0.6667,
+        "y": 0,
+        "w": 0.3333,
+        "h": 0.31
+      },
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0.31,
+        "w": 0.5,
+        "h": 0.31
+      },
+      {
+        "type": "photo",
+        "x": 0.5,
+        "y": 0.31,
+        "w": 0.5,
+        "h": 0.31
+      },
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0.62,
+        "w": 1,
+        "h": 0.38
+      }
+    ]
+  },
+  {
+    "id": "p6-2plus1plus3",
+    "name": "2 + 1 + 3 Collage",
+    "scope": "page",
+    "photoCount": 6,
+    "hasText": false,
+    "frames": [
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0,
+        "w": 0.5,
+        "h": 0.34
+      },
+      {
+        "type": "photo",
+        "x": 0.5,
+        "y": 0,
+        "w": 0.5,
+        "h": 0.34
+      },
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0.34,
+        "w": 1,
+        "h": 0.32
+      },
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0.66,
+        "w": 0.3333,
+        "h": 0.34
+      },
+      {
+        "type": "photo",
+        "x": 0.3333,
+        "y": 0.66,
+        "w": 0.3333,
+        "h": 0.34
+      },
+      {
+        "type": "photo",
+        "x": 0.6667,
+        "y": 0.66,
+        "w": 0.3333,
+        "h": 0.34
+      }
+    ]
+  },
+  {
+    "id": "p6-3-2-1-cols",
+    "name": "3-2-1 Columns",
+    "scope": "page",
+    "photoCount": 6,
+    "hasText": false,
+    "frames": [
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0,
+        "w": 0.3333,
+        "h": 0.3333
+      },
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0.3333,
+        "w": 0.3333,
+        "h": 0.3333
+      },
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0.6667,
+        "w": 0.3333,
+        "h": 0.3333
+      },
+      {
+        "type": "photo",
+        "x": 0.3333,
+        "y": 0,
+        "w": 0.3333,
+        "h": 0.5
+      },
+      {
+        "type": "photo",
+        "x": 0.3333,
+        "y": 0.5,
+        "w": 0.3333,
+        "h": 0.5
+      },
+      {
+        "type": "photo",
+        "x": 0.6667,
+        "y": 0,
+        "w": 0.3333,
+        "h": 1
+      }
+    ]
+  },
+  {
+    "id": "p6-1-2-3-cols",
+    "name": "1-2-3 Columns",
+    "scope": "page",
+    "photoCount": 6,
+    "hasText": false,
+    "frames": [
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0,
+        "w": 0.3333,
+        "h": 1
+      },
+      {
+        "type": "photo",
+        "x": 0.3333,
+        "y": 0,
+        "w": 0.3333,
+        "h": 0.5
+      },
+      {
+        "type": "photo",
+        "x": 0.3333,
+        "y": 0.5,
+        "w": 0.3333,
+        "h": 0.5
+      },
+      {
+        "type": "photo",
+        "x": 0.6667,
+        "y": 0,
+        "w": 0.3333,
+        "h": 0.3333
+      },
+      {
+        "type": "photo",
+        "x": 0.6667,
+        "y": 0.3333,
+        "w": 0.3333,
+        "h": 0.3333
+      },
+      {
+        "type": "photo",
+        "x": 0.6667,
+        "y": 0.6667,
+        "w": 0.3333,
+        "h": 0.3333
+      }
+    ]
+  },
+  {
+    "id": "p6-stagger-2x3",
+    "name": "Staggered 2×3",
+    "scope": "page",
+    "photoCount": 6,
+    "hasText": false,
+    "frames": [
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0,
+        "w": 0.5,
+        "h": 0.42
+      },
+      {
+        "type": "photo",
+        "x": 0.5,
+        "y": 0,
+        "w": 0.5,
+        "h": 0.25
+      },
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0.42,
+        "w": 0.5,
+        "h": 0.28
+      },
+      {
+        "type": "photo",
+        "x": 0.5,
+        "y": 0.25,
+        "w": 0.5,
+        "h": 0.42
+      },
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0.7,
+        "w": 0.5,
+        "h": 0.3
+      },
+      {
+        "type": "photo",
+        "x": 0.5,
+        "y": 0.67,
+        "w": 0.5,
+        "h": 0.33
+      }
+    ]
+  },
+  {
+    "id": "p6-hero-5strip",
+    "name": "Hero Left + 5 Strip",
+    "scope": "page",
+    "photoCount": 6,
+    "hasText": false,
+    "frames": [
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0,
+        "w": 0.74,
+        "h": 1
+      },
+      {
+        "type": "photo",
+        "x": 0.74,
+        "y": 0,
+        "w": 0.26,
+        "h": 0.2
+      },
+      {
+        "type": "photo",
+        "x": 0.74,
+        "y": 0.2,
+        "w": 0.26,
+        "h": 0.2
+      },
+      {
+        "type": "photo",
+        "x": 0.74,
+        "y": 0.4,
+        "w": 0.26,
+        "h": 0.2
+      },
+      {
+        "type": "photo",
+        "x": 0.74,
+        "y": 0.6,
+        "w": 0.26,
+        "h": 0.2
+      },
+      {
+        "type": "photo",
+        "x": 0.74,
+        "y": 0.8,
+        "w": 0.26,
+        "h": 0.2
+      }
+    ]
+  },
+  {
+    "id": "p6-asym-mosaic",
+    "name": "Asymmetric 6 Mosaic",
+    "scope": "page",
+    "photoCount": 6,
+    "hasText": false,
+    "frames": [
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0,
+        "w": 0.58,
+        "h": 0.55
+      },
+      {
+        "type": "photo",
+        "x": 0.58,
+        "y": 0,
+        "w": 0.42,
+        "h": 0.275
+      },
+      {
+        "type": "photo",
+        "x": 0.58,
+        "y": 0.275,
+        "w": 0.42,
+        "h": 0.275
+      },
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0.55,
+        "w": 0.38,
+        "h": 0.45
+      },
+      {
+        "type": "photo",
+        "x": 0.38,
+        "y": 0.55,
+        "w": 0.31,
+        "h": 0.45
+      },
+      {
+        "type": "photo",
+        "x": 0.69,
+        "y": 0.55,
+        "w": 0.31,
+        "h": 0.45
+      }
+    ]
+  },
+  {
+    "id": "p6-text-top",
+    "name": "Title + 2×3 Grid",
+    "scope": "page",
+    "photoCount": 6,
+    "hasText": true,
+    "frames": [
+      {
+        "type": "text",
+        "x": 0,
+        "y": 0,
+        "w": 1,
+        "h": 0.16
+      },
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0.16,
+        "w": 0.5,
+        "h": 0.28
+      },
+      {
+        "type": "photo",
+        "x": 0.5,
+        "y": 0.16,
+        "w": 0.5,
+        "h": 0.28
+      },
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0.44,
+        "w": 0.5,
+        "h": 0.28
+      },
+      {
+        "type": "photo",
+        "x": 0.5,
+        "y": 0.44,
+        "w": 0.5,
+        "h": 0.28
+      },
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0.72,
+        "w": 0.5,
+        "h": 0.28
+      },
+      {
+        "type": "photo",
+        "x": 0.5,
+        "y": 0.72,
+        "w": 0.5,
+        "h": 0.28
+      }
+    ]
+  },
+  {
+    "id": "p6-text-bot",
+    "name": "2×3 Grid + Caption",
+    "scope": "page",
+    "photoCount": 6,
+    "hasText": true,
+    "frames": [
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0,
+        "w": 0.5,
+        "h": 0.28
+      },
+      {
+        "type": "photo",
+        "x": 0.5,
+        "y": 0,
+        "w": 0.5,
+        "h": 0.28
+      },
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0.28,
+        "w": 0.5,
+        "h": 0.28
+      },
+      {
+        "type": "photo",
+        "x": 0.5,
+        "y": 0.28,
+        "w": 0.5,
+        "h": 0.28
+      },
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0.56,
+        "w": 0.5,
+        "h": 0.28
+      },
+      {
+        "type": "photo",
+        "x": 0.5,
+        "y": 0.56,
+        "w": 0.5,
+        "h": 0.28
+      },
+      {
+        "type": "text",
+        "x": 0,
+        "y": 0.84,
+        "w": 1,
+        "h": 0.16
+      }
+    ]
+  },
+  {
+    "id": "p6-text-mid",
+    "name": "6 Collage + Mid Title",
+    "scope": "page",
+    "photoCount": 6,
+    "hasText": true,
+    "frames": [
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0,
+        "w": 0.3333,
+        "h": 0.4
+      },
+      {
+        "type": "photo",
+        "x": 0.3333,
+        "y": 0,
+        "w": 0.3333,
+        "h": 0.4
+      },
+      {
+        "type": "photo",
+        "x": 0.6667,
+        "y": 0,
+        "w": 0.3333,
+        "h": 0.4
+      },
+      {
+        "type": "text",
+        "x": 0,
+        "y": 0.4,
+        "w": 1,
+        "h": 0.18
+      },
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0.58,
+        "w": 0.3333,
+        "h": 0.42
+      },
+      {
+        "type": "photo",
+        "x": 0.3333,
+        "y": 0.58,
+        "w": 0.3333,
+        "h": 0.42
+      },
+      {
+        "type": "photo",
+        "x": 0.6667,
+        "y": 0.58,
+        "w": 0.3333,
+        "h": 0.42
+      }
+    ]
+  },
+  {
+    "id": "p7-3-2-2",
+    "name": "3 + 2 + 2 Editorial",
+    "scope": "page",
+    "photoCount": 7,
+    "hasText": false,
+    "frames": [
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0,
+        "w": 0.3333,
+        "h": 0.3333
+      },
+      {
+        "type": "photo",
+        "x": 0.3333,
+        "y": 0,
+        "w": 0.3333,
+        "h": 0.3333
+      },
+      {
+        "type": "photo",
+        "x": 0.6667,
+        "y": 0,
+        "w": 0.3333,
+        "h": 0.3333
+      },
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0.3333,
+        "w": 0.5,
+        "h": 0.3333
+      },
+      {
+        "type": "photo",
+        "x": 0.5,
+        "y": 0.3333,
+        "w": 0.5,
+        "h": 0.3333
+      },
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0.6667,
+        "w": 0.5,
+        "h": 0.3333
+      },
+      {
+        "type": "photo",
+        "x": 0.5,
+        "y": 0.6667,
+        "w": 0.5,
+        "h": 0.3333
+      }
+    ]
+  },
+  {
+    "id": "p7-2-2-3",
+    "name": "2 + 2 + 3 Editorial",
+    "scope": "page",
+    "photoCount": 7,
+    "hasText": false,
+    "frames": [
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0,
+        "w": 0.5,
+        "h": 0.3333
+      },
+      {
+        "type": "photo",
+        "x": 0.5,
+        "y": 0,
+        "w": 0.5,
+        "h": 0.3333
+      },
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0.3333,
+        "w": 0.5,
+        "h": 0.3333
+      },
+      {
+        "type": "photo",
+        "x": 0.5,
+        "y": 0.3333,
+        "w": 0.5,
+        "h": 0.3333
+      },
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0.6667,
+        "w": 0.3333,
+        "h": 0.3333
+      },
+      {
+        "type": "photo",
+        "x": 0.3333,
+        "y": 0.6667,
+        "w": 0.3333,
+        "h": 0.3333
+      },
+      {
+        "type": "photo",
+        "x": 0.6667,
+        "y": 0.6667,
+        "w": 0.3333,
+        "h": 0.3333
+      }
+    ]
+  },
+  {
+    "id": "p7-hero-6",
+    "name": "Top Hero + 3×2",
+    "scope": "page",
+    "photoCount": 7,
+    "hasText": false,
+    "frames": [
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0,
+        "w": 1,
+        "h": 0.46
+      },
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0.46,
+        "w": 0.3333,
+        "h": 0.27
+      },
+      {
+        "type": "photo",
+        "x": 0.3333,
+        "y": 0.46,
+        "w": 0.3333,
+        "h": 0.27
+      },
+      {
+        "type": "photo",
+        "x": 0.6667,
+        "y": 0.46,
+        "w": 0.3333,
+        "h": 0.27
+      },
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0.73,
+        "w": 0.3333,
+        "h": 0.27
+      },
+      {
+        "type": "photo",
+        "x": 0.3333,
+        "y": 0.73,
+        "w": 0.3333,
+        "h": 0.27
+      },
+      {
+        "type": "photo",
+        "x": 0.6667,
+        "y": 0.73,
+        "w": 0.3333,
+        "h": 0.27
+      }
+    ]
+  },
+  {
+    "id": "p7-ref-collage",
+    "name": "1 + 2 + 4 Collage",
+    "scope": "page",
+    "photoCount": 7,
+    "hasText": false,
+    "frames": [
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0,
+        "w": 0.62,
+        "h": 0.36
+      },
+      {
+        "type": "photo",
+        "x": 0.62,
+        "y": 0,
+        "w": 0.38,
+        "h": 0.18
+      },
+      {
+        "type": "photo",
+        "x": 0.62,
+        "y": 0.18,
+        "w": 0.38,
+        "h": 0.18
+      },
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0.36,
+        "w": 0.42,
+        "h": 0.32
+      },
+      {
+        "type": "photo",
+        "x": 0.42,
+        "y": 0.36,
+        "w": 0.58,
+        "h": 0.32
+      },
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0.68,
+        "w": 0.5,
+        "h": 0.32
+      },
+      {
+        "type": "photo",
+        "x": 0.5,
+        "y": 0.68,
+        "w": 0.5,
+        "h": 0.32
+      }
+    ]
+  },
+  {
+    "id": "p7-text-bot",
+    "name": "7 Mosaic + Caption",
+    "scope": "page",
+    "photoCount": 7,
+    "hasText": true,
+    "frames": [
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0,
+        "w": 0.62,
+        "h": 0.3
+      },
+      {
+        "type": "photo",
+        "x": 0.62,
+        "y": 0,
+        "w": 0.38,
+        "h": 0.15
+      },
+      {
+        "type": "photo",
+        "x": 0.62,
+        "y": 0.15,
+        "w": 0.38,
+        "h": 0.15
+      },
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0.3,
+        "w": 0.5,
+        "h": 0.26
+      },
+      {
+        "type": "photo",
+        "x": 0.5,
+        "y": 0.3,
+        "w": 0.5,
+        "h": 0.26
+      },
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0.56,
+        "w": 0.5,
+        "h": 0.26
+      },
+      {
+        "type": "photo",
+        "x": 0.5,
+        "y": 0.56,
+        "w": 0.5,
+        "h": 0.26
+      },
+      {
+        "type": "text",
+        "x": 0,
+        "y": 0.82,
+        "w": 1,
+        "h": 0.18
+      }
+    ]
+  },
+  {
+    "id": "p8-grid2x4",
+    "name": "2×4 Grid",
+    "scope": "page",
+    "photoCount": 8,
+    "hasText": false,
+    "frames": [
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0,
+        "w": 0.5,
+        "h": 0.25
+      },
+      {
+        "type": "photo",
+        "x": 0.5,
+        "y": 0,
+        "w": 0.5,
+        "h": 0.25
+      },
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0.25,
+        "w": 0.5,
+        "h": 0.25
+      },
+      {
+        "type": "photo",
+        "x": 0.5,
+        "y": 0.25,
+        "w": 0.5,
+        "h": 0.25
+      },
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0.5,
+        "w": 0.5,
+        "h": 0.25
+      },
+      {
+        "type": "photo",
+        "x": 0.5,
+        "y": 0.5,
+        "w": 0.5,
+        "h": 0.25
+      },
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0.75,
+        "w": 0.5,
+        "h": 0.25
+      },
+      {
+        "type": "photo",
+        "x": 0.5,
+        "y": 0.75,
+        "w": 0.5,
+        "h": 0.25
+      }
+    ]
+  },
+  {
+    "id": "p8-3-2-3",
+    "name": "3 + 2 + 3 Grid",
+    "scope": "page",
+    "photoCount": 8,
+    "hasText": false,
+    "frames": [
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0,
+        "w": 0.3333,
+        "h": 0.32
+      },
+      {
+        "type": "photo",
+        "x": 0.3333,
+        "y": 0,
+        "w": 0.3333,
+        "h": 0.32
+      },
+      {
+        "type": "photo",
+        "x": 0.6667,
+        "y": 0,
+        "w": 0.3333,
+        "h": 0.32
+      },
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0.32,
+        "w": 0.5,
+        "h": 0.36
+      },
+      {
+        "type": "photo",
+        "x": 0.5,
+        "y": 0.32,
+        "w": 0.5,
+        "h": 0.36
+      },
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0.68,
+        "w": 0.3333,
+        "h": 0.32
+      },
+      {
+        "type": "photo",
+        "x": 0.3333,
+        "y": 0.68,
+        "w": 0.3333,
+        "h": 0.32
+      },
+      {
+        "type": "photo",
+        "x": 0.6667,
+        "y": 0.68,
+        "w": 0.3333,
+        "h": 0.32
+      }
+    ]
+  },
+  {
+    "id": "p8-3-3-2",
+    "name": "3 + 3 + 2 Grid",
+    "scope": "page",
+    "photoCount": 8,
+    "hasText": false,
+    "frames": [
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0,
+        "w": 0.3333,
+        "h": 0.28
+      },
+      {
+        "type": "photo",
+        "x": 0.3333,
+        "y": 0,
+        "w": 0.3333,
+        "h": 0.28
+      },
+      {
+        "type": "photo",
+        "x": 0.6667,
+        "y": 0,
+        "w": 0.3333,
+        "h": 0.28
+      },
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0.28,
+        "w": 0.3333,
+        "h": 0.28
+      },
+      {
+        "type": "photo",
+        "x": 0.3333,
+        "y": 0.28,
+        "w": 0.3333,
+        "h": 0.28
+      },
+      {
+        "type": "photo",
+        "x": 0.6667,
+        "y": 0.28,
+        "w": 0.3333,
+        "h": 0.28
+      },
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0.56,
+        "w": 0.5,
+        "h": 0.44
+      },
+      {
+        "type": "photo",
+        "x": 0.5,
+        "y": 0.56,
+        "w": 0.5,
+        "h": 0.44
+      }
+    ]
+  },
+  {
+    "id": "p8-2-3-3",
+    "name": "2 + 3 + 3 Grid",
+    "scope": "page",
+    "photoCount": 8,
+    "hasText": false,
+    "frames": [
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0,
+        "w": 0.5,
+        "h": 0.44
+      },
+      {
+        "type": "photo",
+        "x": 0.5,
+        "y": 0,
+        "w": 0.5,
+        "h": 0.44
+      },
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0.44,
+        "w": 0.3333,
+        "h": 0.28
+      },
+      {
+        "type": "photo",
+        "x": 0.3333,
+        "y": 0.44,
+        "w": 0.3333,
+        "h": 0.28
+      },
+      {
+        "type": "photo",
+        "x": 0.6667,
+        "y": 0.44,
+        "w": 0.3333,
+        "h": 0.28
+      },
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0.72,
+        "w": 0.3333,
+        "h": 0.28
+      },
+      {
+        "type": "photo",
+        "x": 0.3333,
+        "y": 0.72,
+        "w": 0.3333,
+        "h": 0.28
+      },
+      {
+        "type": "photo",
+        "x": 0.6667,
+        "y": 0.72,
+        "w": 0.3333,
+        "h": 0.28
+      }
+    ]
+  },
+  {
+    "id": "p8-text-center",
+    "name": "3×3 with Center Text",
+    "scope": "page",
+    "photoCount": 8,
+    "hasText": true,
+    "frames": [
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0,
+        "w": 0.3333,
+        "h": 0.3333
+      },
+      {
+        "type": "photo",
+        "x": 0.3333,
+        "y": 0,
+        "w": 0.3333,
+        "h": 0.3333
+      },
+      {
+        "type": "photo",
+        "x": 0.6667,
+        "y": 0,
+        "w": 0.3333,
+        "h": 0.3333
+      },
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0.3333,
+        "w": 0.3333,
+        "h": 0.3333
+      },
+      {
+        "type": "text",
+        "x": 0.3333,
+        "y": 0.3333,
+        "w": 0.3333,
+        "h": 0.3333
+      },
+      {
+        "type": "photo",
+        "x": 0.6667,
+        "y": 0.3333,
+        "w": 0.3333,
+        "h": 0.3333
+      },
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0.6667,
+        "w": 0.3333,
+        "h": 0.3333
+      },
+      {
+        "type": "photo",
+        "x": 0.3333,
+        "y": 0.6667,
+        "w": 0.3333,
+        "h": 0.3333
+      },
+      {
+        "type": "photo",
+        "x": 0.6667,
+        "y": 0.6667,
+        "w": 0.3333,
+        "h": 0.3333
+      }
+    ]
+  },
+  {
+    "id": "p8-text-bot",
+    "name": "4×2 + Caption",
+    "scope": "page",
+    "photoCount": 8,
+    "hasText": true,
+    "frames": [
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0,
+        "w": 0.25,
+        "h": 0.4
+      },
+      {
+        "type": "photo",
+        "x": 0.25,
+        "y": 0,
+        "w": 0.25,
+        "h": 0.4
+      },
+      {
+        "type": "photo",
+        "x": 0.5,
+        "y": 0,
+        "w": 0.25,
+        "h": 0.4
+      },
+      {
+        "type": "photo",
+        "x": 0.75,
+        "y": 0,
+        "w": 0.25,
+        "h": 0.4
+      },
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0.4,
+        "w": 0.25,
+        "h": 0.4
+      },
+      {
+        "type": "photo",
+        "x": 0.25,
+        "y": 0.4,
+        "w": 0.25,
+        "h": 0.4
+      },
+      {
+        "type": "photo",
+        "x": 0.5,
+        "y": 0.4,
+        "w": 0.25,
+        "h": 0.4
+      },
+      {
+        "type": "photo",
+        "x": 0.75,
+        "y": 0.4,
+        "w": 0.25,
+        "h": 0.4
+      },
+      {
+        "type": "text",
+        "x": 0,
+        "y": 0.8,
+        "w": 1,
+        "h": 0.2
+      }
+    ]
+  },
+  {
+    "id": "p9-grid3x3",
+    "name": "3×3 Grid",
+    "scope": "page",
+    "photoCount": 9,
+    "hasText": false,
+    "frames": [
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0,
+        "w": 0.3333,
+        "h": 0.3333
+      },
+      {
+        "type": "photo",
+        "x": 0.3333,
+        "y": 0,
+        "w": 0.3333,
+        "h": 0.3333
+      },
+      {
+        "type": "photo",
+        "x": 0.6667,
+        "y": 0,
+        "w": 0.3333,
+        "h": 0.3333
+      },
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0.3333,
+        "w": 0.3333,
+        "h": 0.3333
+      },
+      {
+        "type": "photo",
+        "x": 0.3333,
+        "y": 0.3333,
+        "w": 0.3333,
+        "h": 0.3333
+      },
+      {
+        "type": "photo",
+        "x": 0.6667,
+        "y": 0.3333,
+        "w": 0.3333,
+        "h": 0.3333
+      },
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0.6667,
+        "w": 0.3333,
+        "h": 0.3333
+      },
+      {
+        "type": "photo",
+        "x": 0.3333,
+        "y": 0.6667,
+        "w": 0.3333,
+        "h": 0.3333
+      },
+      {
+        "type": "photo",
+        "x": 0.6667,
+        "y": 0.6667,
+        "w": 0.3333,
+        "h": 0.3333
+      }
+    ]
+  },
+  {
+    "id": "p9-stagger3x3",
+    "name": "Staggered 3×3",
+    "scope": "page",
+    "photoCount": 9,
+    "hasText": false,
+    "frames": [
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0,
+        "w": 0.4,
+        "h": 0.35
+      },
+      {
+        "type": "photo",
+        "x": 0.4,
+        "y": 0,
+        "w": 0.3,
+        "h": 0.35
+      },
+      {
+        "type": "photo",
+        "x": 0.7,
+        "y": 0,
+        "w": 0.3,
+        "h": 0.35
+      },
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0.35,
+        "w": 0.3,
+        "h": 0.35
+      },
+      {
+        "type": "photo",
+        "x": 0.3,
+        "y": 0.35,
+        "w": 0.4,
+        "h": 0.35
+      },
+      {
+        "type": "photo",
+        "x": 0.7,
+        "y": 0.35,
+        "w": 0.3,
+        "h": 0.35
+      },
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0.7,
+        "w": 0.3,
+        "h": 0.3
+      },
+      {
+        "type": "photo",
+        "x": 0.3,
+        "y": 0.7,
+        "w": 0.3,
+        "h": 0.3
+      },
+      {
+        "type": "photo",
+        "x": 0.6,
+        "y": 0.7,
+        "w": 0.4,
+        "h": 0.3
+      }
+    ]
+  },
+  {
+    "id": "p9-hero-8",
+    "name": "Hero + 8 Thumbnails",
+    "scope": "page",
+    "photoCount": 9,
+    "hasText": false,
+    "frames": [
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0,
+        "w": 0.6667,
+        "h": 0.6667
+      },
+      {
+        "type": "photo",
+        "x": 0.6667,
+        "y": 0,
+        "w": 0.3333,
+        "h": 0.3333
+      },
+      {
+        "type": "photo",
+        "x": 0.6667,
+        "y": 0.3333,
+        "w": 0.3333,
+        "h": 0.3333
+      },
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0.6667,
+        "w": 0.1667,
+        "h": 0.3333
+      },
+      {
+        "type": "photo",
+        "x": 0.1667,
+        "y": 0.6667,
+        "w": 0.1667,
+        "h": 0.3333
+      },
+      {
+        "type": "photo",
+        "x": 0.3333,
+        "y": 0.6667,
+        "w": 0.1667,
+        "h": 0.3333
+      },
+      {
+        "type": "photo",
+        "x": 0.5,
+        "y": 0.6667,
+        "w": 0.1667,
+        "h": 0.3333
+      },
+      {
+        "type": "photo",
+        "x": 0.6667,
+        "y": 0.6667,
+        "w": 0.1667,
+        "h": 0.3333
+      },
+      {
+        "type": "photo",
+        "x": 0.8333,
+        "y": 0.6667,
+        "w": 0.1667,
+        "h": 0.3333
+      }
+    ]
+  },
+  {
+    "id": "p9-text-bot",
+    "name": "3×3 + Caption",
+    "scope": "page",
+    "photoCount": 9,
+    "hasText": true,
+    "frames": [
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0,
+        "w": 0.3333,
+        "h": 0.28
+      },
+      {
+        "type": "photo",
+        "x": 0.3333,
+        "y": 0,
+        "w": 0.3333,
+        "h": 0.28
+      },
+      {
+        "type": "photo",
+        "x": 0.6667,
+        "y": 0,
+        "w": 0.3333,
+        "h": 0.28
+      },
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0.28,
+        "w": 0.3333,
+        "h": 0.28
+      },
+      {
+        "type": "photo",
+        "x": 0.3333,
+        "y": 0.28,
+        "w": 0.3333,
+        "h": 0.28
+      },
+      {
+        "type": "photo",
+        "x": 0.6667,
+        "y": 0.28,
+        "w": 0.3333,
+        "h": 0.28
+      },
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0.56,
+        "w": 0.3333,
+        "h": 0.28
+      },
+      {
+        "type": "photo",
+        "x": 0.3333,
+        "y": 0.56,
+        "w": 0.3333,
+        "h": 0.28
+      },
+      {
+        "type": "photo",
+        "x": 0.6667,
+        "y": 0.56,
+        "w": 0.3333,
+        "h": 0.28
+      },
+      {
+        "type": "text",
+        "x": 0,
+        "y": 0.84,
+        "w": 1,
+        "h": 0.16
+      }
+    ]
+  },
+  {
+    "id": "p10-2plus8",
+    "name": "2 Wide + 4×2 Contact",
+    "scope": "page",
+    "photoCount": 10,
+    "hasText": false,
+    "frames": [
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0,
+        "w": 0.5,
+        "h": 0.36
+      },
+      {
+        "type": "photo",
+        "x": 0.5,
+        "y": 0,
+        "w": 0.5,
+        "h": 0.36
+      },
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0.36,
+        "w": 0.25,
+        "h": 0.32
+      },
+      {
+        "type": "photo",
+        "x": 0.25,
+        "y": 0.36,
+        "w": 0.25,
+        "h": 0.32
+      },
+      {
+        "type": "photo",
+        "x": 0.5,
+        "y": 0.36,
+        "w": 0.25,
+        "h": 0.32
+      },
+      {
+        "type": "photo",
+        "x": 0.75,
+        "y": 0.36,
+        "w": 0.25,
+        "h": 0.32
+      },
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0.68,
+        "w": 0.25,
+        "h": 0.32
+      },
+      {
+        "type": "photo",
+        "x": 0.25,
+        "y": 0.68,
+        "w": 0.25,
+        "h": 0.32
+      },
+      {
+        "type": "photo",
+        "x": 0.5,
+        "y": 0.68,
+        "w": 0.25,
+        "h": 0.32
+      },
+      {
+        "type": "photo",
+        "x": 0.75,
+        "y": 0.68,
+        "w": 0.25,
+        "h": 0.32
+      }
+    ]
+  },
+  {
+    "id": "p12-grid3x4",
+    "name": "3×4 Contact Sheet",
+    "scope": "page",
+    "photoCount": 12,
+    "hasText": false,
+    "frames": [
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0,
+        "w": 0.3333,
+        "h": 0.25
+      },
+      {
+        "type": "photo",
+        "x": 0.3333,
+        "y": 0,
+        "w": 0.3333,
+        "h": 0.25
+      },
+      {
+        "type": "photo",
+        "x": 0.6667,
+        "y": 0,
+        "w": 0.3333,
+        "h": 0.25
+      },
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0.25,
+        "w": 0.3333,
+        "h": 0.25
+      },
+      {
+        "type": "photo",
+        "x": 0.3333,
+        "y": 0.25,
+        "w": 0.3333,
+        "h": 0.25
+      },
+      {
+        "type": "photo",
+        "x": 0.6667,
+        "y": 0.25,
+        "w": 0.3333,
+        "h": 0.25
+      },
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0.5,
+        "w": 0.3333,
+        "h": 0.25
+      },
+      {
+        "type": "photo",
+        "x": 0.3333,
+        "y": 0.5,
+        "w": 0.3333,
+        "h": 0.25
+      },
+      {
+        "type": "photo",
+        "x": 0.6667,
+        "y": 0.5,
+        "w": 0.3333,
+        "h": 0.25
+      },
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0.75,
+        "w": 0.3333,
+        "h": 0.25
+      },
+      {
+        "type": "photo",
+        "x": 0.3333,
+        "y": 0.75,
+        "w": 0.3333,
+        "h": 0.25
+      },
+      {
+        "type": "photo",
+        "x": 0.6667,
+        "y": 0.75,
+        "w": 0.3333,
+        "h": 0.25
+      }
+    ]
+  },
+  {
+    "id": "p2-wide-top-75",
+    "name": "Wide Top 75/25",
+    "scope": "page",
+    "photoCount": 2,
+    "hasText": false,
+    "frames": [
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0,
+        "w": 1,
+        "h": 0.75
+      },
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0.75,
+        "w": 1,
+        "h": 0.25
+      }
+    ]
+  },
+  {
+    "id": "p2-wide-bot-75",
+    "name": "Wide Bottom 25/75",
+    "scope": "page",
+    "photoCount": 2,
+    "hasText": false,
+    "frames": [
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0,
+        "w": 1,
+        "h": 0.25
+      },
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0.25,
+        "w": 1,
+        "h": 0.75
+      }
+    ]
+  },
+  {
+    "id": "p2-split-75-l",
+    "name": "Left 75/25",
+    "scope": "page",
+    "photoCount": 2,
+    "hasText": false,
+    "frames": [
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0,
+        "w": 0.75,
+        "h": 1
+      },
+      {
+        "type": "photo",
+        "x": 0.75,
+        "y": 0,
+        "w": 0.25,
+        "h": 1
+      }
+    ]
+  },
+  {
+    "id": "p2-split-75-r",
+    "name": "Right 25/75",
+    "scope": "page",
+    "photoCount": 2,
+    "hasText": false,
+    "frames": [
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0,
+        "w": 0.25,
+        "h": 1
+      },
+      {
+        "type": "photo",
+        "x": 0.25,
+        "y": 0,
+        "w": 0.75,
+        "h": 1
+      }
+    ]
+  },
+  {
+    "id": "p3-1-2-wide",
+    "name": "Banner + 2 Tall",
+    "scope": "page",
+    "photoCount": 3,
+    "hasText": false,
+    "frames": [
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0,
+        "w": 1,
+        "h": 0.35
+      },
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0.35,
+        "w": 0.5,
+        "h": 0.65
+      },
+      {
+        "type": "photo",
+        "x": 0.5,
+        "y": 0.35,
+        "w": 0.5,
+        "h": 0.65
+      }
+    ]
+  },
+  {
+    "id": "p3-2-1-wide",
+    "name": "2 Tall + Banner",
+    "scope": "page",
+    "photoCount": 3,
+    "hasText": false,
+    "frames": [
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0,
+        "w": 0.5,
+        "h": 0.65
+      },
+      {
+        "type": "photo",
+        "x": 0.5,
+        "y": 0,
+        "w": 0.5,
+        "h": 0.65
+      },
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0.65,
+        "w": 1,
+        "h": 0.35
+      }
+    ]
+  },
+  {
+    "id": "p3-text-right",
+    "name": "2 Left + Right Note",
+    "scope": "page",
+    "photoCount": 3,
+    "hasText": true,
+    "frames": [
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0,
+        "w": 0.66,
+        "h": 0.5
+      },
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0.5,
+        "w": 0.66,
+        "h": 0.5
+      },
+      {
+        "type": "photo",
+        "x": 0.66,
+        "y": 0,
+        "w": 0.34,
+        "h": 0.55
+      },
+      {
+        "type": "text",
+        "x": 0.66,
+        "y": 0.55,
+        "w": 0.34,
+        "h": 0.45
+      }
+    ]
+  },
+  {
+    "id": "p4-top2-bot2-asym",
+    "name": "Asymmetric 4 Quad",
+    "scope": "page",
+    "photoCount": 4,
+    "hasText": false,
+    "frames": [
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0,
+        "w": 0.65,
+        "h": 0.5
+      },
+      {
+        "type": "photo",
+        "x": 0.65,
+        "y": 0,
+        "w": 0.35,
+        "h": 0.5
+      },
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0.5,
+        "w": 0.35,
+        "h": 0.5
+      },
+      {
+        "type": "photo",
+        "x": 0.35,
+        "y": 0.5,
+        "w": 0.65,
+        "h": 0.5
+      }
+    ]
+  },
+  {
+    "id": "p4-left-col2-right2",
+    "name": "2 Narrow + 2 Wide",
+    "scope": "page",
+    "photoCount": 4,
+    "hasText": false,
+    "frames": [
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0,
+        "w": 0.35,
+        "h": 0.5
+      },
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0.5,
+        "w": 0.35,
+        "h": 0.5
+      },
+      {
+        "type": "photo",
+        "x": 0.35,
+        "y": 0,
+        "w": 0.65,
+        "h": 0.5
+      },
+      {
+        "type": "photo",
+        "x": 0.35,
+        "y": 0.5,
+        "w": 0.65,
+        "h": 0.5
+      }
+    ]
+  },
+  {
+    "id": "p4-text-sidebar",
+    "name": "Left Text + 4 Grid",
+    "scope": "page",
+    "photoCount": 4,
+    "hasText": true,
+    "frames": [
+      {
+        "type": "text",
+        "x": 0,
+        "y": 0,
+        "w": 0.3,
+        "h": 1
+      },
+      {
+        "type": "photo",
+        "x": 0.3,
+        "y": 0,
+        "w": 0.35,
+        "h": 0.5
+      },
+      {
+        "type": "photo",
+        "x": 0.65,
+        "y": 0,
+        "w": 0.35,
+        "h": 0.5
+      },
+      {
+        "type": "photo",
+        "x": 0.3,
+        "y": 0.5,
+        "w": 0.35,
+        "h": 0.5
+      },
+      {
+        "type": "photo",
+        "x": 0.65,
+        "y": 0.5,
+        "w": 0.35,
+        "h": 0.5
+      }
+    ]
+  },
+  {
+    "id": "p5-cols5",
+    "name": "Five Columns",
+    "scope": "page",
+    "photoCount": 5,
+    "hasText": false,
+    "frames": [
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0,
+        "w": 0.2,
+        "h": 1
+      },
+      {
+        "type": "photo",
+        "x": 0.2,
+        "y": 0,
+        "w": 0.2,
+        "h": 1
+      },
+      {
+        "type": "photo",
+        "x": 0.4,
+        "y": 0,
+        "w": 0.2,
+        "h": 1
+      },
+      {
+        "type": "photo",
+        "x": 0.6,
+        "y": 0,
+        "w": 0.2,
+        "h": 1
+      },
+      {
+        "type": "photo",
+        "x": 0.8,
+        "y": 0,
+        "w": 0.2,
+        "h": 1
+      }
+    ]
+  },
+  {
+    "id": "p5-rows5",
+    "name": "Five Rows",
+    "scope": "page",
+    "photoCount": 5,
+    "hasText": false,
+    "frames": [
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0,
+        "w": 1,
+        "h": 0.2
+      },
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0.2,
+        "w": 1,
+        "h": 0.2
+      },
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0.4,
+        "w": 1,
+        "h": 0.2
+      },
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0.6,
+        "w": 1,
+        "h": 0.2
+      },
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0.8,
+        "w": 1,
+        "h": 0.2
+      }
+    ]
+  },
+  {
+    "id": "p5-text-right",
+    "name": "5 Grid + Right Text",
+    "scope": "page",
+    "photoCount": 5,
+    "hasText": true,
+    "frames": [
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0,
+        "w": 0.5,
+        "h": 0.3333
+      },
+      {
+        "type": "photo",
+        "x": 0.5,
+        "y": 0,
+        "w": 0.5,
+        "h": 0.3333
+      },
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0.3333,
+        "w": 0.5,
+        "h": 0.3333
+      },
+      {
+        "type": "photo",
+        "x": 0.5,
+        "y": 0.3333,
+        "w": 0.5,
+        "h": 0.3333
+      },
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0.6667,
+        "w": 0.5,
+        "h": 0.3333
+      },
+      {
+        "type": "text",
+        "x": 0.5,
+        "y": 0.6667,
+        "w": 0.5,
+        "h": 0.3333
+      }
+    ]
+  },
+  {
+    "id": "p6-2x2-plus-2top",
+    "name": "2 Wide + 2×2",
+    "scope": "page",
+    "photoCount": 6,
+    "hasText": false,
+    "frames": [
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0,
+        "w": 0.5,
+        "h": 0.4
+      },
+      {
+        "type": "photo",
+        "x": 0.5,
+        "y": 0,
+        "w": 0.5,
+        "h": 0.4
+      },
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0.4,
+        "w": 0.5,
+        "h": 0.3
+      },
+      {
+        "type": "photo",
+        "x": 0.5,
+        "y": 0.4,
+        "w": 0.5,
+        "h": 0.3
+      },
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0.7,
+        "w": 0.5,
+        "h": 0.3
+      },
+      {
+        "type": "photo",
+        "x": 0.5,
+        "y": 0.7,
+        "w": 0.5,
+        "h": 0.3
+      }
+    ]
+  },
+  {
+    "id": "p6-left-hero-5",
+    "name": "Hero + 2×2 + Rail",
+    "scope": "page",
+    "photoCount": 6,
+    "hasText": false,
+    "frames": [
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0,
+        "w": 0.6,
+        "h": 0.6
+      },
+      {
+        "type": "photo",
+        "x": 0.6,
+        "y": 0,
+        "w": 0.4,
+        "h": 0.3
+      },
+      {
+        "type": "photo",
+        "x": 0.6,
+        "y": 0.3,
+        "w": 0.4,
+        "h": 0.3
+      },
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0.6,
+        "w": 0.3333,
+        "h": 0.4
+      },
+      {
+        "type": "photo",
+        "x": 0.3333,
+        "y": 0.6,
+        "w": 0.3333,
+        "h": 0.4
+      },
+      {
+        "type": "photo",
+        "x": 0.6667,
+        "y": 0.6,
+        "w": 0.3333,
+        "h": 0.4
+      }
+    ]
+  },
+  {
+    "id": "p6-right-hero-5",
+    "name": "2×2 + Hero + Rail",
+    "scope": "page",
+    "photoCount": 6,
+    "hasText": false,
+    "frames": [
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0,
+        "w": 0.4,
+        "h": 0.3
+      },
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0.3,
+        "w": 0.4,
+        "h": 0.3
+      },
+      {
+        "type": "photo",
+        "x": 0.4,
+        "y": 0,
+        "w": 0.6,
+        "h": 0.6
+      },
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0.6,
+        "w": 0.3333,
+        "h": 0.4
+      },
+      {
+        "type": "photo",
+        "x": 0.3333,
+        "y": 0.6,
+        "w": 0.3333,
+        "h": 0.4
+      },
+      {
+        "type": "photo",
+        "x": 0.6667,
+        "y": 0.6,
+        "w": 0.3333,
+        "h": 0.4
+      }
+    ]
+  },
+  {
+    "id": "p6-text-header-3x2",
+    "name": "Header + 3×2",
+    "scope": "page",
+    "photoCount": 6,
+    "hasText": true,
+    "frames": [
+      {
+        "type": "text",
+        "x": 0,
+        "y": 0,
+        "w": 1,
+        "h": 0.18
+      },
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0.18,
+        "w": 0.3333,
+        "h": 0.41
+      },
+      {
+        "type": "photo",
+        "x": 0.3333,
+        "y": 0.18,
+        "w": 0.3333,
+        "h": 0.41
+      },
+      {
+        "type": "photo",
+        "x": 0.6667,
+        "y": 0.18,
+        "w": 0.3333,
+        "h": 0.41
+      },
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0.59,
+        "w": 0.3333,
+        "h": 0.41
+      },
+      {
+        "type": "photo",
+        "x": 0.3333,
+        "y": 0.59,
+        "w": 0.3333,
+        "h": 0.41
+      },
+      {
+        "type": "photo",
+        "x": 0.6667,
+        "y": 0.59,
+        "w": 0.3333,
+        "h": 0.41
+      }
+    ]
+  },
+  {
+    "id": "p6-text-footer-3x2",
+    "name": "3×2 + Footer",
+    "scope": "page",
+    "photoCount": 6,
+    "hasText": true,
+    "frames": [
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0,
+        "w": 0.3333,
+        "h": 0.41
+      },
+      {
+        "type": "photo",
+        "x": 0.3333,
+        "y": 0,
+        "w": 0.3333,
+        "h": 0.41
+      },
+      {
+        "type": "photo",
+        "x": 0.6667,
+        "y": 0,
+        "w": 0.3333,
+        "h": 0.41
+      },
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0.41,
+        "w": 0.3333,
+        "h": 0.41
+      },
+      {
+        "type": "photo",
+        "x": 0.3333,
+        "y": 0.41,
+        "w": 0.3333,
+        "h": 0.41
+      },
+      {
+        "type": "photo",
+        "x": 0.6667,
+        "y": 0.41,
+        "w": 0.3333,
+        "h": 0.41
+      },
+      {
+        "type": "text",
+        "x": 0,
+        "y": 0.82,
+        "w": 1,
+        "h": 0.18
+      }
+    ]
+  },
+  {
+    "id": "p7-1plus6-left",
+    "name": "Left Hero + 2×3",
+    "scope": "page",
+    "photoCount": 7,
+    "hasText": false,
+    "frames": [
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0,
+        "w": 0.5,
+        "h": 1
+      },
+      {
+        "type": "photo",
+        "x": 0.5,
+        "y": 0,
+        "w": 0.25,
+        "h": 0.3333
+      },
+      {
+        "type": "photo",
+        "x": 0.75,
+        "y": 0,
+        "w": 0.25,
+        "h": 0.3333
+      },
+      {
+        "type": "photo",
+        "x": 0.5,
+        "y": 0.3333,
+        "w": 0.25,
+        "h": 0.3333
+      },
+      {
+        "type": "photo",
+        "x": 0.75,
+        "y": 0.3333,
+        "w": 0.25,
+        "h": 0.3333
+      },
+      {
+        "type": "photo",
+        "x": 0.5,
+        "y": 0.6667,
+        "w": 0.25,
+        "h": 0.3333
+      },
+      {
+        "type": "photo",
+        "x": 0.75,
+        "y": 0.6667,
+        "w": 0.25,
+        "h": 0.3333
+      }
+    ]
+  },
+  {
+    "id": "p7-1plus6-right",
+    "name": "2×3 + Right Hero",
+    "scope": "page",
+    "photoCount": 7,
+    "hasText": false,
+    "frames": [
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0,
+        "w": 0.25,
+        "h": 0.3333
+      },
+      {
+        "type": "photo",
+        "x": 0.25,
+        "y": 0,
+        "w": 0.25,
+        "h": 0.3333
+      },
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0.3333,
+        "w": 0.25,
+        "h": 0.3333
+      },
+      {
+        "type": "photo",
+        "x": 0.25,
+        "y": 0.3333,
+        "w": 0.25,
+        "h": 0.3333
+      },
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0.6667,
+        "w": 0.25,
+        "h": 0.3333
+      },
+      {
+        "type": "photo",
+        "x": 0.25,
+        "y": 0.6667,
+        "w": 0.25,
+        "h": 0.3333
+      },
+      {
+        "type": "photo",
+        "x": 0.5,
+        "y": 0,
+        "w": 0.5,
+        "h": 1
+      }
+    ]
+  },
+  {
+    "id": "p8-hero-left-7",
+    "name": "Hero + 7 Gallery",
+    "scope": "page",
+    "photoCount": 8,
+    "hasText": false,
+    "frames": [
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0,
+        "w": 0.5,
+        "h": 0.6
+      },
+      {
+        "type": "photo",
+        "x": 0.5,
+        "y": 0,
+        "w": 0.25,
+        "h": 0.3
+      },
+      {
+        "type": "photo",
+        "x": 0.75,
+        "y": 0,
+        "w": 0.25,
+        "h": 0.3
+      },
+      {
+        "type": "photo",
+        "x": 0.5,
+        "y": 0.3,
+        "w": 0.25,
+        "h": 0.3
+      },
+      {
+        "type": "photo",
+        "x": 0.75,
+        "y": 0.3,
+        "w": 0.25,
+        "h": 0.3
+      },
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0.6,
+        "w": 0.3333,
+        "h": 0.4
+      },
+      {
+        "type": "photo",
+        "x": 0.3333,
+        "y": 0.6,
+        "w": 0.3333,
+        "h": 0.4
+      },
+      {
+        "type": "photo",
+        "x": 0.6667,
+        "y": 0.6,
+        "w": 0.3333,
+        "h": 0.4
+      }
+    ]
+  },
+  {
+    "id": "p1-border-square",
+    "name": "Square Spotlight",
+    "scope": "page",
+    "photoCount": 1,
+    "hasText": false,
+    "frames": [
+      {
+        "type": "photo",
+        "x": 0.1,
+        "y": 0.16,
+        "w": 0.8,
+        "h": 0.68
+      }
+    ]
+  },
+  {
+    "id": "p1-text-card",
+    "name": "Poster + Subtitle",
+    "scope": "page",
+    "photoCount": 1,
+    "hasText": true,
+    "frames": [
+      {
+        "type": "photo",
+        "x": 0.08,
+        "y": 0.06,
+        "w": 0.84,
+        "h": 0.66
+      },
+      {
+        "type": "text",
+        "x": 0.08,
+        "y": 0.74,
+        "w": 0.84,
+        "h": 0.2
+      }
+    ]
+  },
+  {
+    "id": "p2-text-cover",
+    "name": "Cover: 2 Photos + Text",
+    "scope": "page",
+    "photoCount": 2,
+    "hasText": true,
+    "frames": [
+      {
+        "type": "photo",
+        "x": 0.06,
+        "y": 0.05,
+        "w": 0.88,
+        "h": 0.44
+      },
+      {
+        "type": "photo",
+        "x": 0.06,
+        "y": 0.49,
+        "w": 0.88,
+        "h": 0.26
+      },
+      {
+        "type": "text",
+        "x": 0.06,
+        "y": 0.75,
+        "w": 0.88,
+        "h": 0.2
+      }
+    ]
+  },
+  {
+    "id": "s1-pano",
+    "name": "Panoramic Spread",
+    "scope": "spread",
+    "photoCount": 1,
+    "hasText": false,
+    "frames": [
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0.1,
+        "w": 1,
+        "h": 0.8
+      }
+    ]
+  },
+  {
+    "id": "s1-full",
+    "name": "Full Bleed Spread",
+    "scope": "spread",
+    "photoCount": 1,
+    "hasText": false,
+    "frames": [
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0,
+        "w": 1,
+        "h": 1
+      }
+    ]
+  },
+  {
+    "id": "s1-text",
+    "name": "Spread Hero + Story",
+    "scope": "spread",
+    "photoCount": 1,
+    "hasText": true,
+    "frames": [
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0,
+        "w": 0.65,
+        "h": 1
+      },
+      {
+        "type": "text",
+        "x": 0.68,
+        "y": 0.25,
+        "w": 0.28,
+        "h": 0.5
+      }
+    ]
+  },
+  {
+    "id": "s2-facing",
+    "name": "Facing Pair",
+    "scope": "spread",
+    "photoCount": 2,
+    "hasText": false,
+    "frames": [
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0,
+        "w": 0.48,
+        "h": 1
+      },
+      {
+        "type": "photo",
+        "x": 0.52,
+        "y": 0,
+        "w": 0.48,
+        "h": 1
+      }
+    ]
+  },
+  {
+    "id": "s2-wide-asym",
+    "name": "Spread Hero + Feature",
+    "scope": "spread",
+    "photoCount": 2,
+    "hasText": false,
+    "frames": [
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0,
+        "w": 0.62,
+        "h": 1
+      },
+      {
+        "type": "photo",
+        "x": 0.64,
+        "y": 0.15,
+        "w": 0.36,
+        "h": 0.7
+      }
+    ]
+  },
+  {
+    "id": "s2-text-facing",
+    "name": "Photo + Facing Story",
+    "scope": "spread",
+    "photoCount": 2,
+    "hasText": true,
+    "frames": [
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0,
+        "w": 0.48,
+        "h": 1
+      },
+      {
+        "type": "photo",
+        "x": 0.52,
+        "y": 0,
+        "w": 0.48,
+        "h": 0.65
+      },
+      {
+        "type": "text",
+        "x": 0.52,
+        "y": 0.68,
+        "w": 0.48,
+        "h": 0.32
+      }
+    ]
+  },
+  {
+    "id": "s3-hero-right2",
+    "name": "Full Left + 2 Right",
+    "scope": "spread",
+    "photoCount": 3,
+    "hasText": false,
+    "frames": [
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0,
+        "w": 0.48,
+        "h": 1
+      },
+      {
+        "type": "photo",
+        "x": 0.52,
+        "y": 0,
+        "w": 0.48,
+        "h": 0.5
+      },
+      {
+        "type": "photo",
+        "x": 0.52,
+        "y": 0.5,
+        "w": 0.48,
+        "h": 0.5
+      }
+    ]
+  },
+  {
+    "id": "s3-left2-hero",
+    "name": "2 Left + Full Right",
+    "scope": "spread",
+    "photoCount": 3,
+    "hasText": false,
+    "frames": [
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0,
+        "w": 0.48,
+        "h": 0.5
+      },
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0.5,
+        "w": 0.48,
+        "h": 0.5
+      },
+      {
+        "type": "photo",
+        "x": 0.52,
+        "y": 0,
+        "w": 0.48,
+        "h": 1
+      }
+    ]
+  },
+  {
+    "id": "s3-pano-plus-2",
+    "name": "Spread Banner + 2",
+    "scope": "spread",
+    "photoCount": 3,
+    "hasText": false,
+    "frames": [
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0,
+        "w": 1,
+        "h": 0.58
+      },
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0.58,
+        "w": 0.48,
+        "h": 0.42
+      },
+      {
+        "type": "photo",
+        "x": 0.52,
+        "y": 0.58,
+        "w": 0.48,
+        "h": 0.42
+      }
+    ]
+  },
+  {
+    "id": "s3-text-editorial",
+    "name": "Spread Feature + Text",
+    "scope": "spread",
+    "photoCount": 3,
+    "hasText": true,
+    "frames": [
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0,
+        "w": 0.48,
+        "h": 1
+      },
+      {
+        "type": "text",
+        "x": 0.52,
+        "y": 0.05,
+        "w": 0.48,
+        "h": 0.28
+      },
+      {
+        "type": "photo",
+        "x": 0.52,
+        "y": 0.35,
+        "w": 0.24,
+        "h": 0.65
+      },
+      {
+        "type": "photo",
+        "x": 0.76,
+        "y": 0.35,
+        "w": 0.24,
+        "h": 0.65
+      }
+    ]
+  },
+  {
+    "id": "s4-quads",
+    "name": "4-Column Spread",
+    "scope": "spread",
+    "photoCount": 4,
+    "hasText": false,
+    "frames": [
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0,
+        "w": 0.24,
+        "h": 1
+      },
+      {
+        "type": "photo",
+        "x": 0.24,
+        "y": 0,
+        "w": 0.24,
+        "h": 1
+      },
+      {
+        "type": "photo",
+        "x": 0.52,
+        "y": 0,
+        "w": 0.24,
+        "h": 1
+      },
+      {
+        "type": "photo",
+        "x": 0.76,
+        "y": 0,
+        "w": 0.24,
+        "h": 1
+      }
+    ]
+  },
+  {
+    "id": "s4-hero-3",
+    "name": "Full Left + 3 Right",
+    "scope": "spread",
+    "photoCount": 4,
+    "hasText": false,
+    "frames": [
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0,
+        "w": 0.48,
+        "h": 1
+      },
+      {
+        "type": "photo",
+        "x": 0.52,
+        "y": 0,
+        "w": 0.48,
+        "h": 0.55
+      },
+      {
+        "type": "photo",
+        "x": 0.52,
+        "y": 0.55,
+        "w": 0.24,
+        "h": 0.45
+      },
+      {
+        "type": "photo",
+        "x": 0.76,
+        "y": 0.55,
+        "w": 0.24,
+        "h": 0.45
+      }
+    ]
+  },
+  {
+    "id": "s4-facing-2x2",
+    "name": "2 Rows Across Spread",
+    "scope": "spread",
+    "photoCount": 4,
+    "hasText": false,
+    "frames": [
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0,
+        "w": 0.48,
+        "h": 0.5
+      },
+      {
+        "type": "photo",
+        "x": 0.52,
+        "y": 0,
+        "w": 0.48,
+        "h": 0.5
+      },
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0.5,
+        "w": 0.48,
+        "h": 0.5
+      },
+      {
+        "type": "photo",
+        "x": 0.52,
+        "y": 0.5,
+        "w": 0.48,
+        "h": 0.5
+      }
+    ]
+  },
+  {
+    "id": "s5-hero-4",
+    "name": "Full Left + 2×2 Right",
+    "scope": "spread",
+    "photoCount": 5,
+    "hasText": false,
+    "frames": [
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0,
+        "w": 0.48,
+        "h": 1
+      },
+      {
+        "type": "photo",
+        "x": 0.52,
+        "y": 0,
+        "w": 0.24,
+        "h": 0.5
+      },
+      {
+        "type": "photo",
+        "x": 0.76,
+        "y": 0,
+        "w": 0.24,
+        "h": 0.5
+      },
+      {
+        "type": "photo",
+        "x": 0.52,
+        "y": 0.5,
+        "w": 0.24,
+        "h": 0.5
+      },
+      {
+        "type": "photo",
+        "x": 0.76,
+        "y": 0.5,
+        "w": 0.24,
+        "h": 0.5
+      }
+    ]
+  },
+  {
+    "id": "s5-4-hero",
+    "name": "2×2 Left + Full Right",
+    "scope": "spread",
+    "photoCount": 5,
+    "hasText": false,
+    "frames": [
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0,
+        "w": 0.24,
+        "h": 0.5
+      },
+      {
+        "type": "photo",
+        "x": 0.24,
+        "y": 0,
+        "w": 0.24,
+        "h": 0.5
+      },
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0.5,
+        "w": 0.24,
+        "h": 0.5
+      },
+      {
+        "type": "photo",
+        "x": 0.24,
+        "y": 0.5,
+        "w": 0.24,
+        "h": 0.5
+      },
+      {
+        "type": "photo",
+        "x": 0.52,
+        "y": 0,
+        "w": 0.48,
+        "h": 1
+      }
+    ]
+  },
+  {
+    "id": "s6-3-3",
+    "name": "3 Left + 3 Right",
+    "scope": "spread",
+    "photoCount": 6,
+    "hasText": false,
+    "frames": [
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0,
+        "w": 0.48,
+        "h": 0.5
+      },
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0.5,
+        "w": 0.24,
+        "h": 0.5
+      },
+      {
+        "type": "photo",
+        "x": 0.24,
+        "y": 0.5,
+        "w": 0.24,
+        "h": 0.5
+      },
+      {
+        "type": "photo",
+        "x": 0.52,
+        "y": 0,
+        "w": 0.48,
+        "h": 0.5
+      },
+      {
+        "type": "photo",
+        "x": 0.52,
+        "y": 0.5,
+        "w": 0.24,
+        "h": 0.5
+      },
+      {
+        "type": "photo",
+        "x": 0.76,
+        "y": 0.5,
+        "w": 0.24,
+        "h": 0.5
+      }
+    ]
+  },
+  {
+    "id": "s6-text-gallery",
+    "name": "Spread Gallery + Text",
+    "scope": "spread",
+    "photoCount": 6,
+    "hasText": true,
+    "frames": [
+      {
+        "type": "text",
+        "x": 0,
+        "y": 0,
+        "w": 0.24,
+        "h": 1
+      },
+      {
+        "type": "photo",
+        "x": 0.24,
+        "y": 0,
+        "w": 0.24,
+        "h": 0.5
+      },
+      {
+        "type": "photo",
+        "x": 0.24,
+        "y": 0.5,
+        "w": 0.24,
+        "h": 0.5
+      },
+      {
+        "type": "photo",
+        "x": 0.52,
+        "y": 0,
+        "w": 0.24,
+        "h": 0.5
+      },
+      {
+        "type": "photo",
+        "x": 0.76,
+        "y": 0,
+        "w": 0.24,
+        "h": 0.5
+      },
+      {
+        "type": "photo",
+        "x": 0.52,
+        "y": 0.5,
+        "w": 0.24,
+        "h": 0.5
+      },
+      {
+        "type": "photo",
+        "x": 0.76,
+        "y": 0.5,
+        "w": 0.24,
+        "h": 0.5
+      }
+    ]
+  },
+  {
+    "id": "s8-grid",
+    "name": "4×2 Spread Matrix",
+    "scope": "spread",
+    "photoCount": 8,
+    "hasText": false,
+    "frames": [
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0,
+        "w": 0.24,
+        "h": 0.5
+      },
+      {
+        "type": "photo",
+        "x": 0.24,
+        "y": 0,
+        "w": 0.24,
+        "h": 0.5
+      },
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0.5,
+        "w": 0.24,
+        "h": 0.5
+      },
+      {
+        "type": "photo",
+        "x": 0.24,
+        "y": 0.5,
+        "w": 0.24,
+        "h": 0.5
+      },
+      {
+        "type": "photo",
+        "x": 0.52,
+        "y": 0,
+        "w": 0.24,
+        "h": 0.5
+      },
+      {
+        "type": "photo",
+        "x": 0.76,
+        "y": 0,
+        "w": 0.24,
+        "h": 0.5
+      },
+      {
+        "type": "photo",
+        "x": 0.52,
+        "y": 0.5,
+        "w": 0.24,
+        "h": 0.5
+      },
+      {
+        "type": "photo",
+        "x": 0.76,
+        "y": 0.5,
+        "w": 0.24,
+        "h": 0.5
+      }
+    ]
+  },
+  {
+    "id": "s10-contact",
+    "name": "Spread Contact Sheet",
+    "scope": "spread",
+    "photoCount": 10,
+    "hasText": false,
+    "frames": [
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0,
+        "w": 0.48,
+        "h": 0.5
+      },
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0.5,
+        "w": 0.16,
+        "h": 0.5
+      },
+      {
+        "type": "photo",
+        "x": 0.16,
+        "y": 0.5,
+        "w": 0.16,
+        "h": 0.5
+      },
+      {
+        "type": "photo",
+        "x": 0.32,
+        "y": 0.5,
+        "w": 0.16,
+        "h": 0.5
+      },
+      {
+        "type": "photo",
+        "x": 0.52,
+        "y": 0,
+        "w": 0.16,
+        "h": 0.5
+      },
+      {
+        "type": "photo",
+        "x": 0.68,
+        "y": 0,
+        "w": 0.16,
+        "h": 0.5
+      },
+      {
+        "type": "photo",
+        "x": 0.84,
+        "y": 0,
+        "w": 0.16,
+        "h": 0.5
+      },
+      {
+        "type": "photo",
+        "x": 0.52,
+        "y": 0.5,
+        "w": 0.16,
+        "h": 0.5
+      },
+      {
+        "type": "photo",
+        "x": 0.68,
+        "y": 0.5,
+        "w": 0.16,
+        "h": 0.5
+      },
+      {
+        "type": "photo",
+        "x": 0.84,
+        "y": 0.5,
+        "w": 0.16,
+        "h": 0.5
+      }
+    ]
+  },
+  {
+    "id": "s12-grid",
+    "name": "6×2 Spread Grid",
+    "scope": "spread",
+    "photoCount": 12,
+    "hasText": false,
+    "frames": [
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0,
+        "w": 0.16,
+        "h": 0.5
+      },
+      {
+        "type": "photo",
+        "x": 0.16,
+        "y": 0,
+        "w": 0.16,
+        "h": 0.5
+      },
+      {
+        "type": "photo",
+        "x": 0.32,
+        "y": 0,
+        "w": 0.16,
+        "h": 0.5
+      },
+      {
+        "type": "photo",
+        "x": 0,
+        "y": 0.5,
+        "w": 0.16,
+        "h": 0.5
+      },
+      {
+        "type": "photo",
+        "x": 0.16,
+        "y": 0.5,
+        "w": 0.16,
+        "h": 0.5
+      },
+      {
+        "type": "photo",
+        "x": 0.32,
+        "y": 0.5,
+        "w": 0.16,
+        "h": 0.5
+      },
+      {
+        "type": "photo",
+        "x": 0.52,
+        "y": 0,
+        "w": 0.16,
+        "h": 0.5
+      },
+      {
+        "type": "photo",
+        "x": 0.68,
+        "y": 0,
+        "w": 0.16,
+        "h": 0.5
+      },
+      {
+        "type": "photo",
+        "x": 0.84,
+        "y": 0,
+        "w": 0.16,
+        "h": 0.5
+      },
+      {
+        "type": "photo",
+        "x": 0.52,
+        "y": 0.5,
+        "w": 0.16,
+        "h": 0.5
+      },
+      {
+        "type": "photo",
+        "x": 0.68,
+        "y": 0.5,
+        "w": 0.16,
+        "h": 0.5
+      },
+      {
+        "type": "photo",
+        "x": 0.84,
+        "y": 0.5,
+        "w": 0.16,
+        "h": 0.5
+      }
+    ]
+  }
+]

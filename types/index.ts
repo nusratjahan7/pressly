@@ -52,6 +52,12 @@ export interface ImageElement extends ElementBase {
   fit: "cover" | "contain";
   /** Corner radius in millimetres. */
   radius: number;
+  /** Pan/zoom scale inside the frame (>= 1). */
+  cropScale?: number;
+  /** Horizontal pan inside the frame (-1..1). */
+  cropX?: number;
+  /** Vertical pan inside the frame (-1..1). */
+  cropY?: number;
 }
 
 export type TextAlign = "left" | "center" | "right";
@@ -68,6 +74,8 @@ export interface TextElement extends ElementBase {
   lineHeight: number;
   /** Letter spacing in points. */
   letterSpacing: number;
+  /** True while the frame still holds layout placeholder text. */
+  isPlaceholder?: boolean;
 }
 
 export type ShapeKind = "rectangle" | "ellipse" | "line";
@@ -104,6 +112,22 @@ export type Element =
   | StickerElement
   | QrElement;
 
+export interface MediaAsset {
+  id: string;
+  src: string;
+  alt: string;
+  width?: number;
+  height?: number;
+}
+
+export interface PageLayoutMeta {
+  layoutId: string;
+  /** Gutter between frames in millimetres. */
+  gapMm: number;
+  /** Outer margin from page trim edge in millimetres. */
+  marginMm: number;
+}
+
 export interface Page {
   id: string;
   backgroundId: string;
@@ -123,6 +147,8 @@ export interface Page {
    * pages of the cover spread.
    */
   coverSide?: "back" | "front";
+  /** Applied layout configuration for live gap & margin adjustments. */
+  layoutMeta?: PageLayoutMeta;
 }
 
 export interface Project {
@@ -132,4 +158,6 @@ export interface Project {
   spineText?: string;
   pageSize: PageSize;
   pages: Page[];
+  /** Project-level uploaded photos, including unused/unplaced photos. */
+  mediaLibrary?: MediaAsset[];
 }

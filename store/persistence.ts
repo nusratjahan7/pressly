@@ -9,6 +9,7 @@ import { clampSpreadIndex } from "@/lib/spreads";
 
 const PROJECT_KEY = "pressly.project.v1";
 const PREFS_KEY = "pressly.prefs.v1";
+const FAVORITE_LAYOUTS_STORAGE_KEY = "pressly.layoutFavorites.v1";
 
 const projectStore = createStore("pressly", "documents");
 
@@ -21,6 +22,7 @@ interface PersistedDocument {
 interface PersistedPrefs {
   activeTab: string;
   thumbnailsOpen: boolean;
+  favoriteLayoutIds?: string[];
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -179,6 +181,26 @@ export function useProjectPersistence() {
         }));
       }
 
+      const idbFavs = Array.isArray(prefs?.favoriteLayoutIds)
+        ? prefs.favoriteLayoutIds.filter((id): id is string => typeof id === "string")
+        : [];
+      let localFavs: string[] = [];
+      try {
+        const raw = window.localStorage.getItem(FAVORITE_LAYOUTS_STORAGE_KEY);
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          if (Array.isArray(parsed)) {
+            localFavs = parsed.filter((id): id is string => typeof id === "string");
+          }
+        }
+      } catch {
+        /* ignore localStorage access issues */
+      }
+      const mergedFavs = Array.from(new Set([...idbFavs, ...localFavs]));
+      if (mergedFavs.length > 0) {
+        useEditorStore.getState().setFavoriteLayouts(mergedFavs);
+      }
+
       useEditorStore.getState().setHydrated(true);
     };
 
@@ -252,19 +274,30 @@ export function useProjectPersistence() {
     let previous = {
       activeTab: useEditorStore.getState().ui.activeTab,
       thumbnailsOpen: useEditorStore.getState().ui.thumbnailsOpen,
+      favoriteLayoutIds: useEditorStore.getState().ui.favoriteLayoutIds,
     };
 
     const unsubscribe = useEditorStore.subscribe((state) => {
       if (
         state.ui.activeTab === previous.activeTab &&
-        state.ui.thumbnailsOpen === previous.thumbnailsOpen
+        state.ui.thumbnailsOpen === previous.thumbnailsOpen &&
+        state.ui.favoriteLayoutIds === previous.favoriteLayoutIds
       ) {
         return;
       }
       previous = {
         activeTab: state.ui.activeTab,
         thumbnailsOpen: state.ui.thumbnailsOpen,
+        favoriteLayoutIds: state.ui.favoriteLayoutIds,
       };
+      try {
+        window.localStorage.setItem(
+          FAVORITE_LAYOUTS_STORAGE_KEY,
+          JSON.stringify(previous.favoriteLayoutIds),
+        );
+      } catch {
+        /* ignore localStorage errors */
+      }
       if (timeout) clearTimeout(timeout);
       timeout = setTimeout(() => {
         void savePrefs(previous);

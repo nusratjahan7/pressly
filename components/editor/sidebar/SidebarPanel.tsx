@@ -12,6 +12,7 @@ import { LayoutsPanel } from "@/components/editor/sidebar/panels/LayoutsPanel";
 import { BackgroundsPanel } from "@/components/editor/sidebar/panels/BackgroundsPanel";
 import { StickersPanel } from "@/components/editor/sidebar/panels/StickersPanel";
 import { SetupPanel } from "@/components/editor/sidebar/panels/SetupPanel";
+import { cn } from "@/lib/cn";
 import { IconButton } from "@/components/ui/icon-button";
 import { Modal } from "@/components/ui/modal";
 
@@ -88,7 +89,12 @@ export function SidebarPanel() {
                   id="sidebar-panel"
                   role="tabpanel"
                   aria-labelledby={`tab-${activeTab}`}
-                  className="min-h-0 flex-1 overflow-y-auto px-4 py-4"
+                  className={cn(
+                    "min-h-0 flex-1",
+                    activeTab === "layouts"
+                      ? "flex flex-col overflow-hidden"
+                      : "overflow-y-auto px-4 py-4",
+                  )}
                 >
                   <PanelBody tab={activeTab} />
                 </div>
@@ -112,7 +118,11 @@ export function SidebarPanel() {
             id="sidebar-panel"
             role="tabpanel"
             aria-labelledby={`tab-${activeTab}`}
-            className="px-4 py-4"
+            className={
+              activeTab === "layouts"
+                ? "flex h-[72dvh] flex-col overflow-hidden"
+                : "px-4 py-4"
+            }
           >
             <PanelBody tab={activeTab} />
           </div>

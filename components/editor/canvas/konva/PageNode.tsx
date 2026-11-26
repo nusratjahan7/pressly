@@ -1,12 +1,19 @@
 "use client";
 
+import { useState } from "react";
 import { Group, Rect, Text } from "react-konva";
-import type { Page, PageSize } from "@/types";
+import type { Element, Page, PageSize } from "@/types";
 import { getBackground } from "@/lib/backgrounds";
+import {
+  findLayoutGutters,
+  getLargestEmptyFrameId,
+  type LayoutGutter,
+} from "@/lib/layouts";
 import { getSafeMarginInset } from "@/lib/konva/geometry";
+import { useEditorStore } from "@/store";
 import { BackgroundNode } from "@/components/editor/canvas/konva/BackgroundNode";
 import { ElementFrame } from "@/components/editor/canvas/konva/ElementFrame";
-import { ptToMm } from "@/lib/units";
+import { ptToMm, round } from "@/lib/units";
 
 export const END_PAPER_FILL = "#262A3C";
 export const END_PAPER_TEXT = "This page can not be edited";
@@ -22,12 +29,30 @@ interface PageNodeProps {
   showSafeMargin: boolean;
   showBleed: boolean;
   selectedElementId?: string | null;
+  swapTargetElementId?: string | null;
+  croppingElementId?: string | null;
+  dropHighlight?: boolean;
+  animSeq?: number;
   onSelectPage?: (pageId: string) => void;
+  onOpenPhotoPicker?: (elementId: string, pageId: string) => void;
+  onDoubleClickFrame?: (element: Element, pageId: string) => void;
+  onContextMenuFrame?: (
+    element: Element,
+    pageId: string,
+    clientX: number,
+    clientY: number,
+  ) => void;
+  onFrameDragMove?: (elementId: string, pointerX: number, pointerY: number) => void;
+  onFrameDragEndSwap?: (
+    elementId: string,
+    pointerX: number,
+    pointerY: number,
+  ) => boolean;
 }
 
 /**
- * One page of the spread. Elements stay clipped to the trim so nothing can
- * bleed across the spine unless it is explicitly a spread-spanning element.
+ * One page of the spread. Renders background, layout/freeform frames,
+ * interactive gutters between adjacent frames, and print guides.
  */
 export function PageNode({
   page,
@@ -38,7 +63,16 @@ export function PageNode({
   showSafeMargin,
   showBleed,
   selectedElementId = null,
+  swapTargetElementId = null,
+  croppingElementId = null,
+  dropHighlight = false,
+  animSeq = 0,
   onSelectPage,
+  onOpenPhotoPicker,
+  onDoubleClickFrame,
+  onContextMenuFrame,
+  onFrameDragMove,
+  onFrameDragEndSwap,
 }: PageNodeProps) {
   const background = getBackground(page.backgroundId);
   const inset = getSafeMarginInset(pageSize);
@@ -46,6 +80,8 @@ export function PageNode({
   const isLocked = Boolean(page.locked || isEndPaper);
 
   const ordered = [...page.elements].sort((a, b) => a.zIndex - b.zIndex);
+  const largestEmptyId = getLargestEmptyFrameId(page.elements);
+  const gutters = isLocked ? [] : findLayoutGutters(page.elements);
 
   return (
     <Group x={x} y={0}>
@@ -102,9 +138,27 @@ export function PageNode({
                 pageHeight={pageSize.h}
                 selected={selectedElementId === element.id}
                 decorative={isLocked}
+                isLargestEmpty={element.id === largestEmptyId}
+                isSwapTarget={element.id === swapTargetElementId}
+                isCropping={element.id === croppingElementId}
+                animSeq={animSeq}
+                onOpenPhotoPicker={onOpenPhotoPicker}
+                onDoubleClickFrame={onDoubleClickFrame}
+                onContextMenuFrame={onContextMenuFrame}
+                onFrameDragMove={onFrameDragMove}
+                onFrameDragEndSwap={onFrameDragEndSwap}
               />
             ))
           : null}
+
+        {gutters.map((gutter) => (
+          <GutterHandle
+            key={gutter.id}
+            gutter={gutter}
+            page={page}
+            scale={scale}
+          />
+        ))}
 
         {isLocked ? <LockedOverlay page={page} pageSize={pageSize} /> : null}
       </Group>
@@ -138,6 +192,20 @@ export function PageNode({
         />
       ) : null}
 
+      {dropHighlight ? (
+        <Rect
+          x={0}
+          y={0}
+          width={pageSize.w}
+          height={pageSize.h}
+          stroke="#5b65dc"
+          strokeWidth={Math.max(0.4, 2 / scale)}
+          fill="rgba(91,101,220,0.08)"
+          listening={false}
+          perfectDrawEnabled={false}
+        />
+      ) : null}
+
       <Rect
         x={0}
         y={0}
@@ -149,6 +217,118 @@ export function PageNode({
         perfectDrawEnabled={false}
       />
     </Group>
+  );
+}
+
+/**
+ * Draggable gutter handle between adjacent frames that resizes neighbors live.
+ */
+function GutterHandle({
+  gutter,
+  page,
+  scale,
+}: {
+  gutter: LayoutGutter;
+  page: Page;
+  scale: number;
+}) {
+  const resizeGutterFrames = useEditorStore(
+    (state) => state.resizeGutterFrames,
+  );
+  const pushHistory = useEditorStore((state) => state.pushHistory);
+  const [hovered, setHovered] = useState(false);
+
+  const isVertical = gutter.axis === "vertical";
+  const hitThickness = Math.max(gutter.gap, 4 / Math.max(scale, 0.01));
+  const x = isVertical ? gutter.pos - hitThickness / 2 : gutter.start;
+  const y = isVertical ? gutter.start : gutter.pos - hitThickness / 2;
+  const width = isVertical ? hitThickness : gutter.end - gutter.start;
+  const height = isVertical ? gutter.end - gutter.start : hitThickness;
+
+  return (
+    <Rect
+      x={x}
+      y={y}
+      width={width}
+      height={height}
+      fill={hovered ? "rgba(91,101,220,0.35)" : "transparent"}
+      draggable
+      listening
+      perfectDrawEnabled={false}
+      onMouseEnter={(event) => {
+        setHovered(true);
+        const stage = event.target.getStage();
+        if (stage) {
+          stage.container().style.cursor = isVertical
+            ? "col-resize"
+            : "row-resize";
+        }
+      }}
+      onMouseLeave={(event) => {
+        setHovered(false);
+        const stage = event.target.getStage();
+        if (stage) stage.container().style.cursor = "";
+      }}
+      onDragStart={(event) => {
+        event.cancelBubble = true;
+        pushHistory();
+      }}
+      onDragMove={(event) => {
+        event.cancelBubble = true;
+        const node = event.target;
+        const rawDelta = isVertical ? node.x() - x : node.y() - y;
+        const delta = Math.max(
+          gutter.minDelta,
+          Math.min(gutter.maxDelta, rawDelta),
+        );
+        // Lock the handle onto the axis while dragging.
+        node.position({
+          x: isVertical ? x + delta : x,
+          y: isVertical ? y : y + delta,
+        });
+
+        const updates: Array<{
+          id: string;
+          x?: number;
+          y?: number;
+          width?: number;
+          height?: number;
+        }> = [];
+        for (const id of gutter.beforeIds) {
+          const el = page.elements.find((candidate) => candidate.id === id);
+          if (!el) continue;
+          if (isVertical) {
+            updates.push({ id, width: round(el.width + delta, 2) });
+          } else {
+            updates.push({ id, height: round(el.height + delta, 2) });
+          }
+        }
+        for (const id of gutter.afterIds) {
+          const el = page.elements.find((candidate) => candidate.id === id);
+          if (!el) continue;
+          if (isVertical) {
+            updates.push({
+              id,
+              x: round(el.x + delta, 2),
+              width: round(el.width - delta, 2),
+            });
+          } else {
+            updates.push({
+              id,
+              y: round(el.y + delta, 2),
+              height: round(el.height - delta, 2),
+            });
+          }
+        }
+        if (updates.length > 0) {
+          resizeGutterFrames(page.id, updates, { commit: false });
+        }
+      }}
+      onDragEnd={(event) => {
+        event.cancelBubble = true;
+        event.target.position({ x, y });
+      }}
+    />
   );
 }
 
@@ -183,7 +363,7 @@ function LockedOverlay({
         width={pageSize.w * 0.8}
         text={message}
         fontSize={Math.max(2.6, ptToMm(9.5))}
-        fontFamily="Inter, sans-serif"
+        fontFamily="Montserrat, sans-serif"
         fill={isEndPaper ? END_PAPER_TEXT_COLOR : "#565E8E"}
         opacity={isEndPaper ? 1 : 0.85}
         align="center"

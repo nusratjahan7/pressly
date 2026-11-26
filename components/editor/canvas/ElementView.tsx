@@ -47,11 +47,15 @@ interface ElementViewProps {
 
 function renderElementContent(element: Element, scale: number) {
   if (element.type === "text") {
+    const isPlaceholder = Boolean(element.isPlaceholder);
     return (
       <div
-        className="h-full w-full overflow-hidden whitespace-pre-wrap break-words"
+        className={cn(
+          "h-full w-full overflow-hidden whitespace-pre-wrap break-words",
+          isPlaceholder && "flex items-center justify-center border border-dashed border-[#122056]/30",
+        )}
         style={{
-          fontFamily: `"${element.fontFamily}", var(--font-inter), sans-serif`,
+          fontFamily: `"${element.fontFamily}", var(--font-montserrat), sans-serif`,
           fontSize: ptToPx(element.fontSize, scale),
           fontWeight: element.fontWeight,
           lineHeight: element.lineHeight,
@@ -68,23 +72,36 @@ function renderElementContent(element: Element, scale: number) {
   if (element.type === "image") {
     if (!element.src) {
       return (
-        <div className="flex h-full w-full items-center justify-center bg-surface-muted text-[10px] text-ink-subtle">
-          Image
+        <div
+          className="flex h-full w-full items-center justify-center bg-[#B5B7BF] text-white/90"
+          style={{ borderRadius: Math.max(0, element.radius * scale) }}
+        >
+          <span className="text-[11px] font-medium">+</span>
         </div>
       );
     }
+    const cropScale = Math.max(1, element.cropScale ?? 1);
+    const cropX = element.cropX ?? 0;
+    const cropY = element.cropY ?? 0;
     return (
-      // eslint-disable-next-line @next/next/no-img-element
-      <img
-        src={element.src}
-        alt={element.alt || "Untitled image"}
-        draggable={false}
-        className="h-full w-full select-none"
-        style={{
-          objectFit: element.fit,
-          borderRadius: Math.max(0, element.radius * scale),
-        }}
-      />
+      <div
+        className="h-full w-full overflow-hidden"
+        style={{ borderRadius: Math.max(0, element.radius * scale) }}
+      >
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={element.src}
+          alt={element.alt || "Untitled image"}
+          draggable={false}
+          className="h-full w-full select-none"
+          style={{
+            objectFit: element.fit,
+            objectPosition: `${50 - cropX * 50}% ${50 - cropY * 50}%`,
+            transform: cropScale > 1 ? `scale(${cropScale})` : undefined,
+            transformOrigin: `${50 - cropX * 50}% ${50 - cropY * 50}%`,
+          }}
+        />
+      </div>
     );
   }
 

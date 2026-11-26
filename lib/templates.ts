@@ -291,7 +291,7 @@ export const PAGE_TEMPLATES: PageTemplate[] = [
         createTextElement(
           { x: m, y: h * 0.34 + 30, width: w - m * 2, height: 46, zIndex: 2 },
           {
-            text: `${projectName || "Untitled Issue"}\nSet in Inter\nPrinted on uncoated stock`,
+            text: `${projectName || "Untitled Issue"}\nSet in Montserrat\nPrinted on uncoated stock`,
             fontSize: 10 * s,
             fontWeight: 400,
             lineHeight: 1.9,

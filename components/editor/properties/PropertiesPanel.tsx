@@ -76,6 +76,9 @@ function PropertiesContent({
 }) {
   const project = useEditorStore((state) => state.project);
   const updateElement = useEditorStore((state) => state.updateElement);
+  const updatePageLayoutSpacing = useEditorStore(
+    (state) => state.updatePageLayoutSpacing,
+  );
   const pushHistory = useEditorStore((state) => state.pushHistory);
   const removeElement = useEditorStore((state) => state.removeElement);
   const moveElementLayer = useEditorStore((state) => state.moveElementLayer);
@@ -230,7 +233,9 @@ function PropertiesContent({
               multiline
               rows={3}
               disabled={locked}
-              onCommit={(value) => update({ text: value })}
+              onCommit={(value) =>
+                update({ text: value, isPlaceholder: value.trim().length === 0 })
+              }
             />
             <PropertyGrid>
               <NumberField
@@ -382,6 +387,40 @@ function PropertiesContent({
               disabled={locked}
               onCommit={(value) => update({ alt: value })}
             />
+            {element.src && element.fit === "cover" ? (
+              <div className="flex flex-col gap-2 pt-1">
+                <Slider
+                  label="Crop zoom"
+                  value={Math.round((element.cropScale ?? 1) * 100)}
+                  min={100}
+                  max={300}
+                  step={5}
+                  disabled={locked}
+                  formatValue={(v) => `${(v / 100).toFixed(2)}×`}
+                  onStart={pushHistory}
+                  onValueChange={(v) =>
+                    updateElement(
+                      element.id,
+                      { cropScale: v / 100 },
+                      { commit: false },
+                    )
+                  }
+                />
+                {(element.cropScale ?? 1) > 1 ||
+                element.cropX ||
+                element.cropY ? (
+                  <button
+                    type="button"
+                    onClick={() =>
+                      update({ cropScale: 1, cropX: 0, cropY: 0 })
+                    }
+                    className="self-start text-[10.5px] font-medium text-accent underline-offset-2 hover:underline"
+                  >
+                    Reset pan &amp; zoom
+                  </button>
+                ) : null}
+              </div>
+            ) : null}
           </PropertySection>
         ) : null}
 
@@ -493,6 +532,39 @@ function PropertiesContent({
             onCheckedChange={(checked) => update({ locked: checked })}
           />
         </PropertySection>
+
+        {page.layoutMeta ? (
+          <PropertySection title="Layout properties">
+            <Slider
+              label="Frame gap"
+              value={page.layoutMeta.gapMm}
+              min={0}
+              max={12}
+              step={0.5}
+              formatValue={(v) => `${v} mm`}
+              onStart={pushHistory}
+              onValueChange={(v) =>
+                updatePageLayoutSpacing(page.id, { gapMm: v }, { commit: false })
+              }
+            />
+            <Slider
+              label="Outer margin"
+              value={page.layoutMeta.marginMm}
+              min={0}
+              max={25}
+              step={0.5}
+              formatValue={(v) => `${v} mm`}
+              onStart={pushHistory}
+              onValueChange={(v) =>
+                updatePageLayoutSpacing(
+                  page.id,
+                  { marginMm: v },
+                  { commit: false },
+                )
+              }
+            />
+          </PropertySection>
+        ) : null}
 
         <div className="border-t border-line px-3.5 py-3">
           <p className="text-[10px] leading-3.5 text-ink-subtle">

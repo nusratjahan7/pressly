@@ -49,6 +49,9 @@ export const createUiSlice: StateCreator<EditorStore, [], [], UiSlice> = (
     pageSetupOpen: false,
     pageSetupMode: "setup",
     thumbnailView: "strip",
+    favoriteLayoutIds: [],
+    layoutAnimSeq: 0,
+    layoutAnimPageIds: [],
   },
 
   setActiveTab: (tab) =>
@@ -148,6 +151,21 @@ export const createUiSlice: StateCreator<EditorStore, [], [], UiSlice> = (
 
   setThumbnailView: (view) =>
     set((state) => ({ ui: { ...state.ui, thumbnailView: view } })),
+
+  toggleFavoriteLayout: (layoutId) =>
+    set((state) => {
+      const current = state.ui.favoriteLayoutIds;
+      const exists = current.includes(layoutId);
+      const next = exists
+        ? current.filter((id) => id !== layoutId)
+        : [...current, layoutId];
+      return { ui: { ...state.ui, favoriteLayoutIds: next } };
+    }),
+
+  setFavoriteLayouts: (ids) =>
+    set((state) => ({
+      ui: { ...state.ui, favoriteLayoutIds: Array.from(new Set(ids)) },
+    })),
 });
 
 export function getDefaultViewCenterForProject() {

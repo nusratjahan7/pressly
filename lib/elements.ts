@@ -29,7 +29,7 @@ const geometryDefaults = {
 
 export const DEFAULT_TEXT_COLOR = "#122056";
 export const DEFAULT_ACCENT = "#5B65DC";
-export const FONT_FAMILY = "Inter";
+export const FONT_FAMILY = "Montserrat";
 
 export function createTextElement(
   geometry: Geometry,

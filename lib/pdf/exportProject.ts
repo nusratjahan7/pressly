@@ -168,19 +168,21 @@ async function rasterizeImage(
         ? Math.max(
             targetWidth / image.naturalWidth,
             targetHeight / image.naturalHeight,
-          )
+          ) * Math.max(1, element.cropScale ?? 1)
         : Math.min(
             targetWidth / image.naturalWidth,
             targetHeight / image.naturalHeight,
           );
     const drawWidth = image.naturalWidth * scale;
     const drawHeight = image.naturalHeight * scale;
+    const panX = ((element.cropX ?? 0) * Math.max(0, drawWidth - targetWidth)) / 2;
+    const panY = ((element.cropY ?? 0) * Math.max(0, drawHeight - targetHeight)) / 2;
     context.imageSmoothingEnabled = true;
     context.imageSmoothingQuality = "high";
     context.drawImage(
       image,
-      (targetWidth - drawWidth) / 2,
-      (targetHeight - drawHeight) / 2,
+      (targetWidth - drawWidth) / 2 + panX,
+      (targetHeight - drawHeight) / 2 + panY,
       drawWidth,
       drawHeight,
     );
@@ -363,6 +365,7 @@ export async function createProjectPdf(
 
       if (element.type === "text") {
         const text = element as TextElement;
+        if (text.isPlaceholder) continue;
         const font = text.fontWeight >= 600 ? bold : regular;
         const fontSize = Math.max(1, text.fontSize);
         const lineHeight = fontSize * Math.max(0.8, text.lineHeight);

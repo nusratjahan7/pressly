@@ -34,9 +34,9 @@ function getElementsSignature(page: Page) {
       element.zIndex,
     ];
     if (element.type === "text") {
-      parts.push(element.text, element.fontSize, element.color, element.align, element.fontWeight, element.lineHeight, element.letterSpacing);
+      parts.push(element.text, element.fontSize, element.color, element.align, element.fontWeight, element.lineHeight, element.letterSpacing, element.isPlaceholder ? 1 : 0);
     } else if (element.type === "image") {
-      parts.push(element.src.slice(0, 64), element.fit, element.radius);
+      parts.push(element.src.slice(0, 64), element.fit, element.radius, element.cropScale ?? 1, element.cropX ?? 0, element.cropY ?? 0);
     } else if (element.type === "shape") {
       parts.push(element.shape, element.fill, element.stroke, element.strokeWidth, element.radius);
     } else if (element.type === "sticker") {

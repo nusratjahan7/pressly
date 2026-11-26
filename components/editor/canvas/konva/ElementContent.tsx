@@ -13,6 +13,7 @@ interface ElementContentProps {
   /** Frame size from the enclosing transform group, in millimetres. */
   width: number;
   height: number;
+  isLargestEmpty?: boolean;
   listening?: boolean;
 }
 
@@ -25,6 +26,7 @@ export function ElementContent({
   element,
   width,
   height,
+  isLargestEmpty = false,
   listening = false,
 }: ElementContentProps) {
   switch (element.type) {
@@ -43,6 +45,7 @@ export function ElementContent({
           element={element}
           width={width}
           height={height}
+          isLargestEmpty={isLargestEmpty}
           listening={listening}
         />
       );
